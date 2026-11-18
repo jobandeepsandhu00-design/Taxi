@@ -137,6 +137,8 @@ npm run test:e2e    # Playwright – benötigt gebaute App und geseedete DB
    - Quellen prüfen und als verifiziert markieren.
 6. Der Health-Check ist unter `GET /api/health` erreichbar.
 
+**Vercel:** Vercel führt automatisch das Skript `vercel-build` aus (`prisma migrate deploy` → `prisma db seed` → `next build`). Benötigte Umgebungsvariablen: `DATABASE_URL`, `AUTH_SECRET`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`. Hinweis: Der Seed läuft bei jedem Deployment und setzt die Demo-Fragen auf den Stand von `prisma/seed-data` zurück – für den Echtbetrieb das Seed aus `vercel-build` entfernen.
+
 Hinweis zur Skalierung: Der Rate Limiter arbeitet im Speicher, also pro Instanz. Bei mehreren Instanzen durch Redis o. Ä. ersetzen.
 
 ---
