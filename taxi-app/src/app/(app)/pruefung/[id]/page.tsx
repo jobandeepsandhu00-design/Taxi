@@ -28,6 +28,7 @@ export default async function ExamPage({ params }: { params: Promise<{ id: strin
       attemptId={attempt.id}
       title={attempt.examConfig.name}
       expiresAt={attempt.expiresAt.toISOString()}
+      durationSec={attempt.durationMinutes * 60}
       serverNow={new Date().toISOString()}
       initialIndex={attempt.currentIndex}
       questions={questions}

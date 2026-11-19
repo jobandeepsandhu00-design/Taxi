@@ -19,7 +19,7 @@ export interface CelebrationItem {
 }
 
 /** Zeigt neu freigeschaltete Abzeichen und Level-Aufstiege nacheinander als Animation. */
-export function CelebrationGate({ items }: { items: CelebrationItem[] }) {
+export function CelebrationGate({ items, onDone }: { items: CelebrationItem[]; onDone?: () => void }) {
   const [queue, setQueue] = useState(items);
   const current = queue[0];
 
@@ -31,8 +31,11 @@ export function CelebrationGate({ items }: { items: CelebrationItem[] }) {
 
   function next() {
     const rest = queue.slice(1);
-    if (rest.length === 0) void markAchievementsSeenAction(items.map((i) => i.key));
     setQueue(rest);
+    if (rest.length === 0) {
+      void markAchievementsSeenAction(items.map((i) => i.key));
+      onDone?.();
+    }
   }
 
   return (

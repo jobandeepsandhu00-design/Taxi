@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle2, Flag, Home, RotateCcw, Trophy, XCircle } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Flag, Home, RotateCcw, XCircle } from "lucide-react";
 import { useCallback, useMemo, useState, useTransition } from "react";
+import { categoryColor } from "@/components/category-style";
+import { CelebrationGate, type CelebrationItem } from "@/components/gamification/celebration-gate";
 import { Button } from "@/components/ui/button";
-import { Progress, ProgressRing } from "@/components/ui/progress";
+import { achievementInfo } from "@/lib/gamification";
+import { haptic, spring } from "@/lib/motion";
+import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { finishQuizAction, goToQuestionAction, repeatAttemptAction, submitQuizAnswerAction } from "@/server/actions/learning";
 import type { AnswerReveal } from "@/server/questions";
 import { QuestionCard } from "./question-card";
+import { ResultHero, type CategoryScore } from "./result-hero";
+import { SoundToggle } from "./sound-toggle";
+import { SegmentedProgress, type SegmentState } from "./segmented-progress";
 import type { ClientQuestion } from "./types";
 
 interface Props {
@@ -23,11 +31,30 @@ interface Props {
   finished: boolean;
 }
 
+function categoryScores(questions: ClientQuestion[], reveals: Record<string, AnswerReveal>): CategoryScore[] {
+  const map = new Map<string, CategoryScore>();
+  for (const q of questions) {
+    const r = reveals[q.id];
+    if (!r) continue;
+    const c = map.get(q.category.id) ?? { name: q.category.name, pct: 0, color: categoryColor(q.category.color).hex, correct: 0, total: 0 };
+    c.total += 1;
+    if (r.isCorrect) c.correct += 1;
+    c.pct = Math.round((c.correct / c.total) * 100);
+    map.set(q.category.id, c);
+  }
+  return [...map.values()].sort((a, b) => a.pct - b.pct);
+}
+
 export function QuizRunner({ attemptId, title, modeLabel, questions, initialReveals, initialIndex, bookmarkedIds, finished: initialFinished }: Props) {
   const router = useRouter();
   const [index, setIndex] = useState(Math.min(initialIndex, questions.length - 1));
+  const [direction, setDirection] = useState(1);
   const [reveals, setReveals] = useState<Record<string, AnswerReveal>>(initialReveals);
   const [finished, setFinished] = useState(initialFinished);
+  const [combo, setCombo] = useState(0);
+  const [comboFlash, setComboFlash] = useState<number | null>(null);
+  const [sessionXp, setSessionXp] = useState(0);
+  const [celebrations, setCelebrations] = useState<CelebrationItem[]>([]);
   const [pending, start] = useTransition();
   const bookmarks = useMemo(() => new Set(bookmarkedIds), [bookmarkedIds]);
 
@@ -39,11 +66,12 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
   const goTo = useCallback(
     (i: number) => {
       const next = Math.max(0, Math.min(questions.length - 1, i));
+      setDirection(next >= index ? 1 : -1);
       setIndex(next);
       goToQuestionAction(attemptId, next).catch(() => {});
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [attemptId, questions.length],
+    [attemptId, questions.length, index],
   );
 
   const finish = useCallback(() => {
@@ -57,6 +85,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
 
   const next = useCallback(() => {
     if (!reveals[current.id]) return;
+    haptic();
     if (isLast) {
       const firstOpen = questions.findIndex((q) => !reveals[q.id]);
       if (firstOpen >= 0) goTo(firstOpen);
@@ -64,51 +93,95 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
     } else goTo(index + 1);
   }, [current, reveals, isLast, questions, goTo, finish, index]);
 
+  const onRevealed = useCallback(
+    (r: AnswerReveal) => {
+      setReveals((prev) => ({ ...prev, [current.id]: r }));
+      const nextCombo = r.isCorrect ? combo + 1 : 0;
+      setCombo(nextCombo);
+      if (nextCombo >= 3) {
+        setComboFlash(nextCombo);
+        window.setTimeout(() => playSound("streak"), 250);
+        window.setTimeout(() => setComboFlash((c) => (c === nextCombo ? null : c)), 1800);
+      }
+      if (r.reward) {
+        setSessionXp((x) => x + r.reward!.xpGained);
+        const items: CelebrationItem[] = [];
+        if (r.reward.levelUp) {
+          const info = achievementInfo(`level-${r.reward.levelUp.index}`);
+          if (info) items.push({ key: info.key, title: info.title, desc: info.desc, emoji: info.emoji, isLevel: true, levelIndex: info.levelIndex });
+        }
+        for (const u of r.reward.unlocked) {
+          const info = achievementInfo(u.key);
+          if (info) items.push({ key: u.key, title: info.title, desc: info.desc, emoji: info.emoji, isLevel: false, levelIndex: -1 });
+        }
+        if (items.length) {
+          if (r.reward.levelUp) window.setTimeout(() => playSound("levelUp"), 400);
+          window.setTimeout(() => setCelebrations((c) => [...c, ...items]), 1100);
+        }
+      }
+    },
+    [current, combo],
+  );
+
+  const segments: SegmentState[] = questions.map((q) => (reveals[q.id] ? (reveals[q.id].isCorrect ? "correct" : "wrong") : "open"));
+
   if (finished) {
     const pct = answeredCount ? Math.round((correctCount / answeredCount) * 100) : 0;
     const wrong = questions.filter((q) => reveals[q.id] && !reveals[q.id].isCorrect);
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="animate-pop-in rounded-3xl glass p-6 text-center shadow-sm sm:p-10">
-          <Trophy className="mx-auto size-10 text-warning" />
-          <h1 className="mt-3 text-2xl font-extrabold text-navy">Sitzung abgeschlossen</h1>
-          <p className="text-muted-foreground">{title}</p>
-          <div className="my-6 flex justify-center">
-            <ProgressRing value={pct} size={150} stroke={12} color={pct >= 70 ? "#059669" : pct >= 50 ? "#d97706" : "#e11d48"}>
-              <span className="text-3xl font-extrabold text-navy">{pct}%</span>
-              <span className="text-xs text-muted-foreground">richtig</span>
-            </ProgressRing>
-          </div>
+        <ResultHero pct={pct} passed={pct >= 70} title="Sitzung abgeschlossen" subtitle={title} correct={correctCount} total={answeredCount} categories={categoryScores(questions, reveals)} xp={sessionXp || undefined}>
           <div className="mx-auto grid max-w-sm grid-cols-3 gap-3 text-center">
-            <div className="rounded-xl bg-muted p-3"><p className="text-xl font-extrabold text-navy">{answeredCount}</p><p className="text-xs text-muted-foreground">beantwortet</p></div>
-            <div className="rounded-xl bg-success/10 p-3"><p className="text-xl font-extrabold text-success">{correctCount}</p><p className="text-xs text-muted-foreground">richtig</p></div>
-            <div className="rounded-xl bg-destructive/10 p-3"><p className="text-xl font-extrabold text-destructive">{answeredCount - correctCount}</p><p className="text-xs text-muted-foreground">falsch</p></div>
+            <div className="rounded-xl bg-white/10 p-3">
+              <p className="font-display text-xl font-bold text-white">{answeredCount}</p>
+              <p className="text-xs text-white/70">beantwortet</p>
+            </div>
+            <div className="rounded-xl bg-success/20 p-3">
+              <p className="font-display text-xl font-bold text-success">{correctCount}</p>
+              <p className="text-xs text-white/70">richtig</p>
+            </div>
+            <div className="rounded-xl bg-destructive/20 p-3">
+              <p className="font-display text-xl font-bold text-red-300">{answeredCount - correctCount}</p>
+              <p className="text-xs text-white/70">falsch</p>
+            </div>
           </div>
-          <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
+          <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
             {wrong.length > 0 && (
               <form action={repeatAttemptAction}>
                 <input type="hidden" name="attemptId" value={attemptId} />
                 <input type="hidden" name="onlyWrong" value="1" />
-                <Button type="submit" variant="destructive" className="w-full"><RotateCcw /> Falsche wiederholen ({wrong.length})</Button>
+                <Button type="submit" className="w-full">
+                  <RotateCcw /> Fehler wiederholen ({wrong.length})
+                </Button>
               </form>
             )}
             <form action={repeatAttemptAction}>
               <input type="hidden" name="attemptId" value={attemptId} />
-              <Button type="submit" variant="outline" className="w-full"><RotateCcw /> Alle wiederholen</Button>
+              <Button type="submit" variant="outline" className="w-full border-white/20 bg-white/5 text-white">
+                <RotateCcw /> Alle wiederholen
+              </Button>
             </form>
-            <Button asChild><Link href="/dashboard"><Home /> Zur Übersicht</Link></Button>
+            <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white">
+              <Link href="/dashboard">
+                <Home /> Zur Übersicht
+              </Link>
+            </Button>
           </div>
-        </div>
-        <div className="rounded-2xl glass p-5 shadow-sm">
-          <h2 className="font-extrabold text-navy">Deine Antworten</h2>
-          <ul className="mt-3 divide-y">
+        </ResultHero>
+        <div className="glass rounded-2xl p-5">
+          <h2 className="font-bold text-navy">Deine Antworten</h2>
+          <ul className="mt-3 divide-y divide-border">
             {questions.map((q, i) => {
               const r = reveals[q.id];
               return (
                 <li key={q.id} className="flex items-start gap-3 py-3 text-sm">
                   {r ? r.isCorrect ? <CheckCircle2 className="size-5 shrink-0 text-success" /> : <XCircle className="size-5 shrink-0 text-destructive" /> : <span className="size-5 shrink-0 rounded-full border-2" />}
-                  <span className="flex-1 text-foreground/85">{i + 1}. {q.text}</span>
-                  <Link href={`/fragen/${q.id}`} className="shrink-0 text-xs font-semibold text-link hover:underline">Ansehen</Link>
+                  <span className="flex-1 text-foreground/85">
+                    {i + 1}. {q.text}
+                  </span>
+                  <Link href={`/fragen/${q.id}`} className="shrink-0 text-xs font-semibold text-link hover:underline">
+                    Ansehen
+                  </Link>
                 </li>
               );
             })}
@@ -124,29 +197,54 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-bold tracking-wider text-link uppercase">{modeLabel}</p>
-            <h1 className="truncate text-lg font-extrabold text-navy sm:text-xl">{title}</h1>
+            <h1 className="truncate text-lg font-bold text-navy sm:text-xl">{title}</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={finish} disabled={pending}>
-            <Flag /> Beenden
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <SoundToggle />
+            <Button variant="outline" size="sm" onClick={finish} disabled={pending}>
+              <Flag /> Beenden
+            </Button>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <Progress value={(answeredCount / questions.length) * 100} className="h-2.5" />
-          <span className="shrink-0 text-sm font-bold text-navy">{index + 1} / {questions.length}</span>
+          <SegmentedProgress segments={segments} current={index} label={`${answeredCount} von ${questions.length} beantwortet`} />
+          <span className="shrink-0 font-display text-sm font-bold text-navy tabular-nums">
+            {index + 1} / {questions.length}
+          </span>
         </div>
         <div className="flex items-center gap-3 text-xs font-semibold">
           <span className="text-success">✓ {correctCount} richtig</span>
           <span className="text-destructive">✗ {answeredCount - correctCount} falsch</span>
+          {combo >= 2 && <span className="ml-auto text-link">🔥 {combo} in Folge</span>}
         </div>
+      </div>
+
+      {/* Kombo-Banner */}
+      <div className="pointer-events-none fixed inset-x-0 top-24 z-40 flex justify-center" aria-live="polite">
+        <AnimatePresence>
+          {comboFlash && (
+            <motion.div
+              key={comboFlash}
+              className="rounded-full bg-primary px-5 py-2.5 font-display text-lg font-bold text-primary-foreground shadow-[0_10px_40px_-8px_rgba(255,196,0,0.8)]"
+              initial={{ scale: 0.3, opacity: 0, y: -20 }}
+              animate={{ scale: [0.3, 1.18, 1], opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: -10 }}
+              transition={{ duration: 0.45 }}
+            >
+              🔥 {comboFlash}er Serie!
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <QuestionCard
         key={current.id}
+        direction={direction}
         question={current}
         bookmarked={bookmarks.has(current.id)}
         initialReveal={reveals[current.id] ?? null}
         onSubmit={(selectedOptionIds, timeSpentSec) => submitQuizAnswerAction({ attemptId, questionId: current.id, selectedOptionIds, timeSpentSec })}
-        onRevealed={(r) => setReveals((prev) => ({ ...prev, [current.id]: r }))}
+        onRevealed={onRevealed}
         onNext={next}
         nextSlot={
           <Button size="lg" className="w-full shadow-lg" onClick={next} disabled={pending}>
@@ -164,27 +262,32 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
         </Button>
       </div>
 
-      <nav aria-label="Fragenübersicht" className="flex flex-wrap gap-1.5 rounded-2xl glass p-3">
+      <nav aria-label="Fragenübersicht" className="glass flex flex-wrap gap-1.5 rounded-2xl p-3">
         {questions.map((q, i) => {
           const r = reveals[q.id];
           return (
-            <button
+            <motion.button
               key={q.id}
               type="button"
               onClick={() => goTo(i)}
+              whileTap={{ scale: 0.9 }}
+              layout
+              transition={spring}
               aria-label={`Frage ${i + 1}${r ? (r.isCorrect ? ", richtig" : ", falsch") : ""}`}
               aria-current={i === index ? "step" : undefined}
               className={cn(
-                "size-8 rounded-lg text-xs font-bold transition",
-                i === index && "ring-2 ring-primary ring-offset-1",
+                "size-8 rounded-lg font-display text-xs font-bold transition-colors",
+                i === index && "ring-2 ring-primary ring-offset-2 ring-offset-background",
                 r ? (r.isCorrect ? "bg-success text-white" : "bg-destructive text-white") : "bg-foreground/8 text-foreground/75 hover:bg-foreground/15",
               )}
             >
               {i + 1}
-            </button>
+            </motion.button>
           );
         })}
       </nav>
+
+      {celebrations.length > 0 && <CelebrationGate key={celebrations.map((c) => c.key).join()} items={celebrations} onDone={() => setCelebrations([])} />}
     </div>
   );
 }

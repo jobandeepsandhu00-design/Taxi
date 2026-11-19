@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 
 /** Gelbes Wiener Taxi (Seitenansicht) mit Scheinwerferkegel und flackerndem „TAXI"-Dachschild. */
-export function TaxiCar({ className }: { className?: string }) {
+export function TaxiCar({ className, broken = false }: { className?: string; broken?: boolean }) {
   return (
     <svg viewBox="0 0 260 90" className={className} aria-hidden>
       <defs>
@@ -17,7 +17,7 @@ export function TaxiCar({ className }: { className?: string }) {
         </linearGradient>
       </defs>
       {/* Scheinwerferkegel */}
-      <path d="M168 58 L260 40 L260 82 Z" fill="url(#beam)" className="headlight-beam" />
+      {!broken && <path d="M168 58 L260 40 L260 82 Z" fill="url(#beam)" className="headlight-beam" />}
       {/* Karosserie */}
       <path d="M8 66 Q8 52 22 50 L46 48 L66 30 Q72 25 82 25 L122 25 Q132 25 138 31 L154 48 L162 50 Q172 52 172 62 L172 68 Q172 72 168 72 L12 72 Q8 72 8 66 Z" fill="url(#body)" />
       {/* Fenster */}
@@ -41,7 +41,7 @@ export function TaxiCar({ className }: { className?: string }) {
       </g>
       {/* Räder */}
       {[44, 138].map((cx) => (
-        <g key={cx} className="wheel-spin" style={{ transformOrigin: `${cx}px 72px` }}>
+        <g key={cx} className={broken ? undefined : "wheel-spin"} style={{ transformOrigin: `${cx}px 72px` }}>
           <circle cx={cx} cy={72} r={13} fill="#0b0f1a" />
           <circle cx={cx} cy={72} r={6} fill="#94a3b8" />
           <rect x={cx - 1} y={60} width={2} height={24} fill="#0b0f1a" />
