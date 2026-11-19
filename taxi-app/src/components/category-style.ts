@@ -33,19 +33,20 @@ export function categoryIcon(name: string): LucideIcon {
   return CATEGORY_ICONS[name] ?? BookOpen;
 }
 
-/** Farbpaletten für Kategorie-Karten (volle Klassennamen, damit Tailwind sie erkennt) */
+/** Kategorie-Farben – dezent eingesetzt (Akzent, Balken, Icon-Tönung), keine vollflächigen Verläufe.
+ *  Volle Klassennamen, damit Tailwind sie erkennt. */
 export const CATEGORY_COLORS: Record<string, { gradient: string; soft: string; text: string; ring: string; hex: string }> = {
-  blue: { gradient: "from-blue-500 to-blue-700", soft: "bg-blue-50", text: "text-blue-700", ring: "ring-blue-200", hex: "#2563eb" },
-  indigo: { gradient: "from-indigo-500 to-indigo-700", soft: "bg-indigo-50", text: "text-indigo-700", ring: "ring-indigo-200", hex: "#4f46e5" },
-  violet: { gradient: "from-violet-500 to-violet-700", soft: "bg-violet-50", text: "text-violet-700", ring: "ring-violet-200", hex: "#7c3aed" },
-  emerald: { gradient: "from-emerald-500 to-emerald-700", soft: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-200", hex: "#059669" },
-  amber: { gradient: "from-amber-400 to-amber-600", soft: "bg-amber-50", text: "text-amber-700", ring: "ring-amber-200", hex: "#d97706" },
-  rose: { gradient: "from-rose-500 to-rose-700", soft: "bg-rose-50", text: "text-rose-700", ring: "ring-rose-200", hex: "#e11d48" },
-  cyan: { gradient: "from-cyan-500 to-cyan-700", soft: "bg-cyan-50", text: "text-cyan-700", ring: "ring-cyan-200", hex: "#0891b2" },
-  orange: { gradient: "from-orange-500 to-orange-700", soft: "bg-orange-50", text: "text-orange-700", ring: "ring-orange-200", hex: "#ea580c" },
-  teal: { gradient: "from-teal-500 to-teal-700", soft: "bg-teal-50", text: "text-teal-700", ring: "ring-teal-200", hex: "#0d9488" },
-  sky: { gradient: "from-sky-500 to-sky-700", soft: "bg-sky-50", text: "text-sky-700", ring: "ring-sky-200", hex: "#0284c7" },
-  slate: { gradient: "from-slate-500 to-slate-700", soft: "bg-slate-50", text: "text-slate-700", ring: "ring-slate-200", hex: "#475569" },
+  blue: { gradient: "from-[#3b82f6] to-[#3b82f6]", soft: "bg-[#3b82f6]/12", text: "text-[#3b82f6]", ring: "ring-[#3b82f6]/30", hex: "#3b82f6" },
+  indigo: { gradient: "from-[#6366f1] to-[#6366f1]", soft: "bg-[#6366f1]/12", text: "text-[#6366f1]", ring: "ring-[#6366f1]/30", hex: "#6366f1" },
+  violet: { gradient: "from-[#8b5cf6] to-[#8b5cf6]", soft: "bg-[#8b5cf6]/12", text: "text-[#8b5cf6]", ring: "ring-[#8b5cf6]/30", hex: "#8b5cf6" },
+  emerald: { gradient: "from-[#10b981] to-[#10b981]", soft: "bg-[#10b981]/12", text: "text-[#10b981]", ring: "ring-[#10b981]/30", hex: "#10b981" },
+  amber: { gradient: "from-[#d97706] to-[#d97706]", soft: "bg-[#d97706]/12", text: "text-[#d97706]", ring: "ring-[#d97706]/30", hex: "#d97706" },
+  rose: { gradient: "from-[#f43f5e] to-[#f43f5e]", soft: "bg-[#f43f5e]/12", text: "text-[#f43f5e]", ring: "ring-[#f43f5e]/30", hex: "#f43f5e" },
+  cyan: { gradient: "from-[#0891b2] to-[#0891b2]", soft: "bg-[#0891b2]/12", text: "text-[#0891b2]", ring: "ring-[#0891b2]/30", hex: "#0891b2" },
+  orange: { gradient: "from-[#ea580c] to-[#ea580c]", soft: "bg-[#ea580c]/12", text: "text-[#ea580c]", ring: "ring-[#ea580c]/30", hex: "#ea580c" },
+  teal: { gradient: "from-[#0d9488] to-[#0d9488]", soft: "bg-[#0d9488]/12", text: "text-[#0d9488]", ring: "ring-[#0d9488]/30", hex: "#0d9488" },
+  sky: { gradient: "from-[#0284c7] to-[#0284c7]", soft: "bg-[#0284c7]/12", text: "text-[#0284c7]", ring: "ring-[#0284c7]/30", hex: "#0284c7" },
+  slate: { gradient: "from-[#64748b] to-[#64748b]", soft: "bg-[#64748b]/12", text: "text-[#64748b]", ring: "ring-[#64748b]/30", hex: "#64748b" },
 };
 
 export function categoryColor(name: string) {

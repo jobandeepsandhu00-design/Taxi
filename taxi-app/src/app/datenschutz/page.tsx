@@ -5,7 +5,7 @@ export const metadata = { title: "Datenschutz" };
 export default function DatenschutzPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-5 py-12">
-      <Link href="/" className="text-sm font-semibold text-primary">← Zurück</Link>
+      <Link href="/" className="text-sm font-semibold text-link">← Zurück</Link>
       <h1 className="text-3xl font-extrabold text-navy">Datenschutzerklärung</h1>
       <p className="text-muted-foreground">
         <strong>Vorlage – vom Betreiber vor dem Go-live rechtlich prüfen und ergänzen (DSGVO, DSG).</strong>

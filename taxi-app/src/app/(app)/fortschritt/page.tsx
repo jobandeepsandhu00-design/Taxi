@@ -32,9 +32,9 @@ export default async function ProgressPage() {
           <ProgressRing value={stats.accuracy} size={64} stroke={7} color="#059669"><span className="text-sm font-extrabold text-navy">{stats.accuracy}%</span></ProgressRing>
           <div><p className="text-sm font-bold text-navy">Trefferquote</p><p className="text-xs text-muted-foreground">{stats.correct} / {stats.answered}</p></div>
         </Card>
-        <Card className="p-4"><Target className="size-5 text-primary" /><p className="mt-2 text-2xl font-extrabold text-navy">{weekAnswered}</p><p className="text-xs text-muted-foreground">Fragen in 7 Tagen {prev7 > 0 && <span className={weekAnswered >= prev7 ? "text-emerald-600" : "text-rose-600"}>({weekAnswered >= prev7 ? "+" : ""}{weekAnswered - prev7} ggü. Vorwoche)</span>}</p></Card>
-        <Card className="p-4"><Clock className="size-5 text-violet-600" /><p className="mt-2 text-2xl font-extrabold text-navy">{formatDuration(weekMinutes * 60)}</p><p className="text-xs text-muted-foreground">Lernzeit in 7 Tagen</p></Card>
-        <Card className="p-4"><Flame className="size-5 text-orange-500" /><p className="mt-2 text-2xl font-extrabold text-navy">{stats.streak} Tage</p><p className="text-xs text-muted-foreground">Serie · Rekord {stats.longestStreak}</p></Card>
+        <Card className="p-4"><Target className="size-5 text-link" /><p className="mt-2 text-2xl font-extrabold text-navy">{weekAnswered}</p><p className="text-xs text-muted-foreground">Fragen in 7 Tagen {prev7 > 0 && <span className={weekAnswered >= prev7 ? "text-success" : "text-destructive"}>({weekAnswered >= prev7 ? "+" : ""}{weekAnswered - prev7} ggü. Vorwoche)</span>}</p></Card>
+        <Card className="p-4"><Clock className="size-5 text-link" /><p className="mt-2 text-2xl font-extrabold text-navy">{formatDuration(weekMinutes * 60)}</p><p className="text-xs text-muted-foreground">Lernzeit in 7 Tagen</p></Card>
+        <Card className="p-4"><Flame className="size-5 text-warning" /><p className="mt-2 text-2xl font-extrabold text-navy">{stats.streak} Tage</p><p className="text-xs text-muted-foreground">Serie · Rekord {stats.longestStreak}</p></Card>
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -57,7 +57,7 @@ export default async function ProgressPage() {
               return (
                 <div key={c.id}>
                   <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-                    <Link href={`/lernen/${c.slug}`} className="truncate font-semibold text-slate-700 hover:text-primary">{c.name}</Link>
+                    <Link href={`/lernen/${c.slug}`} className="truncate font-semibold text-foreground/85 hover:text-link">{c.name}</Link>
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {c.answered} beantwortet · <strong className="text-navy">{c.accuracy === null ? "–" : `${c.accuracy} %`}</strong>
                     </span>
@@ -69,20 +69,20 @@ export default async function ProgressPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><AlertTriangle className="size-5 text-amber-500" /> Schwächste Themen</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><AlertTriangle className="size-5 text-warning" /> Schwächste Themen</CardTitle></CardHeader>
           <CardContent>
             {analytics.weakest.length === 0 ? (
               <p className="text-sm text-muted-foreground">Beantworte mindestens 3 Fragen pro Kategorie, um deine Schwächen zu sehen.</p>
             ) : (
               <ol className="space-y-3">
                 {analytics.weakest.map((c, i) => (
-                  <li key={c.id} className="flex items-center gap-3 rounded-xl bg-rose-50 p-3">
-                    <span className="flex size-7 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">{i + 1}</span>
+                  <li key={c.id} className="flex items-center gap-3 rounded-xl bg-destructive/10 p-3">
+                    <span className="flex size-7 items-center justify-center rounded-full bg-destructive text-xs font-bold text-white">{i + 1}</span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-navy">{c.name}</p>
-                      <p className="text-xs text-rose-700">{c.accuracy} % richtig</p>
+                      <p className="text-xs text-destructive">{c.accuracy} % richtig</p>
                     </div>
-                    <Link href={`/lernen/${c.slug}`} className="text-xs font-semibold text-primary hover:underline">Üben</Link>
+                    <Link href={`/lernen/${c.slug}`} className="text-xs font-semibold text-link hover:underline">Üben</Link>
                   </li>
                 ))}
               </ol>
@@ -93,7 +93,7 @@ export default async function ProgressPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="size-5 text-primary" /> Verbesserung über Zeit</CardTitle><CardDescription>Wöchentliche Trefferquote</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="size-5 text-link" /> Verbesserung über Zeit</CardTitle><CardDescription>Wöchentliche Trefferquote</CardDescription></CardHeader>
           <CardContent>
             {analytics.weekly.length < 1 ? (
               <p className="text-sm text-muted-foreground">Noch keine Daten.</p>
@@ -106,16 +106,16 @@ export default async function ProgressPage() {
           <CardHeader><CardTitle>Prüfungssimulationen</CardTitle><CardDescription>{analytics.exams.length} abgeschlossen · {analytics.exams.filter((e) => e.passed).length} bestanden</CardDescription></CardHeader>
           <CardContent>
             {analytics.exams.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Noch keine Prüfungssimulation. <Link href="/pruefung" className="font-semibold text-primary hover:underline">Jetzt starten</Link></p>
+              <p className="text-sm text-muted-foreground">Noch keine Prüfungssimulation. <Link href="/pruefung" className="font-semibold text-link hover:underline">Jetzt starten</Link></p>
             ) : (
               <>
                 <ExamHistoryChart data={analytics.exams.map((e) => ({ label: formatDate(e.startedAt).slice(0, 6), score: e.scorePercent ?? 0 }))} passLine={passLine} />
                 <ul className="mt-3 divide-y text-sm">
                   {analytics.exams.slice(-5).reverse().map((e) => (
                     <li key={e.id}>
-                      <Link href={`/pruefung/${e.id}/ergebnis`} className="flex justify-between py-2 hover:text-primary">
+                      <Link href={`/pruefung/${e.id}/ergebnis`} className="flex justify-between py-2 hover:text-link">
                         <span>{formatDate(e.startedAt, true)} · {e.examConfig.name}</span>
-                        <strong className={e.passed ? "text-emerald-600" : "text-rose-600"}>{e.scorePercent?.toLocaleString("de-AT")} %</strong>
+                        <strong className={e.passed ? "text-success" : "text-destructive"}>{e.scorePercent?.toLocaleString("de-AT")} %</strong>
                       </Link>
                     </li>
                   ))}

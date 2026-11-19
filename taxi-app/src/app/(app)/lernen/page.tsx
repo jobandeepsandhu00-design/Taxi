@@ -24,13 +24,13 @@ export default async function LernenPage() {
             <Link
               key={c.id}
               href={`/lernen/${c.slug}`}
-              className="group animate-pop-in flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-lg"
+              className="group animate-pop-in flex flex-col overflow-hidden rounded-2xl glass glow-hover"
               style={{ animationDelay: `${i * 30}ms` }}
             >
-              <div className={`relative bg-gradient-to-br ${color.gradient} p-5 text-white`}>
-                <div className="absolute -right-6 -bottom-6 size-24 rounded-full bg-white/10" />
+              <div className={`relative panel-night p-5 text-white`}>
+                <div className="absolute -right-8 -bottom-8 size-28 rounded-full blur-2xl" style={{ background: `${color.hex}55` }} />
                 <div className="flex items-start justify-between">
-                  <span className="flex size-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+                  <span className="flex size-11 items-center justify-center rounded-xl" style={{ background: `${color.hex}2e`, color: color.hex }}>
                     <Icon className="size-6" />
                   </span>
                   <span className="rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold backdrop-blur">{c.order}</span>
@@ -43,7 +43,7 @@ export default async function LernenPage() {
                   <span className="font-semibold text-navy">{c.questionCount} Fragen</span>
                   <DifficultyBadge difficulty={c.difficulty} />
                   {!c.syllabusVerified && (
-                    <span className="inline-flex items-center gap-1 text-amber-700" title="Prüfungsstoff noch nicht mit offiziellen Vorgaben abgeglichen">
+                    <span className="inline-flex items-center gap-1 text-warning" title="Prüfungsstoff noch nicht mit offiziellen Vorgaben abgeglichen">
                       <ShieldAlert className="size-3.5" /> Stoff unverifiziert
                     </span>
                   )}

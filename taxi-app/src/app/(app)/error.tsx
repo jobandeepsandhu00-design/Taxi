@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export default function AppError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-      <div className="flex size-14 items-center justify-center rounded-2xl bg-red-100 text-destructive">
+      <div className="flex size-14 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
         <AlertTriangle className="size-7" />
       </div>
       <h1 className="text-xl font-extrabold text-navy">Etwas ist schiefgelaufen</h1>

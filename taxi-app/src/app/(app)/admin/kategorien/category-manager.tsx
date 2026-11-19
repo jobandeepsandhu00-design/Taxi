@@ -67,7 +67,7 @@ export function CategoryManager({ categories }: { categories: Cat[] }) {
         return (
           <Card key={c.id} className="overflow-hidden">
             <div className="flex items-center gap-3 p-4">
-              <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${color.gradient} text-white`}><Icon className="size-5" /></span>
+              <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${color.soft} ${color.text}`}><Icon className="size-5" /></span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold text-navy">{c.order}. {c.name}</p>
                 <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
@@ -113,7 +113,7 @@ function CategoryForm({ cat, onDone }: { cat: Cat; onDone: () => void }) {
   const { run, pending, error, fieldErrors } = useAction();
   const set = <K extends keyof Cat>(k: K, v: Cat[K]) => setC((p) => ({ ...p, [k]: v }));
   return (
-    <div className="space-y-4 rounded-2xl border bg-white p-4">
+    <div className="space-y-4 rounded-2xl glass p-4">
       {error && <Alert variant="error">{error}</Alert>}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5"><span className="text-sm font-semibold text-navy">Name *</span><Input value={c.name} onChange={(e) => set("name", e.target.value)} /><FieldError messages={fieldErrors.name} /></label>
@@ -169,7 +169,7 @@ function TopicManager({ categoryId, topics }: { categoryId: string; topics: Cat[
   const [edit, setEdit] = useState<{ id: string; name: string; description: string } | null>(null);
   const { run, pending, error } = useAction();
   return (
-    <div className="mt-4 space-y-3 rounded-2xl border bg-white p-4">
+    <div className="mt-4 space-y-3 rounded-2xl glass p-4">
       <p className="font-bold text-navy">Themen</p>
       {error && <Alert variant="error">{error}</Alert>}
       <ul className="divide-y">

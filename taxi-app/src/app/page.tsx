@@ -22,7 +22,7 @@ export default async function LandingPage() {
   if (user) redirect("/dashboard");
   const settings = await getSettings();
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <Logo />
         <div className="flex gap-2">
@@ -37,8 +37,8 @@ export default async function LandingPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-x-0 -top-40 -z-10 mx-auto h-[480px] max-w-4xl rounded-full bg-gradient-to-br from-blue-200/60 via-sky-100/50 to-transparent blur-3xl" />
         <div className="mx-auto max-w-4xl px-5 pt-12 pb-16 text-center sm:pt-20">
-          <span className="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm">
-            <span className="size-2 rounded-full bg-emerald-500" /> Vorbereitung auf die Taxi-Prüfung · Wien
+          <span className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-semibold text-link shadow-sm">
+            <span className="size-2 rounded-full bg-success" /> Vorbereitung auf die Taxi-Prüfung · Wien
           </span>
           <h1 className="mt-6 text-4xl leading-[1.1] font-extrabold tracking-tight text-navy sm:text-6xl">
             Bestehe deine <span className="bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">Taxi-Prüfung</span> in Österreich
@@ -66,8 +66,8 @@ export default async function LandingPage() {
       </section>
       <section className="mx-auto grid max-w-6xl gap-4 px-5 pb-16 sm:grid-cols-2 lg:grid-cols-3 grid-cols-1">
         {features.map((f) => (
-          <div key={f.title} className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-blue-50 text-primary">
+          <div key={f.title} className="rounded-2xl glass p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-link">
               <f.icon className="size-5" />
             </div>
             <h3 className="font-bold text-navy">{f.title}</h3>

@@ -1,21 +1,24 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { haptic } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 outline-none focus-visible:ring-4 focus-visible:ring-ring/30 active:scale-[0.98] cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-[transform,background-color,box-shadow,color,border-color] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 outline-none focus-visible:ring-4 focus-visible:ring-ring/35 active:scale-[0.96] motion-reduce:active:scale-100 cursor-pointer select-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm shadow-primary/30 hover:bg-blue-800",
-        navy: "bg-navy text-white shadow-sm hover:bg-[#13306e]",
-        destructive: "bg-destructive text-white shadow-sm hover:bg-red-700",
-        success: "bg-success text-white shadow-sm hover:bg-emerald-700",
-        outline: "border border-input bg-white hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-blue-100",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-primary text-primary-foreground shadow-[0_6px_24px_-8px_rgba(255,196,0,0.55)] hover:bg-[#ffd23f] hover:shadow-[0_8px_32px_-6px_rgba(255,196,0,0.65)]",
+        navy: "bg-foreground text-background hover:opacity-90",
+        destructive: "bg-destructive text-white hover:brightness-110",
+        success: "bg-success text-white hover:brightness-110",
+        outline: "glass text-foreground hover:border-primary/40 hover:bg-accent",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-primary/20",
+        ghost: "text-foreground/80 hover:bg-accent hover:text-foreground",
+        link: "text-link underline-offset-4 hover:underline active:scale-100",
       },
       size: {
         default: "h-11 px-5",
@@ -32,9 +35,19 @@ export interface ButtonProps extends React.ComponentProps<"button">, VariantProp
   asChild?: boolean;
 }
 
-function Button({ className, variant, size, asChild = false, ...props }: ButtonProps) {
+function Button({ className, variant, size, asChild = false, onPointerDown, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+  return (
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => {
+        haptic();
+        onPointerDown?.(e);
+      }}
+      {...props}
+    />
+  );
 }
 
 export { Button, buttonVariants };

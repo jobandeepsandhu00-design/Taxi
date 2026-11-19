@@ -69,7 +69,7 @@ export function SourceManager({ sources }: { sources: Src[] }) {
         {sources.map((s) => (
           <Card key={s.id} className="p-4">
             <div className="flex items-start gap-3">
-              {s.verified ? <ShieldCheck className="mt-0.5 size-5 text-emerald-600" /> : <ShieldAlert className="mt-0.5 size-5 text-amber-500" />}
+              {s.verified ? <ShieldCheck className="mt-0.5 size-5 text-success" /> : <ShieldAlert className="mt-0.5 size-5 text-warning" />}
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-navy">{s.title}</p>
                 <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
@@ -78,9 +78,9 @@ export function SourceManager({ sources }: { sources: Src[] }) {
                   <span>{s.questionCount} Fragen</span>
                 </div>
                 {s.reference && <p className="mt-1 text-xs text-muted-foreground">{s.reference}</p>}
-                {s.note && <p className="mt-1 text-xs text-slate-600">{s.note}</p>}
+                {s.note && <p className="mt-1 text-xs text-foreground/75">{s.note}</p>}
                 {s.url && (
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-link hover:underline">
                     Quelle öffnen <ExternalLink className="size-3" />
                   </a>
                 )}

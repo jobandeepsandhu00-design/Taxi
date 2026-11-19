@@ -69,8 +69,8 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
     const wrong = questions.filter((q) => reveals[q.id] && !reveals[q.id].isCorrect);
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="animate-pop-in rounded-3xl border bg-white p-6 text-center shadow-sm sm:p-10">
-          <Trophy className="mx-auto size-10 text-amber-500" />
+        <div className="animate-pop-in rounded-3xl glass p-6 text-center shadow-sm sm:p-10">
+          <Trophy className="mx-auto size-10 text-warning" />
           <h1 className="mt-3 text-2xl font-extrabold text-navy">Sitzung abgeschlossen</h1>
           <p className="text-muted-foreground">{title}</p>
           <div className="my-6 flex justify-center">
@@ -81,8 +81,8 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
           </div>
           <div className="mx-auto grid max-w-sm grid-cols-3 gap-3 text-center">
             <div className="rounded-xl bg-muted p-3"><p className="text-xl font-extrabold text-navy">{answeredCount}</p><p className="text-xs text-muted-foreground">beantwortet</p></div>
-            <div className="rounded-xl bg-emerald-50 p-3"><p className="text-xl font-extrabold text-emerald-700">{correctCount}</p><p className="text-xs text-muted-foreground">richtig</p></div>
-            <div className="rounded-xl bg-rose-50 p-3"><p className="text-xl font-extrabold text-rose-700">{answeredCount - correctCount}</p><p className="text-xs text-muted-foreground">falsch</p></div>
+            <div className="rounded-xl bg-success/10 p-3"><p className="text-xl font-extrabold text-success">{correctCount}</p><p className="text-xs text-muted-foreground">richtig</p></div>
+            <div className="rounded-xl bg-destructive/10 p-3"><p className="text-xl font-extrabold text-destructive">{answeredCount - correctCount}</p><p className="text-xs text-muted-foreground">falsch</p></div>
           </div>
           <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
             {wrong.length > 0 && (
@@ -99,16 +99,16 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
             <Button asChild><Link href="/dashboard"><Home /> Zur Übersicht</Link></Button>
           </div>
         </div>
-        <div className="rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="rounded-2xl glass p-5 shadow-sm">
           <h2 className="font-extrabold text-navy">Deine Antworten</h2>
           <ul className="mt-3 divide-y">
             {questions.map((q, i) => {
               const r = reveals[q.id];
               return (
                 <li key={q.id} className="flex items-start gap-3 py-3 text-sm">
-                  {r ? r.isCorrect ? <CheckCircle2 className="size-5 shrink-0 text-emerald-600" /> : <XCircle className="size-5 shrink-0 text-rose-600" /> : <span className="size-5 shrink-0 rounded-full border-2" />}
-                  <span className="flex-1 text-slate-700">{i + 1}. {q.text}</span>
-                  <Link href={`/fragen/${q.id}`} className="shrink-0 text-xs font-semibold text-primary hover:underline">Ansehen</Link>
+                  {r ? r.isCorrect ? <CheckCircle2 className="size-5 shrink-0 text-success" /> : <XCircle className="size-5 shrink-0 text-destructive" /> : <span className="size-5 shrink-0 rounded-full border-2" />}
+                  <span className="flex-1 text-foreground/85">{i + 1}. {q.text}</span>
+                  <Link href={`/fragen/${q.id}`} className="shrink-0 text-xs font-semibold text-link hover:underline">Ansehen</Link>
                 </li>
               );
             })}
@@ -123,7 +123,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-bold tracking-wider text-primary uppercase">{modeLabel}</p>
+            <p className="text-xs font-bold tracking-wider text-link uppercase">{modeLabel}</p>
             <h1 className="truncate text-lg font-extrabold text-navy sm:text-xl">{title}</h1>
           </div>
           <Button variant="outline" size="sm" onClick={finish} disabled={pending}>
@@ -135,8 +135,8 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
           <span className="shrink-0 text-sm font-bold text-navy">{index + 1} / {questions.length}</span>
         </div>
         <div className="flex items-center gap-3 text-xs font-semibold">
-          <span className="text-emerald-700">✓ {correctCount} richtig</span>
-          <span className="text-rose-700">✗ {answeredCount - correctCount} falsch</span>
+          <span className="text-success">✓ {correctCount} richtig</span>
+          <span className="text-destructive">✗ {answeredCount - correctCount} falsch</span>
         </div>
       </div>
 
@@ -164,7 +164,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
         </Button>
       </div>
 
-      <nav aria-label="Fragenübersicht" className="flex flex-wrap gap-1.5 rounded-2xl border bg-white p-3">
+      <nav aria-label="Fragenübersicht" className="flex flex-wrap gap-1.5 rounded-2xl glass p-3">
         {questions.map((q, i) => {
           const r = reveals[q.id];
           return (
@@ -177,7 +177,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
               className={cn(
                 "size-8 rounded-lg text-xs font-bold transition",
                 i === index && "ring-2 ring-primary ring-offset-1",
-                r ? (r.isCorrect ? "bg-emerald-500 text-white" : "bg-rose-500 text-white") : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                r ? (r.isCorrect ? "bg-success text-white" : "bg-destructive text-white") : "bg-foreground/8 text-foreground/75 hover:bg-foreground/15",
               )}
             >
               {i + 1}

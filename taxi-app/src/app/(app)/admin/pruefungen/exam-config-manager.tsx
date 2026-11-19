@@ -138,7 +138,7 @@ export function ExamConfigManager({ configs, categories }: { configs: Cfg[]; cat
           <Card key={c.id} className="p-5">
             <div className="flex items-start gap-2">
               <div className="flex-1">
-                <p className="flex items-center gap-1.5 font-bold text-navy">{c.isDefault && <Star className="size-4 fill-amber-400 text-amber-400" />}{c.name}</p>
+                <p className="flex items-center gap-1.5 font-bold text-navy">{c.isDefault && <Star className="size-4 fill-primary text-warning" />}{c.name}</p>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {c.verified ? <Badge variant="success"><CheckCircle2 className="size-3" /> verifiziert</Badge> : <Badge variant="warning"><ShieldAlert className="size-3" /> Übungsvorgabe</Badge>}
                   {!c.isActive && <Badge variant="muted">inaktiv</Badge>}
@@ -148,7 +148,7 @@ export function ExamConfigManager({ configs, categories }: { configs: Cfg[]; cat
               <Button size="icon" variant="ghost" aria-label="Bearbeiten" onClick={() => setForm(c)}><Pencil /></Button>
               <Button size="icon" variant="ghost" className="text-destructive" aria-label="Löschen" disabled={pending} onClick={() => run(() => deleteExamConfigAction(c.id), { confirm: `Konfiguration „${c.name}“ löschen?` })}><Trash2 /></Button>
             </div>
-            <p className="mt-3 text-sm text-slate-700">{c.durationMinutes} Min. · {c.questionCount} Fragen · Bestehen ab {c.passPercentage} %</p>
+            <p className="mt-3 text-sm text-foreground/85">{c.durationMinutes} Min. · {c.questionCount} Fragen · Bestehen ab {c.passPercentage} %</p>
             {Object.keys(c.categoryDistribution).length > 0 && (
               <p className="mt-1 text-xs text-muted-foreground">Verteilung: {Object.entries(c.categoryDistribution).map(([id, n]) => `${catName(id)} ${n}`).join(", ")}</p>
             )}

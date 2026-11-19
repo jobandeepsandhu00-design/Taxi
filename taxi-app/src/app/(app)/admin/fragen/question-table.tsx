@@ -37,14 +37,14 @@ export function QuestionTable({ questions }: { questions: Row[] }) {
       {error && <Alert variant="error">{error}</Alert>}
       {message && !error && <Alert variant="success">{message}</Alert>}
       {selected.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 p-3 text-sm">
           <strong className="text-navy">{selected.length} ausgewählt</strong>
           <Button size="sm" variant="success" disabled={pending} onClick={() => run(() => bulkSetStatusAction(selected, "PUBLISHED").then((r) => (r.ok ? { ...r, message: `${r.data.count} veröffentlicht.` } : r)), { onSuccess: () => setSelected([]) })}>Veröffentlichen</Button>
           <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => bulkSetStatusAction(selected, "DRAFT").then((r) => (r.ok ? { ...r, message: `${r.data.count} auf Entwurf gesetzt.` } : r)), { onSuccess: () => setSelected([]) })}>Zurückziehen</Button>
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => bulkSetStatusAction(selected, "ARCHIVED").then((r) => (r.ok ? { ...r, message: `${r.data.count} archiviert.` } : r)), { onSuccess: () => setSelected([]) })}>Archivieren</Button>
         </div>
       )}
-      <div className="overflow-x-auto rounded-2xl border bg-white">
+      <div className="overflow-x-auto rounded-2xl glass">
         <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-muted/60 text-left text-xs font-bold text-muted-foreground uppercase">
             <tr>
@@ -66,14 +66,14 @@ export function QuestionTable({ questions }: { questions: Row[] }) {
                   <input type="checkbox" aria-label="Auswählen" checked={selected.includes(q.id)} onChange={() => setSelected((s) => (s.includes(q.id) ? s.filter((x) => x !== q.id) : [...s, q.id]))} className="size-4 accent-blue-700" />
                 </td>
                 <td className="max-w-md p-3">
-                  <Link href={`/admin/fragen/${q.id}`} className="line-clamp-2 font-medium text-slate-800 hover:text-primary">{q.text}</Link>
+                  <Link href={`/admin/fragen/${q.id}`} className="line-clamp-2 font-medium text-foreground hover:text-link">{q.text}</Link>
                   <div className="mt-1 flex gap-1.5">
                     <DifficultyBadge difficulty={q.difficulty} />
                     {q.multipleCorrect && <Badge variant="outline">Mehrfach</Badge>}
                     <span className="text-xs text-muted-foreground">{q.answers} Antworten</span>
                   </div>
                 </td>
-                <td className="p-3 text-slate-600">{q.category.name}</td>
+                <td className="p-3 text-foreground/75">{q.category.name}</td>
                 <td className="p-3">
                   <Badge variant={q.status === "PUBLISHED" ? "success" : q.status === "DRAFT" ? "muted" : "outline"}>{statusLabel[q.status]}</Badge>
                 </td>
@@ -96,7 +96,7 @@ export function QuestionTable({ questions }: { questions: Row[] }) {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-destructive hover:bg-red-50"
+                      className="text-destructive hover:bg-destructive/10"
                       title="Löschen"
                       aria-label="Löschen"
                       disabled={pending}

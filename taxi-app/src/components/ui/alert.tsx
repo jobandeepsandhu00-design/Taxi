@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 
 const styles = {
-  info: { box: "border-blue-200 bg-blue-50 text-blue-900", Icon: Info },
-  success: { box: "border-emerald-200 bg-emerald-50 text-emerald-900", Icon: CheckCircle2 },
-  warning: { box: "border-amber-200 bg-amber-50 text-amber-900", Icon: AlertTriangle },
-  error: { box: "border-red-200 bg-red-50 text-red-900", Icon: XCircle },
+  info: { box: "border-primary/30 bg-primary/10 text-foreground [&>svg]:text-link", Icon: Info },
+  success: { box: "border-success/30 bg-success/10 text-foreground [&>svg]:text-success", Icon: CheckCircle2 },
+  warning: { box: "border-warning/30 bg-warning/10 text-foreground [&>svg]:text-warning", Icon: AlertTriangle },
+  error: { box: "border-destructive/30 bg-destructive/10 text-foreground [&>svg]:text-destructive", Icon: XCircle },
 };
 
 export function Alert({

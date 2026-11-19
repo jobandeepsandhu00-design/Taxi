@@ -28,19 +28,20 @@ import { modeLabel } from "@/lib/labels";
 import { formatDate, formatDuration } from "@/lib/utils";
 import { expireOverdueExams } from "@/server/exam";
 import { getCategoryOverview, getDashboardStats } from "@/server/stats";
+import { Stagger, StaggerItem } from "@/components/motion/stagger";
 
 export const metadata: Metadata = { title: "Übersicht" };
 
 const actions = [
-  { href: "/lernen", label: "Lernen starten", desc: "Nach Kategorien lernen", icon: BookOpen, cls: "from-blue-600 to-blue-800" },
-  { href: "/quiz", label: "Quiz starten", desc: "Zufällige Fragen", icon: Sparkles, cls: "from-violet-500 to-indigo-700" },
-  { href: "/pruefung", label: "Prüfungsmodus", desc: "Echte Simulation", icon: ClipboardCheck, cls: "from-navy to-[#1e3a8a]" },
-  { href: "/fehler", label: "Falsche Antworten", desc: "Fehler trainieren", icon: RotateCcw, cls: "from-rose-500 to-rose-700" },
-  { href: "/lernkarten", label: "Lernkarten", desc: "Karteikarten üben", icon: Layers, cls: "from-amber-400 to-orange-600" },
-  { href: "/fortschritt", label: "Mein Fortschritt", desc: "Statistiken", icon: BarChart3, cls: "from-emerald-500 to-teal-700" },
+  { href: "/lernen", label: "Lernen starten", desc: "Nach Kategorien lernen", icon: BookOpen },
+  { href: "/quiz", label: "Quiz starten", desc: "Zufällige Fragen", icon: Sparkles },
+  { href: "/pruefung", label: "Prüfungsmodus", desc: "Echte Simulation", icon: ClipboardCheck },
+  { href: "/fehler", label: "Falsche Antworten", desc: "Fehler trainieren", icon: RotateCcw },
+  { href: "/lernkarten", label: "Lernkarten", desc: "Karteikarten üben", icon: Layers },
+  { href: "/fortschritt", label: "Mein Fortschritt", desc: "Statistiken", icon: BarChart3 },
 ];
 
-const readinessColor = { niedrig: "#e11d48", mittel: "#d97706", hoch: "#2563eb", bereit: "#059669" } as const;
+const readinessColor = { niedrig: "#ef4444", mittel: "#f59e0b", hoch: "#ffc400", bereit: "#22c55e" } as const;
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -57,23 +58,23 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Begrüßung */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy via-[#13306e] to-blue-700 p-6 text-white shadow-xl shadow-blue-900/20 sm:p-8">
-        <div className="absolute -top-24 -right-24 size-72 rounded-full bg-blue-400/20 blur-2xl" />
+      <section className="relative overflow-hidden rounded-3xl panel-night p-6 text-white sm:p-8">
+        
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-200">Willkommen zurück,</p>
+            <p className="text-sm font-semibold text-white/80">Willkommen zurück,</p>
             <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">{firstName} 👋</h1>
-            <p className="mt-2 max-w-md text-blue-100">
+            <p className="mt-2 max-w-md text-white/80">
               {stats.answered === 0
                 ? "Starte mit deiner ersten Lerneinheit – jede Frage bringt dich näher zur bestandenen Prüfung."
                 : `Heute schon ${stats.todayAnswered} Fragen beantwortet. Weiter so!`}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold backdrop-blur">
-                <Flame className="size-4 text-orange-300" /> {stats.streak} {stats.streak === 1 ? "Tag" : "Tage"} Serie
+                <Flame className="size-4 text-primary" /> {stats.streak} {stats.streak === 1 ? "Tag" : "Tage"} Serie
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold backdrop-blur">
-                <CalendarClock className="size-4 text-sky-300" />
+                <CalendarClock className="size-4 text-primary" />
                 {daysToExam === null ? (
                   <Link href="/profil" className="underline-offset-2 hover:underline">Prüfungstermin festlegen</Link>
                 ) : daysToExam > 0 ? (
@@ -87,14 +88,14 @@ export default async function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-5 self-start rounded-2xl bg-white/10 p-4 backdrop-blur md:self-auto">
-            <ProgressRing value={stats.overallProgress} size={112} stroke={10} color="#ffffff" track="rgba(255,255,255,0.18)" label="Gesamter Lernfortschritt">
+            <ProgressRing value={stats.overallProgress} size={112} stroke={10} color="#ffc400" track="rgba(255,255,255,0.12)" glow label="Gesamter Lernfortschritt">
               <span className="text-2xl font-extrabold">{stats.overallProgress}%</span>
-              <span className="text-[10px] font-semibold text-blue-200 uppercase">Fortschritt</span>
+              <span className="text-[10px] font-semibold text-white/80 uppercase">Fortschritt</span>
             </ProgressRing>
             <div className="text-sm">
               <p className="font-bold">Lernfortschritt</p>
-              <p className="text-blue-200">{stats.mastered} von {stats.totalPublished} Fragen</p>
-              <p className="text-blue-200">mind. einmal richtig</p>
+              <p className="text-white/80">{stats.mastered} von {stats.totalPublished} Fragen</p>
+              <p className="text-white/80">mind. einmal richtig</p>
             </div>
           </div>
         </div>
@@ -104,55 +105,57 @@ export default async function DashboardPage() {
       {(openExam || openQuizzes.length > 0) && (
         <section className="space-y-2" aria-label="Unfertige Sitzungen">
           {openExam && (
-            <Link href={`/pruefung/${openExam.id}`} className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 transition hover:shadow-md">
-              <ClipboardCheck className="size-5 text-amber-700" />
+            <Link href={`/pruefung/${openExam.id}`} className="flex items-center gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 transition hover:shadow-md">
+              <ClipboardCheck className="size-5 text-warning" />
               <div className="flex-1">
-                <p className="font-bold text-amber-900">Laufende Prüfung fortsetzen</p>
-                <p className="text-sm text-amber-800">{openExam.examConfig.name} · Die Zeit läuft weiter!</p>
+                <p className="font-bold text-warning">Laufende Prüfung fortsetzen</p>
+                <p className="text-sm text-warning">{openExam.examConfig.name} · Die Zeit läuft weiter!</p>
               </div>
-              <ArrowRight className="size-5 text-amber-700" />
+              <ArrowRight className="size-5 text-warning" />
             </Link>
           )}
           {openQuizzes.map((q) => (
-            <Link key={q.id} href={`/sitzung/${q.id}`} className="flex items-center gap-3 rounded-2xl border bg-white p-4 transition hover:shadow-md">
-              <PlayCircle className="size-5 text-primary" />
+            <Link key={q.id} href={`/sitzung/${q.id}`} className="glass glow-hover flex items-center gap-3 rounded-2xl p-4">
+              <PlayCircle className="size-5 text-link" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold text-navy">{q.title}</p>
                 <p className="text-sm text-muted-foreground">
                   {modeLabel[q.mode]} · {q.answeredCount} von {q.questionIds.length} beantwortet
                 </p>
               </div>
-              <span className="text-sm font-semibold text-primary">Fortsetzen</span>
+              <span className="text-sm font-semibold text-link">Fortsetzen</span>
             </Link>
           ))}
         </section>
       )}
 
       {/* Kennzahlen */}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Statistiken">
+      <Stagger as="section" className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Statistiken">
         <StatCard icon={Target} label="Beantwortete Fragen" value={stats.answered.toLocaleString("de-AT")} tone="blue" />
         <StatCard icon={CheckCircle2} label="Richtige Antworten" value={`${stats.accuracy} %`} sub={`${stats.correct} richtig`} tone="emerald" />
         <StatCard icon={XCircle} label="Falsche Antworten" value={stats.incorrect.toLocaleString("de-AT")} sub={`${stats.openMistakes} offen im Fehlertraining`} tone="rose" />
         <StatCard icon={Clock} label="Lernzeit" value={formatDuration(stats.totalSeconds)} sub={`Heute: ${formatDuration(stats.todaySeconds)}`} tone="violet" />
-      </section>
+      </Stagger>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Aktionen */}
         <section className="lg:col-span-2" aria-label="Schnellstart">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {actions.map((a) => (
+              <StaggerItem key={a.href}>
               <Link
                 key={a.href}
                 href={a.href}
-                className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${a.cls} p-4 text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5`}
+                className="glass glow-hover group relative block h-full overflow-hidden rounded-2xl p-4 sm:p-5"
               >
-                <a.icon className="size-7 opacity-90" />
-                <p className="mt-6 font-bold leading-tight sm:text-lg">{a.label}</p>
-                <p className="text-xs text-white/80 sm:text-sm">{a.desc}</p>
-                <ArrowRight className="absolute top-4 right-4 size-4 opacity-0 transition group-hover:opacity-100" />
+                <span className="flex size-11 items-center justify-center rounded-xl bg-primary/15 text-link"><a.icon className="size-6" /></span>
+                <p className="mt-5 font-display font-bold leading-tight text-navy sm:text-lg">{a.label}</p>
+                <p className="text-xs text-muted-foreground sm:text-sm">{a.desc}</p>
+                <ArrowRight className="absolute top-4 right-4 size-4 text-link opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
               </Link>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
 
         {/* Prüfungsbereitschaft */}
@@ -182,15 +185,16 @@ export default async function DashboardPage() {
       <section aria-label="Kategorien">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-extrabold text-navy">Deine Kategorien</h2>
-          <Link href="/lernen" className="text-sm font-semibold text-primary hover:underline">Alle anzeigen</Link>
+          <Link href="/lernen" className="text-sm font-semibold text-link hover:underline">Alle anzeigen</Link>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {categories.slice(0, 6).map((c) => {
             const color = categoryColor(c.color);
             const Icon = categoryIcon(c.icon);
             return (
-              <Link key={c.id} href={`/lernen/${c.slug}`} className="flex items-center gap-3 rounded-2xl border bg-white p-3.5 transition hover:shadow-md">
-                <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${color.gradient} text-white`}>
+              <StaggerItem key={c.id}>
+              <Link href={`/lernen/${c.slug}`} className="glass glow-hover flex items-center gap-3 rounded-2xl p-3.5">
+                <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${color.soft} ${color.text}`}>
                   <Icon className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -199,24 +203,26 @@ export default async function DashboardPage() {
                 </div>
                 <span className="text-xs font-bold text-muted-foreground">{c.progress}%</span>
               </Link>
+              </StaggerItem>
             );
           })}
-        </div>
+        </Stagger>
       </section>
     </div>
   );
 }
 
 const tones = {
-  blue: "bg-blue-50 text-blue-700",
-  emerald: "bg-emerald-50 text-emerald-700",
-  rose: "bg-rose-50 text-rose-700",
-  violet: "bg-violet-50 text-violet-700",
+  blue: "bg-primary/10 text-link",
+  emerald: "bg-success/10 text-success",
+  rose: "bg-destructive/10 text-destructive",
+  violet: "bg-primary/10 text-link",
 };
 
 function StatCard({ icon: Icon, label, value, sub, tone }: { icon: typeof Target; label: string; value: string; sub?: string; tone: keyof typeof tones }) {
   return (
-    <Card className="p-4">
+    <StaggerItem>
+    <Card className="h-full p-4">
       <div className={`mb-3 flex size-9 items-center justify-center rounded-xl ${tones[tone]}`}>
         <Icon className="size-[18px]" />
       </div>
@@ -224,5 +230,6 @@ function StatCard({ icon: Icon, label, value, sub, tone }: { icon: typeof Target
       <p className="text-xs font-semibold text-muted-foreground sm:text-sm">{label}</p>
       {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
     </Card>
+    </StaggerItem>
   );
 }

@@ -89,7 +89,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
 
   return (
     <div className="animate-pop-in space-y-4">
-      <div className="rounded-2xl border bg-white p-5 shadow-sm sm:p-7">
+      <div className="rounded-2xl glass p-5 shadow-sm sm:p-7">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge variant="outline">{question.category.name}</Badge>
           {question.topic && <Badge variant="muted">{question.topic.name}</Badge>}
@@ -126,27 +126,27 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                 onClick={() => toggle(o.id)}
                 className={cn(
                   "flex w-full items-start gap-3 rounded-xl border-2 p-3.5 text-left text-[15px] transition-all duration-200 disabled:cursor-default",
-                  state === "idle" && "border-border bg-white hover:border-blue-300 hover:bg-blue-50/40",
-                  state === "selected" && "border-primary bg-blue-50 shadow-sm shadow-primary/10",
-                  state === "correct" && "border-emerald-500 bg-emerald-50",
-                  state === "wrong" && "border-rose-500 bg-rose-50",
-                  state === "dim" && "border-border bg-white opacity-60",
+                  state === "idle" && "border-glass hover:border-primary/40 hover:bg-primary/10/40",
+                  state === "selected" && "border-primary bg-primary/10 shadow-sm shadow-primary/10",
+                  state === "correct" && "border-success bg-success/10",
+                  state === "wrong" && "border-destructive bg-destructive/10",
+                  state === "dim" && "border-glass opacity-60",
                 )}
               >
                 <span
                   className={cn(
                     "flex size-7 shrink-0 items-center justify-center text-sm font-extrabold",
                     question.multipleCorrect ? "rounded-lg" : "rounded-full",
-                    state === "idle" && "bg-slate-100 text-slate-600",
+                    state === "idle" && "bg-foreground/8 text-foreground/75",
                     state === "selected" && "bg-primary text-white",
-                    state === "correct" && "bg-emerald-500 text-white",
-                    state === "wrong" && "bg-rose-500 text-white",
-                    state === "dim" && "bg-slate-100 text-slate-500",
+                    state === "correct" && "bg-success text-white",
+                    state === "wrong" && "bg-destructive text-white",
+                    state === "dim" && "bg-foreground/8 text-muted-foreground",
                   )}
                 >
                   {state === "correct" ? <Check className="size-4" /> : state === "wrong" ? <X className="size-4" /> : o.label}
                 </span>
-                <span className="flex-1 pt-0.5 text-slate-800">{o.text}</span>
+                <span className="flex-1 pt-0.5 text-foreground">{o.text}</span>
               </button>
             );
           })}
@@ -166,7 +166,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
 
       {reveal && (
         <div ref={resultRef} className="animate-pop-in space-y-4">
-          <div className={cn("flex items-center gap-3 rounded-2xl p-4 text-white shadow-md", reveal.isCorrect ? "bg-gradient-to-r from-emerald-500 to-emerald-600" : "bg-gradient-to-r from-rose-500 to-rose-600")}>
+          <div className={cn("flex items-center gap-3 rounded-2xl p-4 text-white shadow-md", reveal.isCorrect ? "bg-success" : "bg-destructive")}>
             {reveal.isCorrect ? <CheckCircle2 className="size-7" /> : <XCircle className="size-7" />}
             <div>
               <p className="text-lg font-extrabold">{reveal.isCorrect ? "Richtig!" : "Leider falsch"}</p>
@@ -178,21 +178,21 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
-            <h3 className="flex items-center gap-2 font-extrabold text-navy"><Info className="size-5 text-primary" /> Erklärung</h3>
-            <p className="mt-2 leading-relaxed whitespace-pre-line text-slate-700">{reveal.explanation}</p>
+          <div className="rounded-2xl glass p-5 shadow-sm sm:p-6">
+            <h3 className="flex items-center gap-2 font-extrabold text-navy"><Info className="size-5 text-link" /> Erklärung</h3>
+            <p className="mt-2 leading-relaxed whitespace-pre-line text-foreground/85">{reveal.explanation}</p>
 
             <h4 className="mt-5 text-sm font-bold text-navy">Die Antworten im Einzelnen</h4>
             <ul className="mt-2 space-y-2">
               {reveal.options.map((o) => {
                 const text = question.options.find((q) => q.id === o.id)?.text;
                 return (
-                  <li key={o.id} className={cn("rounded-xl border-l-4 p-3 text-sm", o.isCorrect ? "border-emerald-500 bg-emerald-50/60" : "border-rose-300 bg-rose-50/40")}>
+                  <li key={o.id} className={cn("rounded-xl border-l-4 p-3 text-sm", o.isCorrect ? "border-success bg-success/10/60" : "border-destructive/40 bg-destructive/10/40")}>
                     <p className="font-semibold text-navy">
                       {o.label}) {text}{" "}
-                      <span className={o.isCorrect ? "text-emerald-700" : "text-rose-700"}>– {o.isCorrect ? "richtig" : "falsch"}</span>
+                      <span className={o.isCorrect ? "text-success" : "text-destructive"}>– {o.isCorrect ? "richtig" : "falsch"}</span>
                     </p>
-                    {o.explanation && <p className="mt-1 text-slate-600">{o.explanation}</p>}
+                    {o.explanation && <p className="mt-1 text-foreground/75">{o.explanation}</p>}
                   </li>
                 );
               })}
@@ -202,14 +202,14 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               <p className="mt-4 text-xs text-muted-foreground">
                 Quelle: {[reveal.sourceTitle, reveal.sourceDetail].filter(Boolean).join(" · ")}
                 {reveal.sourceUrl && (
-                  <a href={reveal.sourceUrl} target="_blank" rel="noopener noreferrer" className="ml-1 inline-flex items-center gap-0.5 font-semibold text-primary hover:underline">
+                  <a href={reveal.sourceUrl} target="_blank" rel="noopener noreferrer" className="ml-1 inline-flex items-center gap-0.5 font-semibold text-link hover:underline">
                     öffnen <ExternalLink className="size-3" />
                   </a>
                 )}
               </p>
             )}
             {question.origin !== "OFFICIAL" && (
-              <p className="mt-2 text-xs text-amber-700">
+              <p className="mt-2 text-xs text-warning">
                 Hinweis: Eigenständig erstellte {question.origin === "DEMO" ? "Demo-Frage" : "Übungsfrage"} – keine offizielle Prüfungsfrage. Rechtslage bitte anhand der aktuellen Gesetzestexte prüfen.
               </p>
             )}

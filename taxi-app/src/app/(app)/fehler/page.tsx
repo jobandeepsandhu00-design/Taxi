@@ -47,12 +47,12 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
       />
       {leer && <Alert variant="info" className="mb-4">Aktuell gibt es keine offenen Fehler in dieser Auswahl.</Alert>}
       <div className="mb-6 grid gap-3 sm:grid-cols-3 grid-cols-1">
-        <Card className="p-5"><p className="text-3xl font-extrabold text-rose-600">{open.length}</p><p className="text-sm text-muted-foreground">offene Fehler</p></Card>
-        <Card className="p-5"><p className="text-3xl font-extrabold text-emerald-600">{resolvedCount}</p><p className="text-sm text-muted-foreground">bereits verbessert</p></Card>
+        <Card className="p-5"><p className="text-3xl font-extrabold text-destructive">{open.length}</p><p className="text-sm text-muted-foreground">offene Fehler</p></Card>
+        <Card className="p-5"><p className="text-3xl font-extrabold text-success">{resolvedCount}</p><p className="text-sm text-muted-foreground">bereits verbessert</p></Card>
         <Card className="p-5">
-          <p className="flex items-center gap-2 text-3xl font-extrabold text-navy"><TrendingUp className="size-6 text-primary" />{improvement}%</p>
+          <p className="flex items-center gap-2 text-3xl font-extrabold text-navy"><TrendingUp className="size-6 text-link" />{improvement}%</p>
           <p className="text-sm text-muted-foreground">Verbesserungsquote</p>
-          <Progress value={improvement} className="mt-2" barClassName="bg-emerald-500" />
+          <Progress value={improvement} className="mt-2" barClassName="bg-success" />
         </Card>
       </div>
 
@@ -61,7 +61,7 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
           icon={PartyPopper}
           title="Keine offenen Fehler"
           description="Sehr gut! Sobald du eine Frage falsch beantwortest, erscheint sie hier zur Wiederholung."
-          action={<Link href="/quiz" className="font-semibold text-primary hover:underline">Quiz starten</Link>}
+          action={<Link href="/quiz" className="font-semibold text-link hover:underline">Quiz starten</Link>}
         />
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -89,11 +89,11 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
                 {open.map((m) => (
                   <li key={m.id} className="py-3">
                     <Link href={`/fragen/${m.question.id}`} className="block rounded-lg hover:bg-muted/40">
-                      <p className="text-sm font-medium text-slate-800">{m.question.text}</p>
+                      <p className="text-sm font-medium text-foreground">{m.question.text}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{m.question.category.name}</span>
                         <DifficultyBadge difficulty={m.question.difficulty} />
-                        <span className="font-semibold text-rose-600">{m.wrongCount}× falsch</span>
+                        <span className="font-semibold text-destructive">{m.wrongCount}× falsch</span>
                         <span>Fortschritt: {m.correctStreak}/{settings.mistakeRemovalThreshold} richtig in Folge</span>
                         <span>zuletzt {formatDate(m.lastWrongAt)}</span>
                       </div>

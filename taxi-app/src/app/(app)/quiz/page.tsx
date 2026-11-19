@@ -36,7 +36,7 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Shuffle className="size-5 text-primary" /> Quiz konfigurieren</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Shuffle className="size-5 text-link" /> Quiz konfigurieren</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={startPracticeQuizAction} className="space-y-5">
@@ -63,9 +63,9 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
                 <legend className="text-sm font-semibold text-navy">Kategorien <span className="font-normal text-muted-foreground">(keine Auswahl = alle, {total} Fragen)</span></legend>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2 grid-cols-1">
                   {categories.map((c) => (
-                    <label key={c.id} className="flex cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-sm transition has-[:checked]:border-primary has-[:checked]:bg-blue-50">
+                    <label key={c.id} className="flex cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-sm transition has-[:checked]:border-primary has-[:checked]:bg-primary/10">
                       <input type="checkbox" name="categoryIds" value={c.id} className="size-4 accent-blue-700" />
-                      <span className="flex-1 font-medium text-slate-700">{c.name}</span>
+                      <span className="flex-1 font-medium text-foreground/85">{c.name}</span>
                       <span className="text-xs text-muted-foreground">{c.questionCount}</span>
                     </label>
                   ))}
@@ -91,7 +91,7 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
                           <span className="block font-semibold text-navy">{h.correctCount}/{h.answeredCount} richtig</span>
                           <span className="text-xs text-muted-foreground">{h.finishedAt ? formatDate(h.finishedAt, true) : ""}</span>
                         </span>
-                        <span className={`font-extrabold ${pct >= 70 ? "text-emerald-600" : "text-rose-600"}`}>{pct}%</span>
+                        <span className={`font-extrabold ${pct >= 70 ? "text-success" : "text-destructive"}`}>{pct}%</span>
                       </a>
                     </li>
                   );

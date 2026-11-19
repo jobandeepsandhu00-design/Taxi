@@ -60,8 +60,8 @@ export function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
 
   if (done) {
     return (
-      <div className="animate-pop-in mx-auto max-w-lg rounded-3xl border bg-white p-8 text-center shadow-sm">
-        <Trophy className="mx-auto size-10 text-amber-500" />
+      <div className="animate-pop-in mx-auto max-w-lg rounded-3xl glass p-8 text-center shadow-sm">
+        <Trophy className="mx-auto size-10 text-warning" />
         <h2 className="mt-3 text-2xl font-extrabold text-navy">Runde geschafft!</h2>
         <p className="mt-1 text-muted-foreground">{learnedCount} Karten gelernt · {repeatCount}× wiederholt</p>
         <Button className="mt-6" onClick={() => window.location.reload()}>
@@ -85,8 +85,8 @@ export function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
           aria-label={flipped ? "Karte umdrehen: Frage anzeigen" : "Karte umdrehen: Antwort anzeigen"}
           className={cn("flip-card relative grid min-h-[340px] w-full text-left sm:min-h-[380px]", flipped && "is-flipped")}
         >
-          <div className="flip-face col-start-1 row-start-1 flex flex-col rounded-3xl border bg-white p-6 shadow-lg sm:p-8">
-            <span className="text-xs font-bold tracking-wider text-primary uppercase">{card.category}</span>
+          <div className="flip-face col-start-1 row-start-1 flex flex-col rounded-3xl glass p-6 shadow-lg sm:p-8">
+            <span className="text-xs font-bold tracking-wider text-link uppercase">{card.category}</span>
             {card.imageUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={card.imageUrl} alt="" className="mt-3 max-h-40 rounded-xl object-contain" />
@@ -96,20 +96,20 @@ export function FlashcardDeck({ cards }: { cards: Flashcard[] }) {
               <RotateCw className="size-4" /> Tippen zum Umdrehen
             </span>
           </div>
-          <div className="flip-face flip-back col-start-1 row-start-1 flex flex-col overflow-y-auto rounded-3xl bg-gradient-to-br from-navy to-blue-700 p-6 text-white shadow-lg sm:p-8">
-            <span className="text-xs font-bold tracking-wider text-blue-200 uppercase">Antwort</span>
+          <div className="flip-face flip-back col-start-1 row-start-1 flex flex-col overflow-y-auto rounded-3xl panel-night p-6 text-white shadow-lg sm:p-8">
+            <span className="text-xs font-bold tracking-wider text-white/80 uppercase">Antwort</span>
             <ul className="mt-3 space-y-1.5">
               {card.answers.map((a) => (
                 <li key={a} className="text-lg font-bold">{a}</li>
               ))}
             </ul>
-            <p className="mt-4 text-sm leading-relaxed text-blue-100">{card.explanation}</p>
+            <p className="mt-4 text-sm leading-relaxed text-white/80">{card.explanation}</p>
           </div>
         </button>
       </div>
 
       <div className={cn("grid grid-cols-2 gap-3 transition-opacity", flipped ? "opacity-100" : "pointer-events-none opacity-40")}>
-        <Button variant="outline" size="lg" className="border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" onClick={() => rate(false)} disabled={!flipped}>
+        <Button variant="outline" size="lg" className="border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15" onClick={() => rate(false)} disabled={!flipped}>
           <X /> Nicht gelernt
         </Button>
         <Button variant="success" size="lg" onClick={() => rate(true)} disabled={!flipped}>

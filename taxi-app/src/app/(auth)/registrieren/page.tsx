@@ -22,7 +22,7 @@ export default function RegisterPage() {
       )}
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Bereits registriert?{" "}
-        <Link href="/login" className="font-semibold text-primary hover:underline">
+        <Link href="/login" className="font-semibold text-link hover:underline">
           Anmelden
         </Link>
       </p>

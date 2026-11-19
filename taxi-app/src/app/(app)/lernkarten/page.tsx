@@ -92,8 +92,8 @@ export default async function FlashcardsPage({ searchParams }: { searchParams: P
           <Button type="submit" variant="secondary">Anwenden</Button>
         </form>
         <div className="flex gap-2">
-          <Card className="flex items-center gap-2 px-4 py-2 text-sm"><span className="font-extrabold text-emerald-600">{learned}</span> gelernt</Card>
-          <Card className="flex items-center gap-2 px-4 py-2 text-sm"><span className="font-extrabold text-amber-600">{learning}</span> in Arbeit</Card>
+          <Card className="flex items-center gap-2 px-4 py-2 text-sm"><span className="font-extrabold text-success">{learned}</span> gelernt</Card>
+          <Card className="flex items-center gap-2 px-4 py-2 text-sm"><span className="font-extrabold text-warning">{learning}</span> in Arbeit</Card>
         </div>
       </div>
       {cards.length === 0 ? (

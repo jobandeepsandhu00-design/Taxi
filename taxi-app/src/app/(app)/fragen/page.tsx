@@ -68,7 +68,7 @@ export default async function QuestionSearchPage({ searchParams }: { searchParam
         title={bookmarksOnly ? "Gemerkte Fragen" : "Fragensuche"}
         description={bookmarksOnly ? "Deine gespeicherten Fragen zum gezielten Wiederholen." : "Durchsuche alle veröffentlichten Fragen. Die Lösung siehst du erst nach deiner Antwort."}
       />
-      <form className="mb-5 grid gap-2 rounded-2xl border bg-white p-3 sm:grid-cols-[1fr_auto_auto_auto] grid-cols-1" role="search">
+      <form className="mb-5 grid gap-2 rounded-2xl glass p-3 sm:grid-cols-[1fr_auto_auto_auto] grid-cols-1" role="search">
         {bookmarksOnly && <input type="hidden" name="merkliste" value="1" />}
         <div className="relative">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -96,15 +96,15 @@ export default async function QuestionSearchPage({ searchParams }: { searchParam
         <ul className="space-y-2">
           {questions.map((qq) => (
             <li key={qq.id}>
-              <Link href={`/fragen/${qq.id}`} className="block rounded-2xl border bg-white p-4 transition hover:border-blue-200 hover:shadow-md">
-                <p className="font-medium text-slate-800">{qq.text}</p>
+              <Link href={`/fragen/${qq.id}`} className="block rounded-2xl glass p-4 transition hover:border-primary/40 hover:shadow-md">
+                <p className="font-medium text-foreground">{qq.text}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span className="font-semibold">{qq.category.name}</span>
                   <DifficultyBadge difficulty={qq.difficulty} />
                   <OriginBadge origin={qq.origin} verifiedSource={qq.source?.verified} />
-                  {bookmarked.has(qq.id) && <BookmarkCheck className="size-4 text-amber-500" aria-label="Gemerkt" />}
+                  {bookmarked.has(qq.id) && <BookmarkCheck className="size-4 text-warning" aria-label="Gemerkt" />}
                   {qq.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="rounded bg-slate-100 px-1.5 py-0.5">#{t}</span>
+                    <span key={t} className="rounded bg-foreground/8 px-1.5 py-0.5">#{t}</span>
                   ))}
                 </div>
               </Link>

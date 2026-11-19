@@ -10,16 +10,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="w-full max-w-md">{children}</div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-navy lg:block">
+      <div className="relative hidden overflow-hidden bg-primary lg:block">
         <div className="absolute -top-40 -right-40 size-[520px] rounded-full bg-blue-600/40 blur-3xl" />
         <div className="absolute -bottom-32 -left-20 size-[420px] rounded-full bg-sky-400/20 blur-3xl" />
         <div className="relative flex h-full flex-col justify-center gap-8 p-14 text-white">
           <h2 className="text-4xl leading-tight font-extrabold">
             Sicher zur Taxi-Prüfung.
             <br />
-            <span className="text-blue-300">Strukturiert lernen.</span>
+            <span className="text-white/80">Strukturiert lernen.</span>
           </h2>
-          <ul className="space-y-3 text-blue-100">
+          <ul className="space-y-3 text-white/80">
             {[
               "10 Lernkategorien von StVO bis Wiener Ortskenntnisse",
               "Realistische Prüfungssimulation mit Countdown",
@@ -32,7 +32,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </li>
             ))}
           </ul>
-          <p className="max-w-md text-xs text-blue-200/80">
+          <p className="max-w-md text-xs text-white/80/80">
             Unabhängiges Lernangebot. Übungsfragen sind eigenständig erstellt und keine offiziellen Prüfungsfragen.
           </p>
         </div>

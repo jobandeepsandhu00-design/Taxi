@@ -43,7 +43,7 @@ export function ImportForm() {
       <CardHeader><CardTitle>CSV-Import</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-8 text-center hover:border-primary">
-          <FileUp className="size-8 text-primary" />
+          <FileUp className="size-8 text-link" />
           <span className="font-semibold text-navy">{fileName || "CSV-Datei auswählen"}</span>
           <span className="text-xs text-muted-foreground">Zuerst wird eine Prüfung (Probelauf) durchgeführt – erst danach wird importiert.</span>
           <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
@@ -69,7 +69,7 @@ export function ImportForm() {
                   <thead className="sticky top-0 bg-muted text-left"><tr><th className="p-2">Zeile</th><th className="p-2">Fehler</th></tr></thead>
                   <tbody className="divide-y">
                     {summary.errors.map((e, i) => (
-                      <tr key={i}><td className="p-2 font-semibold">{e.rowNumber}</td><td className="p-2 text-rose-700">{e.message}</td></tr>
+                      <tr key={i}><td className="p-2 font-semibold">{e.rowNumber}</td><td className="p-2 text-destructive">{e.message}</td></tr>
                     ))}
                   </tbody>
                 </table>

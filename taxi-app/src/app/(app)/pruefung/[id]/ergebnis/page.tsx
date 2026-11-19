@@ -51,7 +51,7 @@ export default async function ExamResultPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <section className={cn("animate-pop-in relative overflow-hidden rounded-3xl p-6 text-white shadow-xl sm:p-10", passed ? "bg-gradient-to-br from-emerald-500 to-teal-700" : "bg-gradient-to-br from-rose-500 to-rose-700")}>
+      <section className={cn("animate-pop-in relative overflow-hidden rounded-3xl p-6 text-white shadow-xl sm:p-10", passed ? "panel-night ring-1 ring-success/40" : "panel-night ring-1 ring-destructive/40")}>
         <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
           <ProgressRing value={pct} size={150} stroke={12} color="#fff" track="rgba(255,255,255,0.25)" label={`Ergebnis ${pct} Prozent`}>
             <span className="text-3xl font-extrabold">{pct.toLocaleString("de-AT")}%</span>
@@ -94,10 +94,10 @@ export default async function ExamResultPage({ params }: { params: Promise<{ id:
             return (
               <div key={c.name}>
                 <div className="mb-1 flex justify-between text-sm">
-                  <span className="font-semibold text-slate-700">{c.name}</span>
+                  <span className="font-semibold text-foreground/85">{c.name}</span>
                   <span className="font-bold text-navy">{c.correct}/{c.total} · {p}%</span>
                 </div>
-                <Progress value={p} barClassName={p >= attempt.passPercentage ? "bg-emerald-500" : "bg-rose-500"} />
+                <Progress value={p} barClassName={p >= attempt.passPercentage ? "bg-success" : "bg-destructive"} />
               </div>
             );
           })}
@@ -110,17 +110,17 @@ export default async function ExamResultPage({ params }: { params: Promise<{ id:
           {attempt.responses.map((r, i) => (
             <details key={r.id} className="group rounded-xl border p-4 open:bg-muted/30">
               <summary className="flex cursor-pointer list-none items-start gap-3">
-                {r.isCorrect ? <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" /> : <XCircle className="mt-0.5 size-5 shrink-0 text-rose-600" />}
-                <span className="flex-1 text-sm font-medium text-slate-800">{i + 1}. {r.question.text}</span>
-                {r.markedForReview && <span className="text-[11px] font-bold text-amber-600">markiert</span>}
+                {r.isCorrect ? <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" /> : <XCircle className="mt-0.5 size-5 shrink-0 text-destructive" />}
+                <span className="flex-1 text-sm font-medium text-foreground">{i + 1}. {r.question.text}</span>
+                {r.markedForReview && <span className="text-[11px] font-bold text-warning">markiert</span>}
               </summary>
               <ul className="mt-3 space-y-1.5 pl-8">
                 {r.question.options.map((o) => {
                   const chosen = r.selectedOptionIds.includes(o.id);
                   return (
-                    <li key={o.id} className={cn("rounded-lg p-2 text-sm", o.isCorrect ? "bg-emerald-50" : chosen ? "bg-rose-50" : "")}>
+                    <li key={o.id} className={cn("rounded-lg p-2 text-sm", o.isCorrect ? "bg-success/10" : chosen ? "bg-destructive/10" : "")}>
                       <span className="flex items-start gap-2">
-                        {o.isCorrect ? <Check className="mt-0.5 size-4 text-emerald-600" /> : chosen ? <X className="mt-0.5 size-4 text-rose-600" /> : <span className="size-4" />}
+                        {o.isCorrect ? <Check className="mt-0.5 size-4 text-success" /> : chosen ? <X className="mt-0.5 size-4 text-destructive" /> : <span className="size-4" />}
                         <span>
                           <strong>{o.label})</strong> {o.text} {chosen && <em className="text-xs text-muted-foreground">(deine Antwort)</em>}
                           {o.explanation && <span className="block text-xs text-muted-foreground">{o.explanation}</span>}
@@ -130,8 +130,8 @@ export default async function ExamResultPage({ params }: { params: Promise<{ id:
                   );
                 })}
               </ul>
-              {r.selectedOptionIds.length === 0 && <p className="mt-2 pl-8 text-xs font-semibold text-rose-600">Nicht beantwortet</p>}
-              <p className="mt-3 pl-8 text-sm text-slate-600"><strong className="text-navy">Erklärung:</strong> {r.question.explanation}</p>
+              {r.selectedOptionIds.length === 0 && <p className="mt-2 pl-8 text-xs font-semibold text-destructive">Nicht beantwortet</p>}
+              <p className="mt-3 pl-8 text-sm text-foreground/75"><strong className="text-navy">Erklärung:</strong> {r.question.explanation}</p>
             </details>
           ))}
         </CardContent>

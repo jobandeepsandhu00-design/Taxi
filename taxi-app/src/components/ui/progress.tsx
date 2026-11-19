@@ -1,5 +1,10 @@
+"use client";
+
+import { motion } from "motion/react";
+import { softSpring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+/** Fortschrittsbalken – animiert beim Einblenden von 0 (nur transform: scaleX). */
 export function Progress({ value, className, barClassName }: { value: number; className?: string; barClassName?: string }) {
   const v = Math.min(100, Math.max(0, value));
   return (
@@ -8,21 +13,28 @@ export function Progress({ value, className, barClassName }: { value: number; cl
       aria-valuenow={Math.round(v)}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={cn("h-2 w-full overflow-hidden rounded-full bg-slate-100", className)}
+      className={cn("h-2 w-full overflow-hidden rounded-full bg-foreground/10", className)}
     >
-      <div className={cn("h-full rounded-full bg-primary transition-all duration-700 ease-out", barClassName)} style={{ width: `${v}%` }} />
+      <motion.div
+        className={cn("h-full w-full origin-left rounded-full bg-primary", barClassName)}
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: v / 100 }}
+        transition={{ ...softSpring, delay: 0.1 }}
+      />
     </div>
   );
 }
 
+/** Fortschrittsring – Strich zeichnet sich beim Einblenden (pathLength). */
 export function ProgressRing({
   value,
   size = 120,
   stroke = 10,
-  color = "#1d4ed8",
-  track = "#e8eefb",
+  color = "#ffc400",
+  track,
   children,
   label,
+  glow,
 }: {
   value: number;
   size?: number;
@@ -31,15 +43,15 @@ export function ProgressRing({
   track?: string;
   children?: React.ReactNode;
   label?: string;
+  glow?: boolean;
 }) {
   const v = Math.min(100, Math.max(0, value));
   const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }} role="img" aria-label={label ?? `${Math.round(v)} %`}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke={track} strokeWidth={stroke} fill="none" />
-        <circle
+      <svg width={size} height={size} className="-rotate-90 overflow-visible">
+        <circle cx={size / 2} cy={size / 2} r={r} stroke={track ?? "currentColor"} strokeWidth={stroke} fill="none" className={track ? undefined : "text-foreground/10"} />
+        <motion.circle
           cx={size / 2}
           cy={size / 2}
           r={r}
@@ -47,9 +59,11 @@ export function ProgressRing({
           strokeWidth={stroke}
           fill="none"
           strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c - (v / 100) * c}
-          style={{ transition: "stroke-dashoffset 1s ease-out" }}
+          variants={{ hidden: { pathLength: 0 }, shown: { pathLength: Math.max(v / 100, 0.0001) } }}
+          initial="hidden"
+          animate="shown"
+          transition={{ ...softSpring, delay: 0.15 }}
+          style={glow ? { filter: `drop-shadow(0 0 8px ${color})` } : undefined}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>

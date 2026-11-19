@@ -23,7 +23,7 @@ export function BookmarkButton({ questionId, initial }: { questionId: string; in
       }
       className={cn(
         "flex size-9 items-center justify-center rounded-xl border transition",
-        bookmarked ? "border-amber-300 bg-amber-50 text-amber-600" : "bg-white text-slate-500 hover:text-navy",
+        bookmarked ? "border-warning/40 bg-warning/10 text-warning" : "glass text-muted-foreground hover:text-navy",
       )}
     >
       {bookmarked ? <BookmarkCheck className="size-[18px]" /> : <Bookmark className="size-[18px]" />}

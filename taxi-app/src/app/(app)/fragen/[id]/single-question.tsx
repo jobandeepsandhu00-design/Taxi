@@ -20,7 +20,7 @@ export function SingleQuestion({ question, bookmarked }: { question: ClientQuest
       onNext={() => router.back()}
       nextSlot={
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" size="lg" className="bg-white" onClick={() => setRound((r) => r + 1)}>
+          <Button variant="outline" size="lg" onClick={() => setRound((r) => r + 1)}>
             <RotateCcw /> Nochmal
           </Button>
           <Button size="lg" onClick={() => router.push("/fragen")}>

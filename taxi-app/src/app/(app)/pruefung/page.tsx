@@ -54,7 +54,7 @@ export default async function ExamOverviewPage({ searchParams }: { searchParams:
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {configs.map((c) => (
             <Card key={c.id} className="flex flex-col overflow-hidden">
-              <div className="bg-gradient-to-br from-navy to-blue-700 p-5 text-white">
+              <div className="panel-night p-5 text-white">
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="text-lg font-extrabold">{c.name}</h2>
                   {c.verified ? (
@@ -63,13 +63,13 @@ export default async function ExamOverviewPage({ searchParams }: { searchParams:
                     <Badge variant="warning"><ShieldAlert className="size-3" /> Übungsvorgabe</Badge>
                   )}
                 </div>
-                {c.description && <p className="mt-1 text-sm text-blue-100">{c.description}</p>}
+                {c.description && <p className="mt-1 text-sm text-white/80">{c.description}</p>}
               </div>
               <CardContent className="flex flex-1 flex-col gap-4 pt-5">
                 <dl className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-muted p-3"><Clock className="mx-auto size-4 text-primary" /><dd className="mt-1 font-extrabold text-navy">{c.durationMinutes} Min.</dd><dt className="text-[11px] text-muted-foreground">Dauer</dt></div>
-                  <div className="rounded-xl bg-muted p-3"><ListChecks className="mx-auto size-4 text-primary" /><dd className="mt-1 font-extrabold text-navy">{c.questionCount}</dd><dt className="text-[11px] text-muted-foreground">Fragen</dt></div>
-                  <div className="rounded-xl bg-muted p-3"><Target className="mx-auto size-4 text-primary" /><dd className="mt-1 font-extrabold text-navy">{c.passPercentage} %</dd><dt className="text-[11px] text-muted-foreground">zum Bestehen</dt></div>
+                  <div className="rounded-xl bg-muted p-3"><Clock className="mx-auto size-4 text-link" /><dd className="mt-1 font-extrabold text-navy">{c.durationMinutes} Min.</dd><dt className="text-[11px] text-muted-foreground">Dauer</dt></div>
+                  <div className="rounded-xl bg-muted p-3"><ListChecks className="mx-auto size-4 text-link" /><dd className="mt-1 font-extrabold text-navy">{c.questionCount}</dd><dt className="text-[11px] text-muted-foreground">Fragen</dt></div>
+                  <div className="rounded-xl bg-muted p-3"><Target className="mx-auto size-4 text-link" /><dd className="mt-1 font-extrabold text-navy">{c.passPercentage} %</dd><dt className="text-[11px] text-muted-foreground">zum Bestehen</dt></div>
                 </dl>
                 {c.officialReference && <p className="text-xs text-muted-foreground">Grundlage: {c.officialReference}</p>}
                 <form action={startExamAction} className="mt-auto">
@@ -97,17 +97,17 @@ export default async function ExamOverviewPage({ searchParams }: { searchParams:
               {history.map((h) => (
                 <li key={h.id}>
                   <Link href={`/pruefung/${h.id}/ergebnis`} className="flex items-center gap-3 py-3 hover:bg-muted/40">
-                    {h.passed ? <CheckCircle2 className="size-5 text-emerald-600" /> : <XCircle className="size-5 text-rose-600" />}
+                    {h.passed ? <CheckCircle2 className="size-5 text-success" /> : <XCircle className="size-5 text-destructive" />}
                     <div className="flex-1">
                       <p className="text-sm font-bold text-navy">{h.examConfig.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatDate(h.startedAt, true)} · {h.correctCount}/{h.totalCount} richtig
                         {h.status === "EXPIRED" && (
-                          <span className="ml-1 inline-flex items-center gap-0.5 text-amber-700"><AlertTriangle className="size-3" /> Zeit abgelaufen</span>
+                          <span className="ml-1 inline-flex items-center gap-0.5 text-warning"><AlertTriangle className="size-3" /> Zeit abgelaufen</span>
                         )}
                       </p>
                     </div>
-                    <span className={`text-lg font-extrabold ${h.passed ? "text-emerald-600" : "text-rose-600"}`}>{h.scorePercent?.toLocaleString("de-AT")} %</span>
+                    <span className={`text-lg font-extrabold ${h.passed ? "text-success" : "text-destructive"}`}>{h.scorePercent?.toLocaleString("de-AT")} %</span>
                   </Link>
                 </li>
               ))}

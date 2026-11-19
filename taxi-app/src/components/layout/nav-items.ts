@@ -33,6 +33,11 @@ export const mobileNav = [
   { href: "/fortschritt", label: "Fortschritt", icon: BarChart3 },
 ];
 
+/** Index des Tabs, zu dem ein Pfad gehört (für die Richtung der Seitenübergänge). */
+export function tabIndexFor(pathname: string): number {
+  return mobileNav.findIndex((t) => pathname === t.href || pathname.startsWith(`${t.href}/`));
+}
+
 export const adminNav = [
   { href: "/admin", label: "Admin-Übersicht", icon: Shield },
   { href: "/admin/fragen", label: "Fragen", icon: ListChecks },

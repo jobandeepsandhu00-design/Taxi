@@ -28,7 +28,7 @@ export function UserTable({ users, currentUserId }: { users: U[]; currentUserId:
     <div className="space-y-3">
       {error && <Alert variant="error">{error}</Alert>}
       {message && !error && <Alert variant="success">{message}</Alert>}
-      <div className="overflow-x-auto rounded-2xl border bg-white">
+      <div className="overflow-x-auto rounded-2xl glass">
         <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-muted/60 text-left text-xs font-bold text-muted-foreground uppercase">
             <tr><th className="p-3">Benutzer</th><th className="p-3">Rolle</th><th className="p-3">Status</th><th className="p-3">Aktivität</th><th className="p-3">Registriert</th><th className="p-3" /></tr>

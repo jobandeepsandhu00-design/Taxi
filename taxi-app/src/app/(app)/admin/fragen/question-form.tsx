@@ -92,7 +92,7 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
                 <Textarea id="text" value={q.text} onChange={(e) => set("text", e.target.value)} rows={3} aria-invalid={Boolean(err("text"))} />
                 <FieldError messages={err("text")} />
               </div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground/85">
                 <input
                   type="checkbox"
                   checked={q.multipleCorrect}
@@ -108,9 +108,9 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
             <CardHeader><CardTitle>Antwortmöglichkeiten</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {q.options.map((o, i) => (
-                <div key={LABELS[i]} className={cn("rounded-xl border-2 p-3.5 transition", o.isCorrect ? "border-emerald-400 bg-emerald-50/50" : "border-border")}>
+                <div key={LABELS[i]} className={cn("rounded-xl border-2 p-3.5 transition", o.isCorrect ? "border-success bg-success/10/50" : "border-border")}>
                   <div className="flex items-start gap-3">
-                    <span className="mt-2 flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-extrabold text-slate-700">{LABELS[i]}</span>
+                    <span className="mt-2 flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/8 text-sm font-extrabold text-foreground/85">{LABELS[i]}</span>
                     <div className="flex-1 space-y-2">
                       <Input value={o.text} onChange={(e) => setOption(i, { text: e.target.value })} placeholder={`Antwort ${LABELS[i]}`} aria-label={`Antwort ${LABELS[i]}`} />
                       <Textarea
@@ -122,7 +122,7 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
                         aria-label={`Erklärung zu Antwort ${LABELS[i]}`}
                       />
                     </div>
-                    <label className="mt-2 flex shrink-0 items-center gap-1.5 text-xs font-bold text-emerald-700">
+                    <label className="mt-2 flex shrink-0 items-center gap-1.5 text-xs font-bold text-success">
                       <input
                         type={q.multipleCorrect ? "checkbox" : "radio"}
                         name="correct"
@@ -204,7 +204,7 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
                   <option value="OFFICIAL">Offiziell (nur mit verifizierter Quelle)</option>
                 </Select>
                 {q.origin === "OFFICIAL" && (
-                  <p className="text-xs text-amber-700">Nur für nachweislich offizielle Prüfungsfragen verwenden. Eine als verifiziert markierte Quelle ist Pflicht.</p>
+                  <p className="text-xs text-warning">Nur für nachweislich offizielle Prüfungsfragen verwenden. Eine als verifiziert markierte Quelle ist Pflicht.</p>
                 )}
               </div>
               <div className="space-y-1.5">
@@ -214,7 +214,7 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
                   {sources.map((s) => <option key={s.id} value={s.id}>{s.verified ? "✓ " : ""}{s.title}</option>)}
                 </Select>
                 <FieldError messages={err("sourceId")} />
-                <Link href="/admin/quellen" className="text-xs font-semibold text-primary hover:underline">Quellen verwalten</Link>
+                <Link href="/admin/quellen" className="text-xs font-semibold text-link hover:underline">Quellen verwalten</Link>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sourceDetail">Fundstelle</Label>
@@ -235,7 +235,7 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
                   </Button>
                 </div>
               )}
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-link">
                 {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
                 Bild hochladen (PNG, JPEG, WebP, max. 3 MB)
                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
@@ -247,7 +247,7 @@ export function QuestionForm({ id, initial, categories, sources }: Props) {
         </div>
       </div>
 
-      <div className="sticky bottom-20 z-10 flex flex-wrap justify-end gap-2 rounded-2xl border bg-white/95 p-3 shadow-lg backdrop-blur lg:bottom-4">
+      <div className="sticky bottom-20 z-10 flex flex-wrap justify-end gap-2 rounded-2xl border bg-card-solid/90 p-3 shadow-lg backdrop-blur lg:bottom-4">
         <Button asChild variant="ghost"><Link href="/admin/fragen">Abbrechen</Link></Button>
         <Button variant="outline" onClick={() => save(true)} disabled={pending}>
           {pending ? <Loader2 className="animate-spin" /> : <Save />} Speichern

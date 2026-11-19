@@ -39,7 +39,7 @@ export default async function ImportPage() {
       </div>
       <Card>
         <CardHeader><CardTitle>CSV-Format</CardTitle></CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
+        <CardContent className="space-y-3 text-sm text-foreground/85">
           <p>UTF-8, Trennzeichen <code>;</code> oder <code>,</code>, erste Zeile = Spaltennamen. Pflichtspalten: <code>kategorie, frage, antwort_a–d, richtig, erklaerung</code>.</p>
           <p className="rounded-xl bg-muted p-3 font-mono text-xs break-all">{CSV_HEADERS.join(";")}</p>
           <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">

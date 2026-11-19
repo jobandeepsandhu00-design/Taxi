@@ -14,7 +14,7 @@ export function AdminTabs() {
           const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
           return (
             <li key={item.href}>
-              <Link href={item.href} className={cn("block rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap", active ? "bg-navy text-white" : "bg-slate-100 text-slate-600")}>
+              <Link href={item.href} className={cn("block rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap", active ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-foreground/75")}>
                 {item.label.replace("Admin-", "")}
               </Link>
             </li>

@@ -62,7 +62,7 @@ export default async function AdminQuestionsPage({ searchParams }: { searchParam
           </>
         }
       />
-      <form className="mb-4 grid gap-2 rounded-2xl border bg-white p-3 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto] grid-cols-1">
+      <form className="mb-4 grid gap-2 rounded-2xl glass p-3 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr_auto] grid-cols-1">
         <Input name="q" defaultValue={sp.q} placeholder="Text, ID oder Tag" aria-label="Suche" />
         <Select name="kategorie" defaultValue={sp.kategorie ?? ""} aria-label="Kategorie">
           <option value="">Alle Kategorien</option>
@@ -91,9 +91,9 @@ export default async function AdminQuestionsPage({ searchParams }: { searchParam
       <QuestionTable questions={questions.map((q) => ({ ...q, updatedAt: q.updatedAt.toISOString(), answers: q._count.userAnswers, sourceVerified: q.source?.verified ?? false }))} />
       {pages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-3 text-sm">
-          {page > 1 && <Link className="font-semibold text-primary" href={link(page - 1)}>← Zurück</Link>}
+          {page > 1 && <Link className="font-semibold text-link" href={link(page - 1)}>← Zurück</Link>}
           <span>Seite {page} / {pages}</span>
-          {page < pages && <Link className="font-semibold text-primary" href={link(page + 1)}>Weiter →</Link>}
+          {page < pages && <Link className="font-semibold text-link" href={link(page + 1)}>Weiter →</Link>}
         </div>
       )}
     </div>

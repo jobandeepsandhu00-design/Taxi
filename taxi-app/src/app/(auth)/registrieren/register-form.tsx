@@ -37,7 +37,7 @@ export function RegisterForm() {
         <input type="checkbox" name="terms" className="mt-0.5 size-4 accent-blue-700" />
         <span>
           Ich habe verstanden, dass Übungs- und Demo-Fragen keine offiziellen Prüfungsfragen sind, und akzeptiere die{" "}
-          <Link href="/datenschutz" className="font-semibold text-primary hover:underline">
+          <Link href="/datenschutz" className="font-semibold text-link hover:underline">
             Datenschutzerklärung
           </Link>
           .

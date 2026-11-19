@@ -43,7 +43,7 @@ export default async function AdminHome() {
         {tiles.map((t) => (
           <Link key={t.href} href={t.href}>
             <Card className="h-full p-5 transition hover:shadow-md">
-              <t.icon className="size-6 text-primary" />
+              <t.icon className="size-6 text-link" />
               <p className="mt-3 text-3xl font-extrabold text-navy">{t.value}</p>
               <p className="text-sm font-semibold text-navy">{t.label}</p>
               <p className="text-xs text-muted-foreground">{t.sub}</p>
@@ -52,7 +52,7 @@ export default async function AdminHome() {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="size-5 text-primary" /> Herkunft der Fragen</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="size-5 text-link" /> Herkunft der Fragen</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           {(["OFFICIAL", "PRACTICE", "DEMO"] as const).map((o) => (
             <div key={o} className="rounded-xl bg-muted px-4 py-3">
@@ -61,7 +61,7 @@ export default async function AdminHome() {
             </div>
           ))}
           <p className="flex basis-full items-start gap-2 text-xs text-muted-foreground">
-            <AlertTriangle className="size-4 shrink-0 text-amber-500" />
+            <AlertTriangle className="size-4 shrink-0 text-warning" />
             „Offiziell“ darf nur für Fragen aus verifizierten offiziellen Quellen verwendet werden. Das System erzwingt eine verifizierte Quelle für offizielle Fragen.
           </p>
         </CardContent>

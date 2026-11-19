@@ -112,10 +112,10 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
   return (
     <div className="mx-auto max-w-5xl">
       {/* Kopfzeile mit Countdown */}
-      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:px-8">
+      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b bg-card-solid/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold tracking-wider text-primary uppercase">Prüfungssimulation</p>
+            <p className="text-[11px] font-bold tracking-wider text-link uppercase">Prüfungssimulation</p>
             <p className="truncate font-extrabold text-navy">{title}</p>
           </div>
           <div
@@ -124,7 +124,7 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
             aria-label={`Verbleibende Zeit ${formatClock(remaining)}`}
             className={cn(
               "flex items-center gap-2 rounded-xl px-3 py-2 font-mono text-lg font-extrabold tabular-nums",
-              low ? "animate-pulse bg-rose-100 text-rose-700" : "bg-navy text-white",
+              low ? "animate-pulse bg-destructive/15 text-destructive" : "bg-primary text-primary-foreground",
             )}
           >
             <Clock className="size-5" /> {formatClock(remaining)}
@@ -132,14 +132,14 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
         </div>
         <div className="mt-2 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
           <span>{answered}/{questions.length} beantwortet</span>
-          <span className="text-amber-700">{markedCount} markiert</span>
+          <span className="text-warning">{markedCount} markiert</span>
           {saveError && <span className="text-destructive">Speichern fehlgeschlagen: {saveError}</span>}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_260px]">
         <div className="space-y-4">
-          <div className="animate-pop-in rounded-2xl border bg-white p-5 shadow-sm sm:p-7" key={current.id}>
+          <div className="animate-pop-in rounded-2xl glass p-5 shadow-sm sm:p-7" key={current.id}>
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <Badge variant="navy">Frage {index + 1} von {questions.length}</Badge>
               <Badge variant="outline">{current.category.name}</Badge>
@@ -149,7 +149,7 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
                 aria-pressed={resp.marked}
                 className={cn(
                   "ml-auto inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition",
-                  resp.marked ? "border-amber-300 bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-muted",
+                  resp.marked ? "border-warning/40 bg-warning/10 text-warning" : "text-foreground/75 hover:bg-muted",
                 )}
               >
                 <Bookmark className={cn("size-3.5", resp.marked && "fill-current")} /> {resp.marked ? "Markiert" : "Zur Überprüfung markieren"}
@@ -174,13 +174,13 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
                     disabled={submitting}
                     className={cn(
                       "flex w-full items-start gap-3 rounded-xl border-2 p-3.5 text-left text-[15px] transition",
-                      selected ? "border-primary bg-blue-50" : "border-border bg-white hover:border-blue-300",
+                      selected ? "border-primary bg-primary/10" : "border-glass hover:border-primary/40",
                     )}
                   >
-                    <span className={cn("flex size-7 shrink-0 items-center justify-center text-sm font-extrabold", current.multipleCorrect ? "rounded-lg" : "rounded-full", selected ? "bg-primary text-white" : "bg-slate-100 text-slate-600")}>
+                    <span className={cn("flex size-7 shrink-0 items-center justify-center text-sm font-extrabold", current.multipleCorrect ? "rounded-lg" : "rounded-full", selected ? "bg-primary text-white" : "bg-foreground/8 text-foreground/75")}>
                       {o.label}
                     </span>
-                    <span className="flex-1 pt-0.5 text-slate-800">{o.text}</span>
+                    <span className="flex-1 pt-0.5 text-foreground">{o.text}</span>
                   </button>
                 );
               })}
@@ -203,7 +203,7 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
         </div>
 
         <aside className="space-y-3 lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-2xl border bg-white p-4">
+          <div className="rounded-2xl glass p-4">
             <p className="mb-3 text-sm font-bold text-navy">Fragennavigation</p>
             <div className="grid grid-cols-8 gap-1.5 sm:grid-cols-10 lg:grid-cols-5">
               {questions.map((q, i) => {
@@ -219,19 +219,19 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
                     className={cn(
                       "relative h-9 rounded-lg text-xs font-bold transition",
                       i === index && "ring-2 ring-primary ring-offset-1",
-                      isAnswered ? "bg-navy text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                      isAnswered ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-foreground/75 hover:bg-foreground/15",
                     )}
                   >
                     {i + 1}
-                    {r?.marked && <span className="absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white bg-amber-500" />}
+                    {r?.marked && <span className="absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white bg-warning" />}
                   </button>
                 );
               })}
             </div>
             <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="size-2.5 rounded bg-navy" /> beantwortet</span>
-              <span className="flex items-center gap-1"><span className="size-2.5 rounded bg-slate-200" /> offen</span>
-              <span className="flex items-center gap-1"><span className="size-2.5 rounded-full bg-amber-500" /> markiert</span>
+              <span className="flex items-center gap-1"><span className="size-2.5 rounded bg-primary" /> beantwortet</span>
+              <span className="flex items-center gap-1"><span className="size-2.5 rounded bg-foreground/15" /> offen</span>
+              <span className="flex items-center gap-1"><span className="size-2.5 rounded-full bg-warning" /> markiert</span>
             </div>
           </div>
           <Button variant="navy" className="w-full" onClick={() => setConfirmOpen(true)}>
@@ -242,8 +242,8 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-          <button type="button" aria-label="Schließen" className="absolute inset-0 bg-navy/50 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
-          <div className="animate-pop-in relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+          <button type="button" aria-label="Schließen" className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
+          <div className="animate-pop-in relative w-full max-w-md rounded-3xl border border-border bg-card-solid p-6 shadow-2xl">
             <button type="button" onClick={() => setConfirmOpen(false)} className="absolute top-4 right-4 rounded-lg p-1.5 hover:bg-muted" aria-label="Schließen">
               <X className="size-5" />
             </button>
@@ -251,11 +251,11 @@ export function ExamRunner({ attemptId, title, expiresAt, serverNow, initialInde
             <p className="mt-2 text-sm text-muted-foreground">Nach der Abgabe kannst du keine Antworten mehr ändern.</p>
             <ul className="mt-4 space-y-1.5 text-sm">
               <li className="flex justify-between"><span>Beantwortet</span><strong>{answered} / {questions.length}</strong></li>
-              <li className="flex justify-between"><span>Unbeantwortet</span><strong className={answered < questions.length ? "text-rose-600" : ""}>{questions.length - answered}</strong></li>
-              <li className="flex justify-between"><span>Zur Überprüfung markiert</span><strong className={markedCount ? "text-amber-600" : ""}>{markedCount}</strong></li>
+              <li className="flex justify-between"><span>Unbeantwortet</span><strong className={answered < questions.length ? "text-destructive" : ""}>{questions.length - answered}</strong></li>
+              <li className="flex justify-between"><span>Zur Überprüfung markiert</span><strong className={markedCount ? "text-warning" : ""}>{markedCount}</strong></li>
             </ul>
             {answered < questions.length && (
-              <p className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
+              <p className="mt-3 flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs text-warning">
                 <AlertTriangle className="size-4 shrink-0" /> Unbeantwortete Fragen werden als falsch gewertet.
               </p>
             )}

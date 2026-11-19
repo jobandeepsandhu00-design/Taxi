@@ -58,7 +58,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
         <ArrowLeft className="size-4" /> Alle Kategorien
       </Link>
 
-      <section className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${color.gradient} p-6 text-white sm:p-8`}>
+      <section className={`relative overflow-hidden rounded-3xl panel-night p-6 text-white sm:p-8`}>
         <div className="absolute -top-16 -right-16 size-56 rounded-full bg-white/10" />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
           <span className="flex size-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
@@ -82,17 +82,17 @@ export default async function CategoryPage({ params, searchParams }: { params: P
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><BookOpenCheck className="size-5 text-primary" /> Einführung</CardTitle>
+              <CardTitle className="flex items-center gap-2"><BookOpenCheck className="size-5 text-link" /> Einführung</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-[15px] leading-relaxed text-slate-700">
+            <CardContent className="space-y-3 text-[15px] leading-relaxed text-foreground/85">
               {category.introduction.split(/\n{2,}/).map((p, i) => (
                 <p key={i} className="whitespace-pre-line">{p}</p>
               ))}
               <div className="rounded-xl border bg-muted/50 p-3 text-sm">
                 {category.syllabusVerified ? (
-                  <p className="flex items-start gap-2 text-emerald-800"><ShieldCheck className="mt-0.5 size-4 shrink-0" /> Inhalt mit offiziellem Prüfungsstoff abgeglichen.</p>
+                  <p className="flex items-start gap-2 text-success"><ShieldCheck className="mt-0.5 size-4 shrink-0" /> Inhalt mit offiziellem Prüfungsstoff abgeglichen.</p>
                 ) : (
-                  <p className="flex items-start gap-2 text-amber-800">
+                  <p className="flex items-start gap-2 text-warning">
                     <ShieldAlert className="mt-0.5 size-4 shrink-0" />
                     Prüfungsstoff dieser Kategorie ist noch nicht mit den aktuellen offiziellen Vorgaben verifiziert. Bitte zusätzlich die offiziellen Unterlagen der Prüfungsstelle verwenden.
                   </p>
@@ -109,7 +109,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 {category.topics.map((t) => (
                   <div key={t.id} className={`rounded-xl ${color.soft} p-3`}>
                     <p className={`text-sm font-bold ${color.text}`}>{t.name}</p>
-                    {t.description && <p className="mt-0.5 text-xs text-slate-600">{t.description}</p>}
+                    {t.description && <p className="mt-0.5 text-xs text-foreground/75">{t.description}</p>}
                     <p className="mt-1 text-xs text-muted-foreground">{topicCounts.get(t.id) ?? 0} Fragen</p>
                   </div>
                 ))}
@@ -127,10 +127,10 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 {questions.map((q, i) => (
                   <li key={q.id}>
                     <Link href={`/fragen/${q.id}`} className="flex items-start gap-3 py-3 hover:bg-muted/40">
-                      <span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${mastered.has(q.id) ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                      <span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${mastered.has(q.id) ? "bg-success/15 text-success" : "bg-foreground/8 text-foreground/75"}`}>
                         {i + 1}
                       </span>
-                      <span className="flex-1 text-sm text-slate-700">{q.text}</span>
+                      <span className="flex-1 text-sm text-foreground/85">{q.text}</span>
                       <span className="hidden shrink-0 gap-1 sm:flex">
                         <DifficultyBadge difficulty={q.difficulty} />
                         <OriginBadge origin={q.origin} verifiedSource={q.source?.verified} />
@@ -170,7 +170,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                     <option value="HARD">Schwer</option>
                   </Select>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className="flex items-center gap-2 text-sm text-foreground/85">
                   <input type="checkbox" name="onlyNew" className="size-4 accent-blue-700" /> Nur noch nicht gelernte Fragen
                 </label>
                 <SubmitButton className="w-full" size="lg" disabled={questions.length === 0}>
@@ -184,8 +184,8 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             <Progress value={pct} className="mt-2" barClassName={`bg-gradient-to-r ${color.gradient}`} />
             <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div><dt className="text-[11px] text-muted-foreground">Beantwortet</dt><dd className="font-extrabold text-navy">{progress?.answeredCount ?? 0}</dd></div>
-              <div><dt className="text-[11px] text-muted-foreground">Richtig</dt><dd className="font-extrabold text-emerald-700">{progress?.correctCount ?? 0}</dd></div>
-              <div><dt className="text-[11px] text-muted-foreground">Falsch</dt><dd className="font-extrabold text-rose-700">{progress?.incorrectCount ?? 0}</dd></div>
+              <div><dt className="text-[11px] text-muted-foreground">Richtig</dt><dd className="font-extrabold text-success">{progress?.correctCount ?? 0}</dd></div>
+              <div><dt className="text-[11px] text-muted-foreground">Falsch</dt><dd className="font-extrabold text-destructive">{progress?.incorrectCount ?? 0}</dd></div>
             </dl>
           </Card>
         </aside>
