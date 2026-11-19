@@ -8,7 +8,8 @@ export async function middleware(request: NextRequest) {
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   const isPublic = PUBLIC_PATHS.includes(pathname);
 
-  if (session && (pathname === "/login" || pathname === "/registrieren")) {
+  // Gäste dürfen zur Registrierung (Gastkonto in echtes Konto umwandeln)
+  if (session && (pathname === "/login" || (pathname === "/registrieren" && !session.guest))) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
   if (isPublic) return NextResponse.next();

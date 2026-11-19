@@ -16,6 +16,7 @@ interface ShellUser {
   name: string;
   email: string;
   role: "STUDENT" | "ADMIN";
+  isGuest?: boolean;
 }
 
 function useIsActive() {
@@ -90,13 +91,27 @@ function SidebarContent({ user, pillPrefix, onNavigate }: { user: ShellUser; pil
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-bold text-navy">{user.name}</span>
-            <span className="block truncate text-xs text-muted-foreground">{user.role === "ADMIN" ? "Administrator" : "Lernende/r"}</span>
+            <span className="block truncate text-xs text-muted-foreground">{user.isGuest ? "Gastmodus" : user.role === "ADMIN" ? "Administrator" : "Lernende/r"}</span>
           </span>
           <User className="size-4 text-muted-foreground" />
         </Link>
-        <form action={logoutAction}>
+        {user.isGuest && (
+          <Link
+            href="/registrieren"
+            onClick={onNavigate}
+            className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-primary px-2 py-2 text-xs font-bold text-primary-foreground transition active:scale-[0.97]"
+          >
+            Fortschritt sichern – Konto erstellen
+          </Link>
+        )}
+        <form
+          action={logoutAction}
+          onSubmit={(e) => {
+            if (user.isGuest && !window.confirm("Als Gast abmelden? Dein Gast-Fortschritt wird dabei gelöscht.")) e.preventDefault();
+          }}
+        >
           <button type="submit" className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-foreground/70 transition hover:bg-accent hover:text-destructive">
-            <LogOut className="size-3.5" /> Abmelden
+            <LogOut className="size-3.5" /> {user.isGuest ? "Gastmodus beenden" : "Abmelden"}
           </button>
         </form>
       </div>

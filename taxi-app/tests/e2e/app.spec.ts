@@ -17,6 +17,19 @@ async function login(page: Page, email: string, password: string) {
   await page.waitForURL("**/dashboard");
 }
 
+/** Durchläuft das 3-Schritte-Onboarding (Prüfung, Termin, Tagesziel). */
+async function completeOnboarding(page: Page) {
+  await page.waitForURL("**/willkommen");
+  await settle(page);
+  await page.getByRole("button", { name: "Taxilenker:in" }).click();
+  await page.getByRole("button", { name: /Weiter/ }).click();
+  await page.getByLabel("Mein Termin steht noch nicht fest").check();
+  await page.getByRole("button", { name: /Weiter/ }).click();
+  await page.getByRole("radio", { name: /20/ }).click();
+  await page.getByRole("button", { name: /Los geht/ }).click();
+  await page.waitForURL("**/dashboard");
+}
+
 /** Wartet, bis die Seite hydriert ist und Prefetches abgeschlossen sind (vermeidet Klick-Races direkt nach dem Laden). */
 async function settle(page: Page) {
   await page.waitForLoadState("networkidle");
@@ -49,7 +62,7 @@ test.describe.serial("Lernende/r", () => {
     await page.getByLabel("Passwort wiederholen").fill(STUDENT.password);
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Registrieren" }).click();
-    await page.waitForURL("**/dashboard");
+    await completeOnboarding(page);
     await expect(page.getByText("Willkommen zurück,")).toBeVisible();
     for (const label of ["Lernen starten", "Quiz starten", "Prüfungsmodus", "Falsche Antworten", "Lernkarten", "Mein Fortschritt"]) {
       await expect(page.getByRole("main").getByRole("link", { name: new RegExp(label) }).first()).toBeVisible();
@@ -328,18 +341,31 @@ test("PWA: Manifest und Service Worker sind erreichbar", async ({ request }) => 
   expect((await request.get("/api/health")).status()).toBe(200);
 });
 
-test.describe("Demo-Zugang", () => {
-  test("Demo ausprobieren meldet ohne Konto an und sperrt Passwortänderung", async ({ page }) => {
+test.describe("Gastmodus", () => {
+  test("Als Gast testen: eigenes Konto, Onboarding, Sperren und Umwandlung in echtes Konto", async ({ page }) => {
     await gotoSettled(page, "/login");
-    await page.getByRole("button", { name: /Demo ausprobieren/ }).click();
-    await page.waitForURL("**/dashboard");
-    await expect(page.getByText("Demo-Modus:")).toBeVisible();
+    await page.getByRole("button", { name: /Als Gast testen/ }).click();
+    await completeOnboarding(page);
+    await expect(page.getByText("Gastmodus").first()).toBeVisible();
+
     await gotoSettled(page, "/profil");
     const pwForm = page.locator("form").filter({ has: page.getByLabel("Aktuelles Passwort") });
     await pwForm.getByLabel("Aktuelles Passwort").fill("egal");
     await pwForm.getByLabel("Neues Passwort", { exact: true }).fill("Neu!2026passwort");
     await pwForm.getByLabel("Neues Passwort wiederholen").fill("Neu!2026passwort");
     await pwForm.getByRole("button").click();
-    await expect(page.getByText(/Im Demo-Konto nicht möglich/)).toBeVisible();
+    await expect(page.getByText(/Im Gastmodus nicht möglich/)).toBeVisible();
+
+    await gotoSettled(page, "/registrieren");
+    await expect(page.getByRole("heading", { name: "Fortschritt sichern" })).toBeVisible();
+    await page.getByLabel("Name").fill("Ehemaliger Gast");
+    await page.getByLabel("E-Mail-Adresse").fill(`gast-upgrade-${uid}@example.at`);
+    await page.getByLabel("Passwort", { exact: true }).fill("Sicher!2026gast");
+    await page.getByLabel("Passwort wiederholen").fill("Sicher!2026gast");
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: /Konto erstellen/ }).click();
+    await page.waitForURL("**/dashboard");
+    await expect(page.getByText("Ehemaliger").first()).toBeVisible();
+    await expect(page.getByText("Gastmodus")).toHaveCount(0);
   });
 });

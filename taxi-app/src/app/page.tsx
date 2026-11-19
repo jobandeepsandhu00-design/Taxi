@@ -1,20 +1,19 @@
 import Link from "next/link";
-import { DemoLoginButton } from "@/components/demo/demo-login-button";
-import { isDemoLoginEnabled } from "@/lib/demo";
 import { redirect } from "next/navigation";
 import { ArrowRight, BarChart3, ClipboardCheck, Layers, MapPinned, RotateCcw, Sparkles } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { AuthScene } from "@/components/auth/auth-scene";
+import { GuestButton } from "@/components/auth/guest-button";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getSettings } from "@/lib/settings";
 
 const features = [
-  { icon: Sparkles, title: "Lernmodus", text: "Fragen nach Kategorie mit sofortigem Feedback und ausführlichen Erklärungen." },
-  { icon: ClipboardCheck, title: "Prüfungssimulation", text: "Countdown, Fragennavigation, Markieren zur Überprüfung und Bestehensauswertung." },
-  { icon: RotateCcw, title: "Fehlertraining", text: "Falsch beantwortete Fragen werden automatisch gesammelt und wiederholt." },
-  { icon: Layers, title: "Lernkarten", text: "Karteikarten mit Flip-Animation – schwierige Karten gezielt wiederholen." },
-  { icon: MapPinned, title: "Wiener Ortskenntnisse", text: "Bezirke, Sehenswürdigkeiten, Bahnhöfe, Spitäler und wichtige Routen." },
-  { icon: BarChart3, title: "Fortschritt", text: "Trefferquote je Kategorie, Lernzeit, schwächste Themen und Prüfungsbereitschaft." },
+  { icon: Sparkles, title: "Lernmodus" },
+  { icon: ClipboardCheck, title: "Prüfungssimulation" },
+  { icon: RotateCcw, title: "Fehlertraining" },
+  { icon: Layers, title: "Lernkarten" },
+  { icon: MapPinned, title: "Wiener Ortskunde" },
+  { icon: BarChart3, title: "Fortschritt" },
 ];
 
 export default async function LandingPage() {
@@ -22,68 +21,53 @@ export default async function LandingPage() {
   if (user) redirect("/dashboard");
   const settings = await getSettings();
   return (
-    <div className="min-h-dvh">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-        <Logo />
-        <div className="flex gap-2">
-          <Button asChild variant="ghost">
-            <Link href="/login">Anmelden</Link>
+    <AuthScene
+      aside={
+        <div className="max-w-md">
+          <h2 className="text-5xl leading-[1.05] font-bold tracking-tight text-white [text-shadow:0_4px_30px_rgba(0,0,0,0.6)]">
+            Bestehe deine <span className="text-primary">Taxi-Prüfung</span> in Wien.
+          </h2>
+          <p className="mt-4 text-lg text-white/75 [text-shadow:0_2px_16px_rgba(0,0,0,0.7)]">Strukturiert lernen, realistisch üben – von der StVO bis zur Ortskunde.</p>
+        </div>
+      }
+    >
+      <div className="pb-6">
+        <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          <span className="size-2 animate-pulse rounded-full bg-primary" /> Vorbereitung auf die Taxi-Prüfung · Wien
+        </span>
+        <h1 className="mt-4 text-3xl leading-tight font-bold tracking-tight text-white lg:hidden">
+          Bestehe deine <span className="text-primary">Taxi-Prüfung</span> in Österreich
+        </h1>
+        <h1 className="mt-4 hidden text-2xl font-bold tracking-tight text-white lg:block">Los geht&apos;s – in wenigen Sekunden startklar</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Lernmodus, Prüfungssimulation, Fehlertraining und Lernkarten – alles in einer App.</p>
+        <div className="mt-6 grid gap-3">
+          <Button asChild size="lg">
+            <Link href="/registrieren">
+              Kostenlos starten <ArrowRight />
+            </Link>
           </Button>
-          <Button asChild className="hidden sm:inline-flex">
-            <Link href="/registrieren">Registrieren</Link>
+          <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/[0.04]">
+            <Link href="/login">Ich habe bereits ein Konto</Link>
           </Button>
         </div>
-      </header>
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-x-0 -top-40 -z-10 mx-auto h-[480px] max-w-4xl rounded-full bg-gradient-to-br from-blue-200/60 via-sky-100/50 to-transparent blur-3xl" />
-        <div className="mx-auto max-w-4xl px-5 pt-12 pb-16 text-center sm:pt-20">
-          <span className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-semibold text-link shadow-sm">
-            <span className="size-2 rounded-full bg-success" /> Vorbereitung auf die Taxi-Prüfung · Wien
-          </span>
-          <h1 className="mt-6 text-4xl leading-[1.1] font-extrabold tracking-tight text-navy sm:text-6xl">
-            Bestehe deine <span className="bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">Taxi-Prüfung</span> in Österreich
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-            Strukturiert lernen, realistisch üben und den eigenen Fortschritt verfolgen – von der StVO über das Gewerberecht bis zu den Wiener Ortskenntnissen.
-          </p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Button asChild size="lg">
-              <Link href="/registrieren">
-                Kostenlos starten <ArrowRight />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/login">Ich habe bereits ein Konto</Link>
-            </Button>
-          </div>
-          {isDemoLoginEnabled() && (
-            <div className="mx-auto mt-4 max-w-sm">
-              <DemoLoginButton label="Demo ausprobieren – ohne Anmeldung" />
-              <p className="mt-2 text-xs text-muted-foreground">Sofort loslegen mit einem Demo-Konto. Keine Daten nötig.</p>
-            </div>
-          )}
+        <div className="my-5 flex items-center gap-3 text-xs font-semibold text-muted-foreground uppercase">
+          <span className="h-px flex-1 bg-white/10" /> oder <span className="h-px flex-1 bg-white/10" />
         </div>
-      </section>
-      <section className="mx-auto grid max-w-6xl gap-4 px-5 pb-16 sm:grid-cols-2 lg:grid-cols-3 grid-cols-1">
-        {features.map((f) => (
-          <div key={f.title} className="rounded-2xl glass p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-link">
-              <f.icon className="size-5" />
-            </div>
-            <h3 className="font-bold text-navy">{f.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{f.text}</p>
-          </div>
-        ))}
-      </section>
-      <footer className="border-t bg-muted/50">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-8 text-xs text-muted-foreground sm:flex-row sm:justify-between">
-          <p className="max-w-2xl leading-relaxed">{settings.disclaimer}</p>
-          <div className="flex gap-4">
-            <Link href="/impressum" className="hover:text-navy">Impressum</Link>
-            <Link href="/datenschutz" className="hover:text-navy">Datenschutz</Link>
-          </div>
+        <GuestButton />
+        <ul className="mt-6 grid grid-cols-3 gap-2">
+          {features.map((f) => (
+            <li key={f.title} className="flex flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 text-center">
+              <f.icon className="size-5 text-primary" />
+              <span className="text-[11px] leading-tight font-semibold text-white/80">{f.title}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground">{settings.disclaimer}</p>
+        <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+          <Link href="/impressum" className="hover:text-white">Impressum</Link>
+          <Link href="/datenschutz" className="hover:text-white">Datenschutz</Link>
         </div>
-      </footer>
-    </div>
+      </div>
+    </AuthScene>
   );
 }

@@ -112,7 +112,9 @@ npm run dev                   # http://localhost:3000
 | Admin | `admin@taxi-pruefung.at` (bzw. `SEED_ADMIN_EMAIL`) | `SEED_ADMIN_PASSWORD` |
 | Demo-Lernende | `demo@taxi-pruefung.at` | `Lernen!2026demo` (mit `SEED_DEMO_STUDENT=false` deaktivierbar) |
 
-**Demo-Zugang:** Startseite, Login und Registrierung zeigen den Button „Demo ausprobieren“, der ohne Eingabe mit dem Demo-Konto anmeldet. Im Demo-Konto sind Profil- und Passwortänderung gesperrt; ein Hinweisbanner weist auf den gemeinsamen Fortschritt hin. Mit `DEMO_LOGIN_ENABLED=false` lässt sich der Button abschalten.
+**Gastmodus:** Startseite, Login und Registrierung bieten „Als Gast testen“. Dabei wird ein eigenes, anonymes Konto nur für dieses Gerät angelegt (kein geteiltes Demo-Konto). Gäste können ihr Konto über „Fortschritt sichern“ jederzeit in ein echtes Konto umwandeln – der Lernfortschritt bleibt erhalten. Beim Abmelden wird ein Gastkonto gelöscht; ungenutzte Gastkonten werden nach 30 Tagen automatisch entfernt.
+
+**Onboarding:** Neue Konten durchlaufen unter `/willkommen` drei Schritte (Prüfungsart, Prüfungstermin, Tagesziel).
 
 
 ### Qualitätssicherung

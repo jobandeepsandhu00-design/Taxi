@@ -34,13 +34,13 @@ async function main() {
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "Admin!2026sicher";
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    create: { email: adminEmail, name: "Administrator", role: "ADMIN", passwordHash: await bcrypt.hash(adminPassword, 12), regionId: wien.id },
+    create: { email: adminEmail, name: "Administrator", role: "ADMIN", passwordHash: await bcrypt.hash(adminPassword, 12), regionId: wien.id, onboardedAt: new Date() },
     update: { role: "ADMIN", isActive: true },
   });
   if (process.env.SEED_DEMO_STUDENT !== "false") {
     await prisma.user.upsert({
       where: { email: "demo@taxi-pruefung.at" },
-      create: { email: "demo@taxi-pruefung.at", name: "Demo Lernende", role: "STUDENT", passwordHash: await bcrypt.hash("Lernen!2026demo", 12), regionId: wien.id },
+      create: { email: "demo@taxi-pruefung.at", name: "Demo Lernende", role: "STUDENT", passwordHash: await bcrypt.hash("Lernen!2026demo", 12), regionId: wien.id, onboardedAt: new Date() },
       update: {},
     });
   }

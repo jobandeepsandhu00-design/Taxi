@@ -88,6 +88,11 @@ model User {
   regionId          String?
   region            Region?             @relation(fields: [regionId], references: [id], onDelete: SetNull)
   targetExamDate    DateTime?           @db.Date
+  /// Gastkonto: pro Gerät angelegt, ohne E-Mail/Passwort; kann später in ein echtes Konto umgewandelt werden
+  isGuest           Boolean             @default(false)
+  examType          ExamType?
+  dailyGoalMinutes  Int?
+  onboardedAt       DateTime?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   lastLoginAt       DateTime?
@@ -103,6 +108,12 @@ model User {
   createdQuestions  Question[]          @relation("QuestionCreatedBy")
 
   @@index([role])
+  @@index([isGuest, lastLoginAt])
+}
+
+enum ExamType {
+  TAXILENKER
+  KONZESSION
 }
 
 model Category {

@@ -8,13 +8,18 @@ import { createSession, destroySession, requireUser } from "@/lib/auth/session";
 import { rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { loginSchema, passwordSchema, registerSchema } from "@/lib/validation";
 import { z } from "zod";
-import { DEMO_EMAIL, isDemoEmail, isDemoLoginEnabled } from "@/lib/demo";
+import { randomUUID } from "node:crypto";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export interface FormState {
   error?: string;
   success?: string;
   fieldErrors?: Record<string, string[] | undefined>;
+  /** Ziel nach erfolgreicher Anmeldung – der Client spielt erst die Abfahrt-Animation ab. */
+  redirectTo?: string;
 }
+
+const GUEST_TTL_DAYS = 30;
 
 async function clientIp() {
   const h = await headers();
@@ -46,12 +51,25 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   const { name, email, password } = parsed.data;
   const exists = await prisma.user.findUnique({ where: { email } });
   if (exists) return { error: "Mit dieser E-Mail-Adresse existiert bereits ein Konto." };
+  const passwordHash = await hashPassword(password);
+
+  // Angemeldeter Gast: Konto umwandeln, Lernfortschritt bleibt erhalten
+  const current = await getCurrentUser();
+  if (current?.isGuest) {
+    const user = await prisma.user.update({
+      where: { id: current.id },
+      data: { name, email, passwordHash, isGuest: false, lastLoginAt: new Date() },
+    });
+    await createSession({ sub: user.id, role: user.role, name: user.name });
+    return { redirectTo: user.onboardedAt ? "/dashboard" : "/willkommen" };
+  }
+
   const region = await prisma.region.findFirst({ where: { code: "W" } });
   const user = await prisma.user.create({
-    data: { name, email, passwordHash: await hashPassword(password), role: "STUDENT", regionId: region?.id, lastLoginAt: new Date() },
+    data: { name, email, passwordHash, role: "STUDENT", regionId: region?.id, lastLoginAt: new Date() },
   });
   await createSession({ sub: user.id, role: user.role, name: user.name });
-  redirect("/dashboard");
+  return { redirectTo: "/willkommen" };
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -70,25 +88,65 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   resetRateLimit(key);
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession({ sub: user.id, role: user.role, name: user.name });
-  redirect(safeRedirectTarget(formData.get("next")));
+  return { redirectTo: safeRedirectTarget(formData.get("next")) };
 }
 
-export async function demoLoginAction(): Promise<FormState> {
-  if (!isDemoLoginEnabled()) return { error: "Der Demo-Zugang ist derzeit nicht verfügbar." };
+/** „Als Gast testen": legt ein eigenes, anonymes Konto für dieses Gerät an (kein geteiltes Demo-Konto). */
+export async function guestLoginAction(): Promise<FormState> {
   const ip = await clientIp();
-  if (!rateLimit(`demo:${ip}`, 20, 15 * 60 * 1000).ok) {
-    return { error: "Zu viele Demo-Anmeldungen. Bitte in ein paar Minuten erneut versuchen." };
+  if (!rateLimit(`guest:${ip}`, 10, 60 * 60 * 1000).ok) {
+    return { error: "Zu viele Gastzugänge von diesem Netzwerk. Bitte später erneut versuchen." };
   }
-  const user = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
-  if (!user || !user.isActive || user.role !== "STUDENT") return { error: "Der Demo-Zugang ist derzeit nicht verfügbar." };
-  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await createSession({ sub: user.id, role: user.role, name: user.name });
-  redirect("/dashboard");
+  // Verwaiste Gastkonten aufräumen (seit 30 Tagen nicht genutzt)
+  await prisma.user.deleteMany({
+    where: { isGuest: true, lastLoginAt: { lt: new Date(Date.now() - GUEST_TTL_DAYS * 24 * 60 * 60 * 1000) } },
+  });
+  const region = await prisma.region.findFirst({ where: { code: "W" } });
+  const user = await prisma.user.create({
+    data: {
+      email: `gast-${randomUUID()}@gast.invalid`,
+      name: "Gast",
+      // Kein gültiger bcrypt-Hash → Passwort-Anmeldung ist für Gastkonten unmöglich
+      passwordHash: "!guest",
+      role: "STUDENT",
+      isGuest: true,
+      regionId: region?.id,
+      lastLoginAt: new Date(),
+    },
+  });
+  await createSession({ sub: user.id, role: user.role, name: user.name, guest: true });
+  return { redirectTo: "/willkommen" };
 }
 
 export async function logoutAction() {
+  // Gastkonten haben keine Zugangsdaten – beim Abmelden werden sie entfernt
+  const current = await getCurrentUser();
+  if (current?.isGuest) await prisma.user.delete({ where: { id: current.id } }).catch(() => undefined);
   await destroySession();
   redirect("/login");
+}
+
+const onboardingSchema = z.object({
+  examType: z.enum(["TAXILENKER", "KONZESSION"]),
+  targetExamDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
+  dailyGoalMinutes: z.coerce.number().int().refine((v) => [10, 20, 30].includes(v), "Bitte ein Tagesziel wählen."),
+});
+
+/** Abschluss des 3-Schritte-Onboardings. */
+export async function completeOnboardingAction(input: { examType: string; targetExamDate: string; dailyGoalMinutes: number }): Promise<FormState> {
+  const user = await requireUser();
+  const parsed = onboardingSchema.safeParse(input);
+  if (!parsed.success) return { error: "Bitte alle Schritte ausfüllen." };
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      examType: parsed.data.examType,
+      targetExamDate: parsed.data.targetExamDate ? new Date(`${parsed.data.targetExamDate}T00:00:00Z`) : null,
+      dailyGoalMinutes: parsed.data.dailyGoalMinutes,
+      onboardedAt: new Date(),
+    },
+  });
+  return { redirectTo: "/dashboard" };
 }
 
 const profileSchema = z.object({
@@ -96,11 +154,11 @@ const profileSchema = z.object({
   targetExamDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
 });
 
-const DEMO_LOCKED = "Im Demo-Konto nicht möglich. Erstelle ein eigenes Konto, um dein Profil zu ändern.";
+const GUEST_LOCKED = "Im Gastmodus nicht möglich. Erstelle ein kostenloses Konto, um dein Profil zu ändern.";
 
 export async function updateProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
-  if (isDemoEmail(user.email)) return { error: DEMO_LOCKED };
+  if (user.isGuest) return { error: GUEST_LOCKED };
   const parsed = profileSchema.safeParse({ name: formData.get("name"), targetExamDate: formData.get("targetExamDate") ?? "" });
   if (!parsed.success) return { error: "Bitte Eingaben prüfen.", fieldErrors: parsed.error.flatten().fieldErrors };
   await prisma.user.update({
@@ -115,7 +173,7 @@ export async function updateProfileAction(_prev: FormState, formData: FormData):
 
 export async function changePasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
-  if (isDemoEmail(user.email)) return { error: DEMO_LOCKED };
+  if (user.isGuest) return { error: GUEST_LOCKED };
   const current = String(formData.get("currentPassword") ?? "");
   const next = passwordSchema.safeParse(formData.get("newPassword"));
   if (!next.success) return { error: "Bitte Eingaben prüfen.", fieldErrors: { newPassword: next.error.issues.map((i) => i.message) } };

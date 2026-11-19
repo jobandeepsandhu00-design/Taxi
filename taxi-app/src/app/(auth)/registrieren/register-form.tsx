@@ -2,50 +2,42 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { Alert } from "@/components/ui/alert";
-import { FieldError, Input, Label } from "@/components/ui/input";
+import { FormError } from "@/components/auth/form-error";
+import { useSceneForm } from "@/components/auth/use-scene-form";
+import { FieldError } from "@/components/ui/input";
+import { FloatingInput } from "@/components/ui/floating-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { registerAction, type FormState } from "@/server/actions/auth";
 
-export function RegisterForm() {
+export function RegisterForm({ submitLabel = "Registrieren" }: { submitLabel?: string }) {
   const [state, action] = useActionState<FormState, FormData>(registerAction, {});
+  useSceneForm(state);
+  const fe = state.fieldErrors;
   return (
-    <form action={action} className="mt-8 space-y-4" noValidate>
-      {state.error && <Alert variant="error">{state.error}</Alert>}
-      <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
-        <Input id="name" name="name" autoComplete="name" required />
-        <FieldError messages={state.fieldErrors?.name} />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="email">E-Mail-Adresse</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-        <FieldError messages={state.fieldErrors?.email} />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="password">Passwort</Label>
-        <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={10} />
-        <p className="text-xs text-muted-foreground">Mindestens 10 Zeichen, Buchstaben und Ziffern.</p>
-        <FieldError messages={state.fieldErrors?.password} />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="passwordConfirm">Passwort wiederholen</Label>
-        <Input id="passwordConfirm" name="passwordConfirm" type="password" autoComplete="new-password" required />
-        <FieldError messages={state.fieldErrors?.passwordConfirm} />
-      </div>
-      <label className="flex items-start gap-2.5 text-sm text-muted-foreground">
-        <input type="checkbox" name="terms" className="mt-0.5 size-4 accent-blue-700" />
+    <form action={action} className="mt-6 space-y-3" noValidate>
+      <FormError message={state.error} />
+      <FloatingInput id="name" name="name" label="Name" autoComplete="name" required aria-invalid={Boolean(fe?.name)} />
+      <FieldError messages={fe?.name} />
+      <FloatingInput id="email" name="email" type="email" label="E-Mail-Adresse" autoComplete="email" required aria-invalid={Boolean(fe?.email)} />
+      <FieldError messages={fe?.email} />
+      <FloatingInput id="password" name="password" type="password" label="Passwort" autoComplete="new-password" required minLength={10} aria-invalid={Boolean(fe?.password)} />
+      <p className="-mt-1 px-1 text-xs text-muted-foreground">Mindestens 10 Zeichen, Buchstaben und Ziffern.</p>
+      <FieldError messages={fe?.password} />
+      <FloatingInput id="passwordConfirm" name="passwordConfirm" type="password" label="Passwort wiederholen" autoComplete="new-password" required aria-invalid={Boolean(fe?.passwordConfirm)} />
+      <FieldError messages={fe?.passwordConfirm} />
+      <label className="flex items-start gap-2.5 pt-1 text-sm text-muted-foreground">
+        <input type="checkbox" name="terms" className="mt-0.5 size-4 shrink-0" />
         <span>
           Ich habe verstanden, dass Übungs- und Demo-Fragen keine offiziellen Prüfungsfragen sind, und akzeptiere die{" "}
-          <Link href="/datenschutz" className="font-semibold text-link hover:underline">
+          <Link href="/datenschutz" className="font-semibold text-primary hover:underline">
             Datenschutzerklärung
           </Link>
           .
         </span>
       </label>
-      <FieldError messages={state.fieldErrors?.terms} />
-      <SubmitButton className="w-full" size="lg" pendingText="Konto wird erstellt…">
-        Registrieren
+      <FieldError messages={fe?.terms} />
+      <SubmitButton className="mt-2 w-full" size="lg" pendingText="Konto wird erstellt…">
+        {submitLabel}
       </SubmitButton>
     </form>
   );

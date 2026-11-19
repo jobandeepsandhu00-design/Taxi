@@ -7,6 +7,8 @@ export interface SessionPayload {
   sub: string;
   role: "STUDENT" | "ADMIN";
   name: string;
+  /** Gastkonto (pro Gerät, ohne Zugangsdaten) */
+  guest?: boolean;
 }
 
 function getSecret(): Uint8Array {
@@ -18,7 +20,7 @@ function getSecret(): Uint8Array {
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {
-  return new SignJWT({ role: payload.role, name: payload.name })
+  return new SignJWT({ role: payload.role, name: payload.name, guest: payload.guest === true })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -32,7 +34,7 @@ export async function verifySession(token: string | undefined): Promise<SessionP
   try {
     const { payload } = await jwtVerify(token, getSecret(), { issuer: "taxi-pruefung", algorithms: ["HS256"] });
     if (!payload.sub || (payload.role !== "STUDENT" && payload.role !== "ADMIN")) return null;
-    return { sub: payload.sub, role: payload.role, name: String(payload.name ?? "") };
+    return { sub: payload.sub, role: payload.role, name: String(payload.name ?? ""), guest: payload.guest === true };
   } catch {
     return null;
   }
