@@ -23,4 +23,5 @@ export const modeLabel: Record<QuizMode, string> = {
   LEARN: "Lernmodus",
   PRACTICE: "Übungsquiz",
   MISTAKES: "Fehlertraining",
+  REVIEW: "Wiederholung",
 };

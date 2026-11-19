@@ -47,6 +47,7 @@ enum QuizMode {
   LEARN
   PRACTICE
   MISTAKES
+  REVIEW
 }
 
 enum AttemptStatus {
@@ -93,6 +94,10 @@ model User {
   examType          ExamType?
   dailyGoalMinutes  Int?
   onboardedAt       DateTime?
+  /// Erfahrungspunkte (Level-System)
+  xp                Int                 @default(0)
+  achievements      UserAchievement[]
+  reviewItems       ReviewItem[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   lastLoginAt       DateTime?
@@ -195,6 +200,7 @@ model Question {
   userAnswers     UserAnswer[]
   examResponses   ExamResponse[]
   flashcards      FlashcardProgress[]
+  reviewItems     ReviewItem[]
   mistakes        MistakeEntry[]
   bookmarks       Bookmark[]
 
@@ -418,4 +424,33 @@ model AppSetting {
   key       String   @id @db.VarChar(80)
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+/// Freigeschaltete Abzeichen und Level-Aufstiege (key z. B. "erste-100" oder "level-2")
+model UserAchievement {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key        String    @db.VarChar(60)
+  unlockedAt DateTime  @default(now())
+  /// Wann die Freischalt-Animation gezeigt wurde
+  seenAt     DateTime?
+
+  @@unique([userId, key])
+  @@index([userId, seenAt])
+}
+
+/// Leitner-Karteikasten für verteilte Wiederholung (Fach 1–5)
+model ReviewItem {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  box            Int      @default(1)
+  dueDate        DateTime @db.Date
+  lastReviewedAt DateTime @default(now())
+
+  @@unique([userId, questionId])
+  @@index([userId, dueDate])
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { dayKey, dayKeyToDate, dateToDayKey } from "@/lib/dates";
 import { gradeAnswer, nextMistakeState, updateStreak } from "@/lib/quiz-logic";
 import { getSettings } from "@/lib/settings";
+import { rewardAnswer } from "./gamification";
 import { buildReveal, getAnswerKey, type AnswerReveal } from "./questions";
 
 const MAX_TIME_PER_ANSWER = 600;
@@ -118,5 +119,9 @@ export async function recordAnswer(params: {
   });
 
   await touchStreak(userId);
-  return buildReveal(key, selected, isCorrect);
+  const reward = await rewardAnswer({ userId, questionId, categoryId: key.categoryId, isCorrect }).catch((e) => {
+    console.error("Belohnung fehlgeschlagen", e);
+    return null;
+  });
+  return { ...buildReveal(key, selected, isCorrect), reward };
 }

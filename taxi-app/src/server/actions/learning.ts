@@ -1,5 +1,7 @@
 "use server";
 
+import { dayKey, dayKeyToDate } from "@/lib/dates";
+import type { QuizMode } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -16,7 +18,7 @@ const idSchema = z.string().min(1).max(64);
 
 async function createAttempt(
   userId: string,
-  data: { mode: "LEARN" | "PRACTICE" | "MISTAKES"; title: string; questionIds: string[]; categoryId?: string | null; settings?: Prisma.InputJsonValue },
+  data: { mode: QuizMode; title: string; questionIds: string[]; categoryId?: string | null; settings?: Prisma.InputJsonValue },
 ) {
   // Nur eine offene Sitzung pro Modus: ältere offene Sitzungen werden als abgebrochen markiert
   await prisma.quizAttempt.updateMany({
@@ -103,6 +105,24 @@ export async function startMistakeTrainingAction(formData: FormData) {
     title: `Fehlertraining (${mistakes.length} Fragen)`,
     categoryId,
     questionIds: shuffle(mistakes.map((m) => m.questionId)),
+  });
+  redirect(`/sitzung/${attempt.id}`);
+}
+
+/** Leitner-Wiederholung: heute fällige Fragen (max. 20), schwächste Fächer zuerst. */
+export async function startReviewAction() {
+  const user = await requireUser();
+  const due = await prisma.reviewItem.findMany({
+    where: { userId: user.id, dueDate: { lte: dayKeyToDate(dayKey()) }, question: publishedWhere },
+    orderBy: [{ box: "asc" }, { dueDate: "asc" }],
+    take: 20,
+    select: { questionId: true },
+  });
+  if (due.length === 0) redirect("/dashboard");
+  const attempt = await createAttempt(user.id, {
+    mode: "REVIEW",
+    title: `Wiederholung (${due.length} ${due.length === 1 ? "Frage" : "Fragen"})`,
+    questionIds: shuffle(due.map((d) => d.questionId)),
   });
   redirect(`/sitzung/${attempt.id}`);
 }

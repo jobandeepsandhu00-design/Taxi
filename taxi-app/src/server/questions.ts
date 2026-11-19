@@ -30,6 +30,8 @@ export interface AnswerReveal {
   sourceTitle: string | null;
   sourceDetail: string | null;
   sourceUrl: string | null;
+  /** XP/Level/Abzeichen für diese Antwort (nur bei Lern-/Quizantworten) */
+  reward?: import("./gamification").Reward | null;
 }
 
 export async function getPublicQuestions(ids: string[]): Promise<PublicQuestion[]> {

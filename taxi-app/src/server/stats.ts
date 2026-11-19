@@ -55,6 +55,7 @@ export async function getDashboardStats(userId: string) {
     totalSeconds,
     todaySeconds: todayRow?.secondsStudied ?? 0,
     todayAnswered: todayRow?.questionsAnswered ?? 0,
+    todayCorrect: todayRow?.correctAnswers ?? 0,
     readiness,
     openMistakes,
   };

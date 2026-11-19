@@ -4,6 +4,7 @@ import { computeExamResult, gradeAnswer } from "@/lib/quiz-logic";
 import { getSettings } from "@/lib/settings";
 import { dayKey, dayKeyToDate } from "@/lib/dates";
 import { nextMistakeState } from "@/lib/quiz-logic";
+import { rewardExam } from "./gamification";
 import { touchStreak } from "./progress";
 
 /**
@@ -92,9 +93,12 @@ export async function finalizeExam(attemptId: string, status: "SUBMITTED" | "EXP
         secondsStudied: { increment: Math.max(0, elapsed) },
       },
     });
-    return attempt.userId;
+    return { userId: attempt.userId, passed: result.passed };
   });
-  if (done) await touchStreak(done);
+  if (done) {
+    await touchStreak(done.userId);
+    await rewardExam(done.userId, done.passed).catch((e) => console.error("Belohnung fehlgeschlagen", e));
+  }
 }
 
 /** Abgelaufene, offene Prüfungen eines Benutzers automatisch abschließen. */

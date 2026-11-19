@@ -48,6 +48,13 @@ async function answerFirstOption(page: Page) {
   await expect(page.getByText(/^(Richtig!|Leider falsch)$/)).toBeVisible();
 }
 
+// Feier-Dialoge (Level-Aufstieg/Abzeichen) können jederzeit erscheinen – automatisch schließen
+test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (dialog) => {
+    await dialog.getByRole("button").click();
+  });
+});
+
 test.describe.serial("Lernende/r", () => {
   test("Schutz: nicht angemeldete Nutzer werden zum Login umgeleitet", async ({ page }) => {
     await gotoSettled(page, "/dashboard");
@@ -63,7 +70,8 @@ test.describe.serial("Lernende/r", () => {
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Registrieren" }).click();
     await completeOnboarding(page);
-    await expect(page.getByText("Willkommen zurück,")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Test");
+    await expect(page.getByText("Prüfungsreife")).toBeVisible();
     for (const label of ["Lernen starten", "Quiz starten", "Prüfungsmodus", "Falsche Antworten", "Lernkarten", "Mein Fortschritt"]) {
       await expect(page.getByRole("main").getByRole("link", { name: new RegExp(label) }).first()).toBeVisible();
     }
@@ -214,7 +222,7 @@ test.describe.serial("Lernende/r", () => {
     await expect(page.getByText("Profil gespeichert.")).toBeVisible();
     await gotoSettled(page, "/dashboard");
     await expect(page.getByText(/bis zur Prüfung/)).toBeVisible();
-    await expect(page.getByText("Beantwortete Fragen")).toBeVisible();
+    await expect(page.getByText("Lernserie")).toBeVisible();
   });
 
   test("Lernende haben keinen Zugriff auf die Administration", async ({ page, request }) => {
