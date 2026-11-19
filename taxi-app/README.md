@@ -112,6 +112,9 @@ npm run dev                   # http://localhost:3000
 | Admin | `admin@taxi-pruefung.at` (bzw. `SEED_ADMIN_EMAIL`) | `SEED_ADMIN_PASSWORD` |
 | Demo-Lernende | `demo@taxi-pruefung.at` | `Lernen!2026demo` (mit `SEED_DEMO_STUDENT=false` deaktivierbar) |
 
+**Demo-Zugang:** Startseite, Login und Registrierung zeigen den Button „Demo ausprobieren“, der ohne Eingabe mit dem Demo-Konto anmeldet. Im Demo-Konto sind Profil- und Passwortänderung gesperrt; ein Hinweisbanner weist auf den gemeinsamen Fortschritt hin. Mit `DEMO_LOGIN_ENABLED=false` lässt sich der Button abschalten.
+
+
 ### Qualitätssicherung
 
 ```bash

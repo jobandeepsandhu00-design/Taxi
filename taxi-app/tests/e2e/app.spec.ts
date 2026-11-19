@@ -327,3 +327,19 @@ test("PWA: Manifest und Service Worker sind erreichbar", async ({ request }) => 
   expect((await request.get("/sw.js")).status()).toBe(200);
   expect((await request.get("/api/health")).status()).toBe(200);
 });
+
+test.describe("Demo-Zugang", () => {
+  test("Demo ausprobieren meldet ohne Konto an und sperrt Passwortänderung", async ({ page }) => {
+    await gotoSettled(page, "/login");
+    await page.getByRole("button", { name: /Demo ausprobieren/ }).click();
+    await page.waitForURL("**/dashboard");
+    await expect(page.getByText("Demo-Modus:")).toBeVisible();
+    await gotoSettled(page, "/profil");
+    const pwForm = page.locator("form").filter({ has: page.getByLabel("Aktuelles Passwort") });
+    await pwForm.getByLabel("Aktuelles Passwort").fill("egal");
+    await pwForm.getByLabel("Neues Passwort", { exact: true }).fill("Neu!2026passwort");
+    await pwForm.getByLabel("Neues Passwort wiederholen").fill("Neu!2026passwort");
+    await pwForm.getByRole("button").click();
+    await expect(page.getByText(/Im Demo-Konto nicht möglich/)).toBeVisible();
+  });
+});

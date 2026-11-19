@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DemoLoginButton } from "@/components/demo/demo-login-button";
+import { isDemoLoginEnabled } from "@/lib/demo";
 import { redirect } from "next/navigation";
 import { ArrowRight, BarChart3, ClipboardCheck, Layers, MapPinned, RotateCcw, Sparkles } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -54,6 +56,12 @@ export default async function LandingPage() {
               <Link href="/login">Ich habe bereits ein Konto</Link>
             </Button>
           </div>
+          {isDemoLoginEnabled() && (
+            <div className="mx-auto mt-4 max-w-sm">
+              <DemoLoginButton label="Demo ausprobieren – ohne Anmeldung" />
+              <p className="mt-2 text-xs text-muted-foreground">Sofort loslegen mit einem Demo-Konto. Keine Daten nötig.</p>
+            </div>
+          )}
         </div>
       </section>
       <section className="mx-auto grid max-w-6xl gap-4 px-5 pb-16 sm:grid-cols-2 lg:grid-cols-3 grid-cols-1">

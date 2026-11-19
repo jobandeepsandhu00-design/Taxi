@@ -8,6 +8,7 @@ import { createSession, destroySession, requireUser } from "@/lib/auth/session";
 import { rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { loginSchema, passwordSchema, registerSchema } from "@/lib/validation";
 import { z } from "zod";
+import { DEMO_EMAIL, isDemoEmail, isDemoLoginEnabled } from "@/lib/demo";
 
 export interface FormState {
   error?: string;
@@ -72,6 +73,19 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   redirect(safeRedirectTarget(formData.get("next")));
 }
 
+export async function demoLoginAction(): Promise<FormState> {
+  if (!isDemoLoginEnabled()) return { error: "Der Demo-Zugang ist derzeit nicht verfügbar." };
+  const ip = await clientIp();
+  if (!rateLimit(`demo:${ip}`, 20, 15 * 60 * 1000).ok) {
+    return { error: "Zu viele Demo-Anmeldungen. Bitte in ein paar Minuten erneut versuchen." };
+  }
+  const user = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
+  if (!user || !user.isActive || user.role !== "STUDENT") return { error: "Der Demo-Zugang ist derzeit nicht verfügbar." };
+  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  await createSession({ sub: user.id, role: user.role, name: user.name });
+  redirect("/dashboard");
+}
+
 export async function logoutAction() {
   await destroySession();
   redirect("/login");
@@ -82,8 +96,11 @@ const profileSchema = z.object({
   targetExamDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
 });
 
+const DEMO_LOCKED = "Im Demo-Konto nicht möglich. Erstelle ein eigenes Konto, um dein Profil zu ändern.";
+
 export async function updateProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+  if (isDemoEmail(user.email)) return { error: DEMO_LOCKED };
   const parsed = profileSchema.safeParse({ name: formData.get("name"), targetExamDate: formData.get("targetExamDate") ?? "" });
   if (!parsed.success) return { error: "Bitte Eingaben prüfen.", fieldErrors: parsed.error.flatten().fieldErrors };
   await prisma.user.update({
@@ -98,6 +115,7 @@ export async function updateProfileAction(_prev: FormState, formData: FormData):
 
 export async function changePasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+  if (isDemoEmail(user.email)) return { error: DEMO_LOCKED };
   const current = String(formData.get("currentPassword") ?? "");
   const next = passwordSchema.safeParse(formData.get("newPassword"));
   if (!next.success) return { error: "Bitte Eingaben prüfen.", fieldErrors: { newPassword: next.error.issues.map((i) => i.message) } };
