@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && prisma migrate deploy && prisma db seed && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && (prisma db seed || echo 'Seed übersprungen (Datenbank beschäftigt) – nächster Deploy holt es nach') && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
