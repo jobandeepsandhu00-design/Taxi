@@ -142,6 +142,22 @@ function MobileHeader({ user, onMenu }: { user: ShellUser; onMenu: () => void })
               <Shield className="size-5" />
             </Link>
           )}
+          <Link
+            href="/profil"
+            onClick={() => haptic()}
+            aria-label={`Konto: ${user.name}${user.isGuest ? " (Gastmodus)" : ""}`}
+            className="relative ml-0.5 flex size-11 items-center justify-center rounded-full transition active:scale-95"
+          >
+            <span
+              className={cn(
+                "flex size-9 items-center justify-center rounded-full font-display text-sm font-bold ring-2 ring-offset-2 ring-offset-background transition-shadow",
+                user.avatar ? "bg-primary/15 text-xl ring-primary/60" : "bg-primary text-primary-foreground ring-primary/40",
+              )}
+            >
+              {user.avatar ?? user.name.slice(0, 1).toUpperCase()}
+            </span>
+            {user.isGuest && <span className="absolute right-0.5 bottom-0.5 size-3 rounded-full border-2 border-background bg-warning" aria-hidden />}
+          </Link>
           <button type="button" onClick={onMenu} className="rounded-xl p-2.5 text-foreground/80 transition hover:bg-accent active:scale-95" aria-label="Menü öffnen">
             <Menu className="size-5" />
           </button>
