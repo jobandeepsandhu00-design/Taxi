@@ -19,11 +19,11 @@ const fontVars = [inter, grotesk, jakarta, nunito, playfair, sora].map((f) => f.
 const themeCss = buildThemeCss();
 
 export const metadata: Metadata = {
-  title: { default: "TaxiPrüfung Österreich – Lernen für die Taxi-Prüfung in Wien", template: "%s · TaxiPrüfung" },
+  title: { default: "TaxiFit – Lernen für die Taxi-Prüfung in Wien", template: "%s · TaxiFit" },
   description:
     "Strukturierte Vorbereitung auf die Taxi-Prüfung in Österreich (Wien): Lernmodus, Übungsquiz, Prüfungssimulation, Fehlertraining, Lernkarten und Fortschrittsanalyse.",
-  applicationName: "TaxiPrüfung",
-  appleWebApp: { capable: true, title: "TaxiPrüfung", statusBarStyle: "black-translucent" },
+  applicationName: "TaxiFit",
+  appleWebApp: { capable: true, title: "TaxiFit", statusBarStyle: "black-translucent" },
   formatDetection: { telephone: false },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "TaxiPrüfung Österreich",
-    short_name: "TaxiPrüfung",
+    name: "TaxiFit – Taxi-Prüfung Wien",
+    short_name: "TaxiFit",
     description: "Lern- und Quiz-App zur Vorbereitung auf die Taxi-Prüfung in Österreich (Wien).",
     start_url: "/dashboard",
     scope: "/",

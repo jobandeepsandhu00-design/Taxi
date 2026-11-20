@@ -1,3 +1,4 @@
+import { TaxiFitMark } from "@/components/brand/taxifit-mark";
 import Link from "next/link";
 
 export function TaxiGlyph({ className = "size-5" }: { className?: string }) {
@@ -13,16 +14,16 @@ export function TaxiGlyph({ className = "size-5" }: { className?: string }) {
 
 export function Logo({ href = "/", compact = false }: { href?: string; compact?: boolean }) {
   return (
-    <Link href={href} className="group flex items-center gap-2.5 font-bold tracking-tight text-navy" aria-label="TaxiPrüfung – Startseite">
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_24px_-4px_var(--glow)] transition-transform duration-300 group-hover:-rotate-6 group-active:scale-95">
-        <TaxiGlyph />
+    <Link href={href} className="group flex items-center gap-2.5 font-bold tracking-tight text-navy" aria-label="TaxiFit – Startseite">
+      <span className="rounded-[10px] shadow-[0_0_24px_-6px_var(--glow)] transition-transform duration-300 group-hover:-rotate-6 group-active:scale-95">
+        <TaxiFitMark size={36} />
       </span>
       {!compact && (
         <span className="leading-none">
-          <span className="block font-display text-[16px]">
-            Taxi<span className="text-link">Prüfung</span>
+          <span className="block font-display text-[17px]">
+            Taxi<span className="text-link">Fit</span>
           </span>
-          <span className="block text-[11px] font-medium text-muted-foreground">Österreich · Wien</span>
+          <span className="block text-[11px] font-medium text-muted-foreground">Taxi-Prüfung · Wien</span>
         </span>
       )}
     </Link>

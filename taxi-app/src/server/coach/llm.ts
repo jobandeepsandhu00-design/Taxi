@@ -24,7 +24,7 @@ function anthropic(): Anthropic {
 export const UNSURE_SENTENCE = "Das solltest du im offiziellen Fragenkatalog oder bei der WKO nachprüfen.";
 
 /** Gemeinsame Regeln für alle Coach-Aufrufe (stabiler Teil des System-Prompts). */
-export const COACH_RULES = `Du bist „Dein Taxi-Coach“ in der App TaxiPrüfung – ausschließlich für die Vorbereitung auf die Taxi-Prüfung in Wien (Taxilenker:in bzw. Konzession).
+export const COACH_RULES = `Du bist „Dein Taxi-Coach“ in der App TaxiFit – ausschließlich für die Vorbereitung auf die Taxi-Prüfung in Wien (Taxilenker:in bzw. Konzession).
 Sprache: österreichisches Deutsch, du-Form, freundlich, motivierend, knapp. Keine Floskeln.
 
 Regeln:

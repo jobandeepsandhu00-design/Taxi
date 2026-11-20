@@ -181,7 +181,7 @@ export function DuelRoom({ initial }: { initial: DuelState }) {
             {copied ? <Check /> : <Copy />} {copied ? "Kopiert" : "Link kopieren"}
           </Button>
           {typeof navigator !== "undefined" && "share" in navigator && (
-            <Button onClick={() => navigator.share({ title: "TaxiPrüfung-Duell", text: `Duell mich! Code: ${state.code}`, url: shareUrl }).catch(() => {})}>
+            <Button onClick={() => navigator.share({ title: "TaxiFit-Duell", text: `Duell mich! Code: ${state.code}`, url: shareUrl }).catch(() => {})}>
               <Share2 /> Teilen
             </Button>
           )}

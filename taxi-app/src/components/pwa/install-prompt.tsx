@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Share, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { TaxiGlyph } from "@/components/logo";
+import { TaxiFitMark } from "@/components/brand/taxifit-mark";
 import { Button } from "@/components/ui/button";
 import { spring } from "@/lib/motion";
 
@@ -71,14 +71,14 @@ export function InstallPrompt() {
           </button>
           <div className="flex items-center gap-3">
             <motion.span
-              className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_0_24px_-4px_var(--glow)]"
+              className="shrink-0 rounded-[13px] shadow-[0_0_24px_-4px_var(--glow)]"
               animate={{ y: [0, -6, 0], rotate: [0, -6, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1.5 }}
             >
-              <TaxiGlyph className="size-6" />
+              <TaxiFitMark size={48} />
             </motion.span>
             <div className="min-w-0 flex-1 pr-5">
-              <p className="font-bold text-navy">TaxiPrüfung installieren</p>
+              <p className="font-bold text-navy">TaxiFit installieren</p>
               <p className="text-xs text-muted-foreground">
                 {ios ? (
                   <>

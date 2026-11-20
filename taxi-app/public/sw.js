@@ -1,8 +1,8 @@
-/* TaxiPrüfung – Service Worker
+/* TaxiFit – Service Worker
  * Strategie: statische Assets cache-first, Seiten network-first mit Offline-Fallback.
  * API-/Server-Action-Anfragen (POST) werden nie gecacht – Lernfortschritt wird immer in der Datenbank gespeichert.
  */
-const VERSION = "v2";
+const VERSION = "v-taxifit-1";
 const STATIC_CACHE = `tp-static-${VERSION}`;
 const PAGE_CACHE = `tp-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -80,7 +80,7 @@ self.addEventListener("push", (event) => {
     data = { body: event.data ? event.data.text() : "" };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || "TaxiPrüfung", {
+    self.registration.showNotification(data.title || "TaxiFit", {
       body: data.body || "Zeit für eine kurze Lerneinheit!",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
