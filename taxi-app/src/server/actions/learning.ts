@@ -4,7 +4,7 @@ import { dayKey, dayKeyToDate } from "@/lib/dates";
 import { dailyQuestionIds } from "@/lib/challenge";
 import { rewardXp } from "@/server/gamification";
 import type { QuizMode } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -96,11 +96,21 @@ export async function startPracticeQuizAction(formData: FormData) {
 export async function startMistakeTrainingAction(formData: FormData) {
   const user = await requireUser();
   const categoryId = formData.get("categoryId") ? String(formData.get("categoryId")) : null;
-  const mistakes = await prisma.mistakeEntry.findMany({
-    where: { userId: user.id, resolved: false, question: { ...publishedWhere, ...(categoryId ? { categoryId } : {}) } },
+  // Fehlertraining = alle Fragen in Leitner-Fach 1, die schon einmal falsch beantwortet wurden
+  const mistakes = await prisma.reviewItem.findMany({
+    where: { userId: user.id, box: 1, timesWrong: { gt: 0 }, question: { ...publishedWhere, ...(categoryId ? { categoryId } : {}) } },
     select: { questionId: true },
-    orderBy: [{ wrongCount: "desc" }, { lastWrongAt: "desc" }],
+    orderBy: [{ timesWrong: "desc" }, { lastReviewedAt: "desc" }],
   });
+  // Rückfall: noch offene Einträge der Fehlerliste (z. B. vor Umstellung auf Leitner)
+  if (mistakes.length === 0) {
+    const open = await prisma.mistakeEntry.findMany({
+      where: { userId: user.id, resolved: false, question: { ...publishedWhere, ...(categoryId ? { categoryId } : {}) } },
+      select: { questionId: true },
+      orderBy: [{ wrongCount: "desc" }, { lastWrongAt: "desc" }],
+    });
+    mistakes.push(...open);
+  }
   if (mistakes.length === 0) redirect("/fehler?leer=1");
   const attempt = await createAttempt(user.id, {
     mode: "MISTAKES",
@@ -130,20 +140,20 @@ export async function startDailyChallengeAction() {
   redirect(`/sitzung/${attempt.id}`);
 }
 
-/** Leitner-Wiederholung: heute fällige Fragen (max. 20), schwächste Fächer zuerst. */
+/** Leitner-Wiederholung: heute fällige Fragen (max. 10 auf einmal), am längsten fällige zuerst. */
 export async function startReviewAction() {
   const user = await requireUser();
   const due = await prisma.reviewItem.findMany({
     where: { userId: user.id, dueDate: { lte: dayKeyToDate(dayKey()) }, question: publishedWhere },
-    orderBy: [{ box: "asc" }, { dueDate: "asc" }],
-    take: 20,
+    orderBy: [{ dueDate: "asc" }, { lastReviewedAt: "asc" }],
+    take: 10,
     select: { questionId: true },
   });
   if (due.length === 0) redirect("/dashboard");
   const attempt = await createAttempt(user.id, {
     mode: "REVIEW",
     title: `Wiederholung (${due.length} ${due.length === 1 ? "Frage" : "Fragen"})`,
-    questionIds: shuffle(due.map((d) => d.questionId)),
+    questionIds: due.map((d) => d.questionId),
   });
   redirect(`/sitzung/${attempt.id}`);
 }
@@ -179,13 +189,14 @@ const submitSchema = z.object({
   questionId: idSchema,
   selectedOptionIds: z.array(idSchema).min(1).max(4),
   timeSpentSec: z.number().int().min(0).max(36000),
+  unsure: z.boolean().optional(),
 });
 
 export async function submitQuizAnswerAction(input: z.infer<typeof submitSchema>): Promise<ActionResult<AnswerReveal>> {
   const user = await requireUser();
   const parsed = submitSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Bitte mindestens eine Antwort auswählen." };
-  const { attemptId, questionId, selectedOptionIds, timeSpentSec } = parsed.data;
+  const { attemptId, questionId, selectedOptionIds, timeSpentSec, unsure } = parsed.data;
   const attempt = await prisma.quizAttempt.findFirst({ where: { id: attemptId, userId: user.id } });
   if (!attempt) return { ok: false, error: "Sitzung nicht gefunden." };
   if (attempt.status !== "IN_PROGRESS") return { ok: false, error: "Diese Sitzung ist bereits abgeschlossen." };
@@ -194,7 +205,7 @@ export async function submitQuizAnswerAction(input: z.infer<typeof submitSchema>
   const already = await prisma.userAnswer.findFirst({ where: { quizAttemptId: attempt.id, questionId } });
   if (already) return { ok: false, error: "Diese Frage wurde in dieser Sitzung bereits beantwortet." };
   try {
-    const reveal = await recordAnswer({ userId: user.id, questionId, selectedOptionIds, mode: attempt.mode, quizAttemptId: attempt.id, timeSpentSec });
+    const reveal = await recordAnswer({ userId: user.id, questionId, selectedOptionIds, mode: attempt.mode, quizAttemptId: attempt.id, timeSpentSec, unsure });
     await prisma.quizAttempt.update({
       where: { id: attempt.id },
       data: {
@@ -225,6 +236,15 @@ export async function finishQuizAction(attemptId: string): Promise<ActionResult>
   if (attempt.status === "IN_PROGRESS") {
     const finishedAt = new Date();
     await prisma.quizAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", finishedAt } });
+    // Prüfungsreife nach jeder Sitzung aktualisieren
+    const { refreshReadiness } = await import("@/server/readiness");
+    await refreshReadiness(user.id).catch(() => undefined);
+    // Mini-Lektion: Ergebnis speichern
+    const lessonId = (attempt.settings as { lesson?: string } | null)?.lesson;
+    if (lessonId) {
+      const score = await prisma.userAnswer.count({ where: { quizAttemptId: attempt.id, isCorrect: true } });
+      await prisma.lesson.updateMany({ where: { id: lessonId, userId: user.id }, data: { score, completedAt: finishedAt } });
+    }
     // Daily Challenge: Ergebnis einmal pro Tag für die Rangliste speichern
     const challengeDay = (attempt.settings as { dailyChallenge?: string } | null)?.dailyChallenge;
     if (challengeDay) {
@@ -262,6 +282,7 @@ export async function answerSingleQuestionAction(input: {
   questionId: string;
   selectedOptionIds: string[];
   timeSpentSec: number;
+  unsure?: boolean;
 }): Promise<ActionResult<AnswerReveal>> {
   const user = await requireUser();
   const parsed = submitSchema.omit({ attemptId: true }).safeParse(input);
@@ -330,4 +351,35 @@ export async function heartbeatAction(seconds: number): Promise<void> {
   const user = await requireUser();
   if (!Number.isFinite(seconds)) return;
   await addStudyTime(user.id, seconds);
+}
+
+/** 3-Minuten-Lektion starten: Leitner-Mix (optional je Kategorie) oder feste Kategorie-Lektion. */
+export async function startLessonAction(formData: FormData) {
+  const user = await requireUser();
+  const categoryId = formData.get("categoryId") ? idSchema.parse(formData.get("categoryId")) : null;
+  const lessonIndex = formData.get("lessonIndex") ? z.coerce.number().int().min(1).max(500).parse(formData.get("lessonIndex")) : null;
+  const { buildLesson, categoryLessons } = await import("@/server/lessons");
+  let questionIds: string[];
+  let kind = "mix";
+  let title = "3-Minuten-Lektion";
+  if (categoryId && lessonIndex) {
+    const lessons = await categoryLessons(user.id, categoryId);
+    const l = lessons.find((x) => x.index === lessonIndex);
+    if (!l) redirect("/lernen");
+    const cat = await prisma.category.findUnique({ where: { id: categoryId }, select: { name: true } });
+    questionIds = l.questionIds;
+    kind = "category";
+    title = `Lektion ${lessonIndex} · ${cat?.name ?? ""}`;
+  } else {
+    questionIds = await buildLesson(user.id, categoryId);
+  }
+  if (questionIds.length === 0) redirect("/lernen");
+  // nur eine offene Lektion: ältere offene Lektionen abbrechen (andere Sitzungen bleiben unberührt)
+  await prisma.quizAttempt.updateMany({ where: { userId: user.id, status: "IN_PROGRESS", settings: { path: ["lesson"], not: Prisma.DbNull } }, data: { status: "ABANDONED" } });
+  const lesson = await prisma.lesson.create({ data: { userId: user.id, kind, categoryId, lessonIndex, questionIds } });
+  const attempt = await prisma.quizAttempt.create({
+    data: { userId: user.id, mode: "PRACTICE", title, categoryId, questionIds, settings: { lesson: lesson.id, kind } },
+  });
+  await prisma.lesson.update({ where: { id: lesson.id }, data: { quizAttemptId: attempt.id } });
+  redirect(`/sitzung/${attempt.id}`);
 }

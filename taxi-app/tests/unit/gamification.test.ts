@@ -25,8 +25,11 @@ describe("levelFor", () => {
 
 describe("nextLeitner", () => {
   it("neue richtige Antwort → Fach 2 (2 Tage)", () => expect(nextLeitner(null, true)).toEqual({ box: 2, days: 2 }));
-  it("richtig rückt ein Fach vor", () => expect(nextLeitner(3, true)).toEqual({ box: 4, days: 7 }));
-  it("Fach 5 bleibt Fach 5", () => expect(nextLeitner(5, true)).toEqual({ box: 5, days: 14 }));
+  it("richtig rückt ein Fach vor", () => expect(nextLeitner(3, true)).toEqual({ box: 4, days: 8 }));
+  it("Fach 5 bleibt Fach 5", () => expect(nextLeitner(5, true)).toEqual({ box: 5, days: 16 }));
+  it("richtig, aber unsicher → Fach bleibt", () => expect(nextLeitner(3, true, true)).toEqual({ box: 3, days: 4 }));
+  it("neu, richtig aber unsicher → Fach 1", () => expect(nextLeitner(null, true, true)).toEqual({ box: 1, days: 1 }));
+  it("falsch trotz unsicher → Fach 1", () => expect(nextLeitner(4, false, true)).toEqual({ box: 1, days: 1 }));
   it("falsch → zurück in Fach 1, morgen fällig", () => expect(nextLeitner(4, false)).toEqual({ box: 1, days: 1 }));
 });
 

@@ -10,47 +10,6 @@ import { getAnswerKey, publishedWhere } from "@/server/questions";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; limitReached?: boolean };
 
-const simplifiedSchema = z.object({
-  text: z.string(),
-  options: z.array(z.object({ label: z.string(), text: z.string() })),
-});
-
-/** „Einfache Sprache“: Frage in B1-Deutsch – einmal erzeugt, für alle zwischengespeichert. */
-export async function simplifyQuestionAction(questionId: string): Promise<Result<{ text: string; options: { id: string; label: string; text: string }[] }>> {
-  const user = await requireUser();
-  const id = z.string().min(1).max(64).parse(questionId);
-  const q = await prisma.question.findFirst({ where: { id, ...publishedWhere }, select: { id: true, text: true, options: { orderBy: { order: "asc" }, select: { id: true, label: true, text: true } } } });
-  if (!q) return { ok: false, error: "Frage nicht gefunden." };
-  const mapOptions = (opts: { label: string; text: string }[]) => q.options.map((o) => ({ id: o.id, label: o.label, text: opts.find((x) => x.label === o.label)?.text ?? o.text }));
-
-  const cached = await prisma.simplifiedQuestion.findUnique({ where: { questionId: id } });
-  if (cached) return { ok: true, data: { text: cached.text, options: mapOptions(cached.options as { label: string; text: string }[]) } };
-  if (!coachConfigured()) return { ok: false, error: "Der Coach ist noch nicht eingerichtet." };
-  const quota = await coachQuota(user);
-  if (quota.remaining <= 0) return { ok: false, error: LIMIT_REACHED, limitReached: true };
-
-  try {
-    const prompt = `Schreibe diese Prüfungsfrage und ihre Antwortmöglichkeiten in Einfacher Sprache (Niveau B1, kurze Sätze, gebräuchliche Wörter, Fachbegriffe kurz in Klammern erklären).
-Wichtig: Inhalt und Bedeutung jeder Antwort müssen exakt gleich bleiben – verrate nicht, welche richtig ist, und mach keine Antwort eindeutiger als im Original. Behalte die Buchstaben bei.
-
-Frage: ${q.text}
-${q.options.map((o) => `${o.label}) ${o.text}`).join("\n")}`;
-    const out = await parseCoach({
-      context: "Aufgabe: sprachliche Vereinfachung ohne inhaltliche Änderung.",
-      prompt,
-      schema: simplifiedSchema,
-      fake: () => ({ text: `Einfach gesagt: ${q.text}`, options: q.options.map((o) => ({ label: o.label, text: o.text })) }),
-      maxTokens: 3000,
-    });
-    if (!out || out.options.length !== q.options.length) return { ok: false, error: "Die Vereinfachung hat nicht geklappt – bitte später erneut versuchen." };
-    await prisma.coachMessage.create({ data: { userId: user.id, kind: "simplify", role: "user", content: `Einfache Sprache (${id})` } });
-    await prisma.simplifiedQuestion.upsert({ where: { questionId: id }, create: { questionId: id, text: out.text, options: out.options }, update: { text: out.text, options: out.options } });
-    return { ok: true, data: { text: out.text, options: mapOptions(out.options) } };
-  } catch (err) {
-    return { ok: false, error: coachErrorMessage(err) };
-  }
-}
-
 /** Mündliche Prüfung: 10 Fragen, Schwerpunkt auf Schwächen. */
 export async function startOralExamAction(): Promise<Result<{ id: string; text: string; category: string }[]>> {
   const user = await requireUser();

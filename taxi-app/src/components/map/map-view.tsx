@@ -25,6 +25,8 @@ interface Props {
   route?: [number, number][] | null;
   routeKey?: string;
   focus?: "wien" | "ring";
+  /** eigener Kartenausschnitt (überschreibt focus) */
+  fitTo?: [[number, number], [number, number]];
   className?: string;
 }
 
@@ -78,7 +80,7 @@ function heatColor(v: number | undefined): string {
 }
 
 /** MapLibre-Karte von Wien mit Bezirksgrenzen, Heatmap, Markern und Taxi-Animation. */
-export default function MapView({ onPick, onDistrictClick, markers = [], line, heat, highlightDistrict, route, routeKey, focus = "wien", className }: Props) {
+export default function MapView({ onPick, onDistrictClick, markers = [], line, heat, highlightDistrict, route, routeKey, focus = "wien", fitTo, className }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MLMap | null>(null);
   const markerRefs = useRef<maplibregl.Marker[]>([]);
@@ -98,7 +100,7 @@ export default function MapView({ onPick, onDistrictClick, markers = [], line, h
       m = new maplibregl.Map({
       container: container.current,
       style: buildStyle(dark),
-      bounds: focus === "ring" ? RING_BOUNDS : VIENNA_BOUNDS,
+      bounds: fitTo ?? (focus === "ring" ? RING_BOUNDS : VIENNA_BOUNDS),
       fitBoundsOptions: { padding: 20 },
       attributionControl: false,
       dragRotate: false,
@@ -150,6 +152,8 @@ export default function MapView({ onPick, onDistrictClick, markers = [], line, h
       m.remove();
       map.current = null;
     };
+    // fitTo ist nur der Start-Ausschnitt – die Karte soll nicht bei jedem Rendern neu entstehen
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus]);
 
   // Heatmap + Hervorhebung

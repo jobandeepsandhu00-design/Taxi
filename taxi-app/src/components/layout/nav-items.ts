@@ -17,6 +17,9 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Languages,
+  Hash,
+  Route as RouteIcon,
 } from "lucide-react";
 
 export const mainNav = [
@@ -27,7 +30,9 @@ export const mainNav = [
   { href: "/pruefung", label: "Prüfungsmodus", icon: ClipboardCheck },
   { href: "/fehler", label: "Falsche Antworten", icon: RotateCcw },
   { href: "/lernkarten", label: "Lernkarten", icon: Layers },
+  { href: "/zahlen", label: "Zahlen-Trainer", icon: Hash },
   { href: "/ortskunde", label: "Ortskunde-Karte", icon: Map },
+  { href: "/ortskunde/routen", label: "Routen in Etappen", icon: RouteIcon },
   { href: "/challenge", label: "Daily Challenge", icon: Trophy },
   { href: "/duell", label: "Duell", icon: Swords },
   { href: "/fortschritt", label: "Mein Fortschritt", icon: BarChart3 },
@@ -56,6 +61,8 @@ export const adminNav = [
   { href: "/admin/fragen", label: "Fragen", icon: ListChecks },
   { href: "/admin/kategorien", label: "Kategorien", icon: BookOpen },
   { href: "/admin/quellen", label: "Quellen", icon: BookmarkCheck },
+  { href: "/admin/varianten", label: "KI-Varianten", icon: Languages },
+  { href: "/admin/zahlen", label: "Zahlen-Fakten", icon: Hash },
   { href: "/admin/import", label: "Import / Export", icon: Layers },
   { href: "/admin/pruefungen", label: "Prüfungen", icon: ClipboardCheck },
   { href: "/admin/benutzer", label: "Benutzer", icon: Home },

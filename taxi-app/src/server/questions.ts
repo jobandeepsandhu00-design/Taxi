@@ -18,7 +18,7 @@ export const publicQuestionSelect = {
   options: { select: { id: true, label: true, text: true }, orderBy: { order: "asc" } },
 } satisfies Prisma.QuestionSelect;
 
-export type PublicQuestion = Prisma.QuestionGetPayload<{ select: typeof publicQuestionSelect }>;
+export type PublicQuestion = Prisma.QuestionGetPayload<{ select: typeof publicQuestionSelect }> & { glossary?: { term: string; definition: string }[] };
 
 export interface AnswerReveal {
   questionId: string;
@@ -36,8 +36,12 @@ export interface AnswerReveal {
 
 export async function getPublicQuestions(ids: string[]): Promise<PublicQuestion[]> {
   if (ids.length === 0) return [];
-  const rows = await prisma.question.findMany({ where: { id: { in: ids } }, select: publicQuestionSelect });
-  const byId = new Map(rows.map((r) => [r.id, r]));
+  const [rows, glossaries] = await Promise.all([
+    prisma.question.findMany({ where: { id: { in: ids } }, select: publicQuestionSelect }),
+    prisma.questionVariant.findMany({ where: { questionId: { in: ids }, kind: "glossary", lang: "de" }, select: { questionId: true, content: true } }),
+  ]);
+  const gMap = new Map(glossaries.map((g) => [g.questionId, ((g.content as { terms?: { term: string; definition: string }[] }).terms ?? [])]));
+  const byId = new Map(rows.map((r) => [r.id, { ...r, glossary: gMap.get(r.id) ?? [] } as PublicQuestion]));
   return ids.map((id) => byId.get(id)).filter((q): q is PublicQuestion => Boolean(q));
 }
 

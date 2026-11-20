@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <CoachProvider enabled={coachConfigured()}>
     <AppShell user={{ name: user.name, email: user.email, role: user.role, isGuest: user.isGuest, avatar: avatarEmoji(user.avatar) }} disclaimer={settings.disclaimer}>
-      <ThemeSync uid={user.id} theme={user.theme} mode={user.themeMode} />
+      <ThemeSync uid={user.id} theme={user.theme} mode={user.themeMode} helperLang={user.helperLang} />
       {children}
       {unseen.length > 0 && <CelebrationGate items={unseen} />}
     </AppShell>

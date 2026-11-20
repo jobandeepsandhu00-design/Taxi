@@ -8,7 +8,6 @@ import {
   dailyGoalQuestions,
   isNightOwl,
   levelFor,
-  nextLeitner,
   XP,
   type AchievementKey,
 } from "@/lib/gamification";
@@ -19,12 +18,8 @@ export interface Reward {
   xp: number;
   levelUp: { index: number; name: string } | null;
   unlocked: { key: string; title: string; emoji: string }[];
-}
-
-function addDays(key: string, days: number): Date {
-  const d = dayKeyToDate(key);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d;
+  /** Leitner-Wechsel dieser Antwort, z. B. Fach 2 → 3 */
+  box?: { from: number | null; to: number; nextReview: string };
 }
 
 /** Schaltet Abzeichen frei (idempotent) und liefert die tatsächlich neuen zurück. */
@@ -56,17 +51,13 @@ function toReward(xpGained: number, xp: number, levelUp: Reward["levelUp"], keys
 }
 
 /** Nach jeder Antwort: Leitner-Fach, XP (inkl. Tagesziel-Bonus), Level-Aufstieg und Abzeichen. */
-export async function rewardAnswer(params: { userId: string; questionId: string; categoryId: string; isCorrect: boolean }): Promise<Reward> {
+export async function rewardAnswer(params: { userId: string; questionId: string; categoryId: string; isCorrect: boolean; unsure?: boolean }): Promise<Reward> {
   const { userId, questionId, categoryId, isCorrect } = params;
   const today = dayKey();
 
-  const item = await prisma.reviewItem.findUnique({ where: { userId_questionId: { userId, questionId } } });
-  const next = nextLeitner(item?.box ?? null, isCorrect);
-  await prisma.reviewItem.upsert({
-    where: { userId_questionId: { userId, questionId } },
-    create: { userId, questionId, box: next.box, dueDate: addDays(today, next.days) },
-    update: { box: next.box, dueDate: addDays(today, next.days), lastReviewedAt: new Date() },
-  });
+  // Leitner atomar in der Datenbank (Funktion update_progress, siehe Migration 20261123090000_leitner)
+  const [box] = await prisma.$queryRaw<{ old_box: number | null; new_box: number; next_review: Date }[]>`
+    SELECT * FROM update_progress(${userId}, ${questionId}, ${isCorrect}, ${Boolean(params.unsure)}, ${today}::date)`;
 
   const [user, activity, streak, totals] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { dailyGoalMinutes: true } }),
@@ -96,7 +87,7 @@ export async function rewardAnswer(params: { userId: string; questionId: string;
 
   const { xp, levelUp } = await addXp(userId, gained);
   const keys = await unlock(userId, [...candidates, ...(levelUp ? [`level-${levelUp.index}`] : [])]);
-  return toReward(gained, xp, levelUp, keys);
+  return { ...toReward(gained, xp, levelUp, keys), box: box ? { from: box.old_box, to: box.new_box, nextReview: box.next_review.toISOString().slice(0, 10) } : undefined };
 }
 
 /** Pauschale XP (z. B. Ortskunde, Routen, Challenge, Duell) inkl. Level-Aufstieg. */

@@ -100,6 +100,12 @@ model User {
   xp                Int                 @default(0)
   achievements      UserAchievement[]
   reviewItems       ReviewItem[]
+  lessons           Lesson[]
+  readinessSnapshots ReadinessSnapshot[]
+  variantFeedback   VariantFeedback[]
+  numberProgress    NumberProgress[]
+  routeProgress     RouteProgress[]
+  helperLang        String?             @db.VarChar(8)
   ortskundeAttempts OrtskundeAttempt[]
   dailyChallenges   DailyChallengeResult[]
   hostedDuels       Duel[]              @relation("DuelHost")
@@ -216,7 +222,7 @@ model Question {
   examResponses   ExamResponse[]
   flashcards      FlashcardProgress[]
   reviewItems     ReviewItem[]
-  simplified      SimplifiedQuestion?
+  variants        QuestionVariant[]
   mistakes        MistakeEntry[]
   bookmarks       Bookmark[]
 
@@ -466,6 +472,8 @@ model ReviewItem {
   box            Int      @default(1)
   dueDate        DateTime @db.Date
   lastReviewedAt DateTime @default(now())
+  timesCorrect   Int      @default(0)
+  timesWrong     Int      @default(0)
 
   @@unique([userId, questionId])
   @@index([userId, dueDate])
@@ -572,13 +580,6 @@ model CoachMessage {
 }
 
 /// Frage in Einfacher Sprache (B1), einmal erzeugt und für alle zwischengespeichert
-model SimplifiedQuestion {
-  questionId String   @id
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  text       String   @db.Text
-  options    Json
-  createdAt  DateTime @default(now())
-}
 
 /// Tagesplan des Coaches (per Cron um 06:00 Wien oder beim ersten Öffnen erzeugt)
 model DailyPlan {
@@ -602,4 +603,133 @@ model WeeklyReport {
   createdAt DateTime @default(now())
 
   @@unique([userId, weekStart])
+}
+
+/// Mini-Lektion: 5 Fragen, ca. 3 Minuten (läuft als QuizAttempt)
+model Lesson {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// mix = Leitner-Mix, review = fällige Wiederholung, category = feste Kategorie-Lektion
+  kind          String    @db.VarChar(12)
+  categoryId    String?
+  lessonIndex   Int?
+  questionIds   String[]
+  quizAttemptId String?   @unique
+  score         Int?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, categoryId, lessonIndex])
+}
+
+/// Prüfungsreife je Tag (Cache + Trendlinie)
+model ReadinessSnapshot {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       DateTime @db.Date
+  score     Int
+  data      Json
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, day])
+}
+
+/// KI-Varianten einer Frage (einmal erzeugt, danach aus der DB): simple, glossary, translation, why, why_wrong_A …
+model QuestionVariant {
+  id         String            @id @default(cuid())
+  questionId String
+  question   Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  kind       String            @db.VarChar(32)
+  lang       String            @default("de") @db.VarChar(8)
+  content    Json
+  model      String            @db.VarChar(80)
+  verified   Boolean           @default(false)
+  createdAt  DateTime          @default(now())
+  feedback   VariantFeedback[]
+
+  @@unique([questionId, kind, lang])
+  @@index([verified, kind, lang])
+}
+
+/// 👍/👎 zu einer KI-Variante; 👎 landet in der Prüf-Warteschlange
+model VariantFeedback {
+  id        String          @id @default(cuid())
+  variantId String
+  variant   QuestionVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  createdAt DateTime        @default(now())
+
+  @@unique([variantId, userId])
+  @@index([rating])
+}
+
+/// Zahlen-Trainer: typische Prüfungszahlen (Promille, Fristen, Abstände …); Aussage mit Platzhalter {x}
+model NumberFact {
+  id               String           @id @default(cuid())
+  examMode         String           @default("TAXI") @db.VarChar(20)
+  category         String           @db.VarChar(80)
+  statement        String           @db.Text
+  value            String           @db.VarChar(40)
+  unit             String           @default("") @db.VarChar(20)
+  distractors      String[]
+  legalReference   String?          @db.VarChar(255)
+  verified         Boolean          @default(false)
+  sourceQuestionId String?          @db.VarChar(64)
+  createdAt        DateTime         @default(now())
+  progress         NumberProgress[]
+
+  @@index([verified, category])
+}
+
+/// Leitner-Fortschritt je Zahlen-Fakt
+model NumberProgress {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  factId       String
+  fact         NumberFact @relation(fields: [factId], references: [id], onDelete: Cascade)
+  box          Int        @default(1)
+  dueDate      DateTime   @db.Date
+  lastSeenAt   DateTime   @default(now())
+  timesCorrect Int        @default(0)
+  timesWrong   Int        @default(0)
+
+  @@unique([userId, factId])
+  @@index([userId, dueDate])
+}
+
+/// Ortskunde-Route als geordnete Straßenliste (für Etappen + Lückentext)
+model Route {
+  id        String          @id @default(cuid())
+  slug      String          @unique @db.VarChar(80)
+  fromName  String          @db.VarChar(120)
+  toName    String          @db.VarChar(120)
+  streets   String[]
+  /// je Straße ein Linienzug [[lng, lat], …]
+  path      Json
+  examMode  String          @default("TAXI") @db.VarChar(20)
+  verified  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  progress  RouteProgress[]
+}
+
+/// Fortschritt je Route und Etappe (stageIndex = Anzahl Etappen → ganze Route)
+model RouteProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routeId         String
+  route           Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  stageIndex      Int
+  level           Int      @default(0)
+  mastered        Boolean  @default(false)
+  fullCorrectDays String[] @default([])
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, routeId, stageIndex])
 }

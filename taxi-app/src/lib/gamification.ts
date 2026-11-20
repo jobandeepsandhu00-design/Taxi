@@ -36,14 +36,20 @@ export function levelFor(xp: number): LevelInfo {
   return { index, name: cur.name, min: cur.min, next, progress: Math.min(1, Math.max(0, progress)), xpToNext: next ? next.min - safe : 0 };
 }
 
-/** Leitner-Intervalle in Tagen je Fach (Index = Fach 1–5). */
-export const LEITNER_DAYS = [0, 1, 2, 4, 7, 14] as const;
+/** Leitner-Intervalle in Tagen je Fach (Index = Fach 1–5): 1, 2, 4, 8, 16 Tage. */
+export const LEITNER_DAYS = [0, 1, 2, 4, 8, 16] as const;
 export const LEITNER_MAX_BOX = 5;
+/** „Gemeistert“ = Fach 5 */
+export const MASTERED_BOX = 5;
 
-/** Nächstes Fach und Abstand in Tagen: richtig → ein Fach höher, falsch → zurück in Fach 1 (morgen wieder). */
-export function nextLeitner(box: number | null, isCorrect: boolean): { box: number; days: number } {
+/**
+ * Nächstes Fach und Abstand in Tagen (Spiegel der Datenbankfunktion update_progress):
+ * richtig → ein Fach höher (max. 5), falsch → zurück in Fach 1, richtig aber unsicher → Fach bleibt.
+ */
+export function nextLeitner(box: number | null, isCorrect: boolean, unsure = false): { box: number; days: number } {
   if (!isCorrect) return { box: 1, days: LEITNER_DAYS[1] };
-  const nb = Math.min(LEITNER_MAX_BOX, Math.max(1, box ?? 1) + 1);
+  const cur = Math.max(1, box ?? 1);
+  const nb = unsure ? cur : Math.min(LEITNER_MAX_BOX, cur + 1);
   return { box: nb, days: LEITNER_DAYS[nb] };
 }
 

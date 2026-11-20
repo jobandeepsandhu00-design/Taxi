@@ -18,6 +18,7 @@ import { QuestionCard } from "./question-card";
 import { ResultHero, type CategoryScore } from "./result-hero";
 import { SoundToggle } from "./sound-toggle";
 import { SegmentedProgress, type SegmentState } from "./segmented-progress";
+import { LessonResult, type LessonInfo } from "./lesson-result";
 import type { ClientQuestion } from "./types";
 
 interface Props {
@@ -30,6 +31,7 @@ interface Props {
   bookmarkedIds: string[];
   finished: boolean;
   isDailyChallenge?: boolean;
+  lesson?: LessonInfo | null;
 }
 
 function categoryScores(questions: ClientQuestion[], reveals: Record<string, AnswerReveal>): CategoryScore[] {
@@ -46,7 +48,7 @@ function categoryScores(questions: ClientQuestion[], reveals: Record<string, Ans
   return [...map.values()].sort((a, b) => a.pct - b.pct);
 }
 
-export function QuizRunner({ attemptId, title, modeLabel, questions, initialReveals, initialIndex, bookmarkedIds, finished: initialFinished, isDailyChallenge = false }: Props) {
+export function QuizRunner({ attemptId, title, modeLabel, questions, initialReveals, initialIndex, bookmarkedIds, finished: initialFinished, isDailyChallenge = false, lesson = null }: Props) {
   const router = useRouter();
   const [index, setIndex] = useState(Math.min(initialIndex, questions.length - 1));
   const [direction, setDirection] = useState(1);
@@ -125,6 +127,10 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
   );
 
   const segments: SegmentState[] = questions.map((q) => (reveals[q.id] ? (reveals[q.id].isCorrect ? "correct" : "wrong") : "open"));
+
+  if (finished && lesson) {
+    return <LessonResult correct={correctCount} total={questions.length} xp={sessionXp} lesson={lesson} results={questions.map((q) => Boolean(reveals[q.id]?.isCorrect))} />;
+  }
 
   if (finished) {
     const pct = answeredCount ? Math.round((correctCount / answeredCount) * 100) : 0;
@@ -213,7 +219,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <SegmentedProgress segments={segments} current={index} label={`${answeredCount} von ${questions.length} beantwortet`} />
+          <SegmentedProgress segments={segments} current={index} label={`${answeredCount} von ${questions.length} beantwortet`} pop={Boolean(lesson)} />
           <span className="shrink-0 font-display text-sm font-bold text-navy tabular-nums">
             {index + 1} / {questions.length}
           </span>
@@ -249,7 +255,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
         question={current}
         bookmarked={bookmarks.has(current.id)}
         initialReveal={reveals[current.id] ?? null}
-        onSubmit={(selectedOptionIds, timeSpentSec) => submitQuizAnswerAction({ attemptId, questionId: current.id, selectedOptionIds, timeSpentSec })}
+        onSubmit={(selectedOptionIds, timeSpentSec, unsure) => submitQuizAnswerAction({ attemptId, questionId: current.id, selectedOptionIds, timeSpentSec, unsure })}
         onRevealed={onRevealed}
         onNext={next}
         nextSlot={

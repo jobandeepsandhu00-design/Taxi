@@ -2,9 +2,9 @@
 
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import Link from "next/link";
-import { ArrowRight, BarChart3, BookOpen, ChevronDown, ClipboardCheck, Layers, Map as MapIcon, RotateCcw, Sparkles, Swords, Trophy, type LucideIcon } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpen, ChevronDown, ClipboardCheck, Layers, Map as MapIcon, RotateCcw, Sparkles, Swords, Trophy, Hash, Route as RouteIcon, type LucideIcon } from "lucide-react";
 
-const ACTION_ICONS: Record<string, LucideIcon> = { BarChart3, BookOpen, ClipboardCheck, Layers, RotateCcw, Sparkles, Map: MapIcon, Swords, Trophy };
+const ACTION_ICONS: Record<string, LucideIcon> = { BarChart3, BookOpen, ClipboardCheck, Layers, RotateCcw, Sparkles, Map: MapIcon, Swords, Trophy, Hash, Route: RouteIcon };
 import { useState } from "react";
 import { categoryIcon } from "@/components/category-style";
 import { AnimatedNumber } from "@/components/motion/animated-number";

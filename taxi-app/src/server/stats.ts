@@ -1,25 +1,19 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { dayKey, dayKeyToDate, lastNDays, dateToDayKey } from "@/lib/dates";
-import { computeReadiness, effectiveStreak } from "@/lib/quiz-logic";
+import { effectiveStreak } from "@/lib/quiz-logic";
+import { getReadiness } from "./readiness";
 import { publishedWhere } from "./questions";
 
 export async function getDashboardStats(userId: string) {
   const today = dayKey();
-  const [progress, streak, activity, totalPublished, recentAnswers, exams, defaultExam, openMistakes] = await Promise.all([
+  const [progress, streak, activity, totalPublished, openMistakes, readiness] = await Promise.all([
     prisma.userProgress.findMany({ where: { userId } }),
     prisma.learningStreak.findUnique({ where: { userId } }),
     prisma.dailyActivity.findMany({ where: { userId } , select: { date: true, secondsStudied: true, questionsAnswered: true, correctAnswers: true } }),
     prisma.question.count({ where: publishedWhere }),
-    prisma.userAnswer.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 100, select: { isCorrect: true } }),
-    prisma.examAttempt.findMany({
-      where: { userId, status: { in: ["SUBMITTED", "EXPIRED"] } },
-      orderBy: { startedAt: "desc" },
-      take: 5,
-      select: { scorePercent: true },
-    }),
-    prisma.examConfig.findFirst({ where: { isActive: true }, orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] }),
     prisma.mistakeEntry.count({ where: { userId, resolved: false } }),
+    getReadiness(userId),
   ]);
 
   const answered = progress.reduce((s, p) => s + p.answeredCount, 0);
@@ -29,13 +23,6 @@ export async function getDashboardStats(userId: string) {
   const totalSeconds = activity.reduce((s, a) => s + a.secondsStudied, 0);
   const todayRow = activity.find((a) => dateToDayKey(a.date) === today);
   const coverage = totalPublished ? Math.min(1, mastered / totalPublished) : 0;
-  const recentAccuracy = recentAnswers.length ? recentAnswers.filter((a) => a.isCorrect).length / recentAnswers.length : 0;
-  const readiness = computeReadiness({
-    coverage,
-    recentAccuracy,
-    recentExamScores: exams.map((e) => e.scorePercent ?? 0),
-    passPercentage: defaultExam?.passPercentage ?? 70,
-  });
 
   return {
     answered,

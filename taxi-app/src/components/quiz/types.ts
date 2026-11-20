@@ -14,4 +14,6 @@ export interface ClientQuestion {
   topic: { name: string } | null;
   source: { title: string; verified: boolean } | null;
   options: { id: string; label: string; text: string }[];
+  /** zwischengespeicherte Fachbegriffe (KI-Glossar), falls vorhanden */
+  glossary?: { term: string; definition: string }[];
 }

@@ -98,6 +98,8 @@ export async function finalizeExam(attemptId: string, status: "SUBMITTED" | "EXP
   if (done) {
     await touchStreak(done.userId);
     await rewardExam(done.userId, done.passed).catch((e) => console.error("Belohnung fehlgeschlagen", e));
+    const { refreshReadiness } = await import("./readiness");
+    await refreshReadiness(done.userId).catch(() => undefined);
   }
 }
 

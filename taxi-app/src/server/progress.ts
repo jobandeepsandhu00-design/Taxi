@@ -52,6 +52,8 @@ export async function recordAnswer(params: {
   mode: QuizMode;
   quizAttemptId?: string | null;
   timeSpentSec?: number;
+  /** „Unsicher“ angekreuzt: richtig, aber Fach bleibt gleich */
+  unsure?: boolean;
 }): Promise<AnswerReveal> {
   const { userId, questionId, mode } = params;
   const key = await getAnswerKey(questionId);
@@ -119,7 +121,7 @@ export async function recordAnswer(params: {
   });
 
   await touchStreak(userId);
-  const reward = await rewardAnswer({ userId, questionId, categoryId: key.categoryId, isCorrect }).catch((e) => {
+  const reward = await rewardAnswer({ userId, questionId, categoryId: key.categoryId, isCorrect, unsure: params.unsure }).catch((e) => {
     console.error("Belohnung fehlgeschlagen", e);
     return null;
   });

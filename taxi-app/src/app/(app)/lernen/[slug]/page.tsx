@@ -12,7 +12,9 @@ import { Progress } from "@/components/ui/progress";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { startLearnSessionAction } from "@/server/actions/learning";
+import { startLearnSessionAction, startLessonAction } from "@/server/actions/learning";
+import { categoryLessons } from "@/server/lessons";
+import { LessonPath } from "./lesson-path";
 import { publishedWhere } from "@/server/questions";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -44,6 +46,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       distinct: ["questionId"],
     }),
   ]);
+  const lessons = await categoryLessons(user.id, category.id);
   const mastered = new Set(correctIds.map((c) => c.questionId));
   const color = categoryColor(category.color);
   const Icon = categoryIcon(category.icon);
@@ -116,6 +119,20 @@ export default async function CategoryPage({ params, searchParams }: { params: P
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lektionen</CardTitle>
+              <p className="text-sm text-muted-foreground">Je 5 Fragen, ca. 3 Minuten. Gemeistert = alle 5 richtig.</p>
+            </CardHeader>
+            <CardContent>
+              <LessonPath categoryId={category.id} lessons={lessons.map((l) => ({ index: l.index, status: l.status, best: l.best, size: l.questionIds.length }))} />
+              <form action={startLessonAction} className="mt-4">
+                <input type="hidden" name="categoryId" value={category.id} />
+                <SubmitButton variant="outline" className="w-full">⚡ Gemischte 3-Minuten-Lektion aus dieser Kategorie</SubmitButton>
+              </form>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

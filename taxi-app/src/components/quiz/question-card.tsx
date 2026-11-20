@@ -19,14 +19,15 @@ import { SpeakButton } from "./speak-button";
 import { TranslateSheet } from "./translate-sheet";
 import { useCoach } from "@/components/coach/coach-provider";
 import { WhyPanel } from "@/components/coach/why-panel";
-import { simplifyQuestionAction } from "@/server/actions/coach";
+import { getSimpleAction } from "@/server/actions/variants";
+import { GlossaryText, type GlossaryTerm } from "./glossary-text";
 import type { ClientQuestion } from "./types";
 
 interface Props {
   question: ClientQuestion;
   bookmarked: boolean;
   initialReveal?: AnswerReveal | null;
-  onSubmit: (selectedOptionIds: string[], timeSpentSec: number) => Promise<ActionResult<AnswerReveal>>;
+  onSubmit: (selectedOptionIds: string[], timeSpentSec: number, unsure: boolean) => Promise<ActionResult<AnswerReveal>>;
   onRevealed?: (reveal: AnswerReveal) => void;
   /** Wird nach dem Aufdecken angezeigt (z. B. „Nächste Frage“) */
   nextSlot?: React.ReactNode;
@@ -50,6 +51,7 @@ const optionItem = { hidden: { opacity: 0, x: 18 }, show: { opacity: 1, x: 0, tr
 
 export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, onRevealed, nextSlot, onNext, headerSlot, direction = 1 }: Props) {
   const [selected, setSelected] = useState<string[]>(initialReveal?.selectedOptionIds ?? []);
+  const [unsure, setUnsure] = useState(false);
   const [reveal, setReveal] = useState<AnswerReveal | null>(initialReveal ?? null);
   const [fresh, setFresh] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,8 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
   const [translateOpen, setTranslateOpen] = useState(false);
   const { enabled: coachEnabled } = useCoach();
   const [simple, setSimple] = useState(false);
-  const [simplified, setSimplified] = useState<{ text: string; options: { id: string; text: string }[] } | null>(null);
+  const [simplified, setSimplified] = useState<{ text: string; options: { id: string; text: string }[]; verified: boolean } | null>(null);
+  const [glossary, setGlossary] = useState<GlossaryTerm[]>(question.glossary ?? []);
   const [simplifying, setSimplifying] = useState(false);
   const [simplifyError, setSimplifyError] = useState<string | null>(null);
   const toggleSimple = async () => {
@@ -73,13 +76,14 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
     if (!simplified) {
       setSimplifying(true);
       setSimplifyError(null);
-      const res = await simplifyQuestionAction(question.id).catch(() => null);
+      const res = await getSimpleAction(question.id).catch(() => null);
       setSimplifying(false);
       if (!res || !res.ok) {
         setSimplifyError(res && !res.ok ? res.error : "Vereinfachung nicht verfügbar.");
         return;
       }
       setSimplified(res.data);
+      if (res.data.glossary.length) setGlossary(res.data.glossary);
     }
     setSimple(true);
   };
@@ -140,7 +144,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
       return;
     }
     start(async () => {
-      const res = await onSubmit(selected, Math.round((Date.now() - startedAt.current) / 1000));
+      const res = await onSubmit(selected, Math.round((Date.now() - startedAt.current) / 1000), unsure);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -151,7 +155,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
       onRevealed?.(res.data);
       window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 250);
     });
-  }, [reveal, pending, selected, onSubmit, onRevealed, celebrate, card]);
+  }, [reveal, pending, selected, unsure, onSubmit, onRevealed, celebrate, card]);
 
   // Tastatursteuerung: A–D / 1–4 auswählen, Enter = prüfen bzw. weiter
   useEffect(() => {
@@ -225,10 +229,10 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                     aria-pressed={simple}
                     aria-label="Einfache Sprache"
                     title="Einfache Sprache (B1)"
-                    className={cn("flex h-9 items-center gap-1 rounded-xl border px-2.5 text-xs font-bold transition-colors", simple ? "border-primary/50 bg-primary/12 text-primary" : "glass text-muted-foreground hover:text-navy")}
+                    className={cn("flex h-11 items-center gap-1 rounded-xl border px-3 text-xs font-bold transition-colors", simple ? "border-primary/50 bg-primary/12 text-link" : "glass text-muted-foreground hover:text-navy")}
                   >
                     {simplifying ? <Loader2 className="size-3.5 animate-spin" /> : "B1"}
-                    <span className="hidden sm:inline">Einfach</span>
+                    <span>Einfach</span>
                   </button>
                 )}
                 <SpeakButton text={speechText} />
@@ -237,7 +241,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                   onClick={() => setTranslateOpen(true)}
                   aria-label="Übersetzungshilfe öffnen"
                   title="Übersetzen (oder Frage lange drücken)"
-                  className="glass flex size-9 items-center justify-center rounded-xl text-muted-foreground transition hover:text-navy"
+                  className="glass flex size-11 items-center justify-center rounded-xl text-muted-foreground transition hover:text-navy"
                 >
                   <Languages className="size-[18px]" />
                 </button>
@@ -260,11 +264,16 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
             >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span key={simple ? "b1" : "orig"} className="block" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
-                  {shownText}
+                  {simple ? shownText : <GlossaryText text={question.text} terms={glossary} />}
                 </motion.span>
               </AnimatePresence>
             </h2>
-            {simple && <p className="mt-1 text-xs font-semibold text-primary">Einfache Sprache (B1) – die Prüfung findet in der Originalfassung statt.</p>}
+            {simple && (
+              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-link">
+                Einfache Sprache (B1) – die Prüfung findet in der Originalfassung statt.
+                {simplified && !simplified.verified && <span className="rounded-full bg-warning/12 px-2 py-0.5 text-[10px] font-bold text-warning">Ungeprüft</span>}
+              </p>
+            )}
             {simplifyError && <p className="mt-1 text-xs text-destructive">{simplifyError}</p>}
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
               {question.multipleCorrect ? "Mehrfachauswahl: Es können mehrere Antworten richtig sein." : "Wähle die richtige Antwort."}
@@ -330,7 +339,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
 
             {!reveal && (
               <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="hidden text-xs text-muted-foreground sm:block">Tipp: Tasten A–D wählen, Enter prüft.</p>
+                <UnsureToggle checked={unsure} onChange={setUnsure} />
                 <Button ref={submitRef} size="lg" onClick={submit} disabled={pending || selected.length === 0} className="w-full sm:w-auto">
                   {pending ? <Loader2 className="animate-spin" /> : null} Antwort prüfen
                 </Button>
@@ -357,7 +366,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
         </motion.div>
       </motion.div>
 
-      <TranslateSheet open={translateOpen} onClose={() => setTranslateOpen(false)} text={fullText} />
+      <TranslateSheet open={translateOpen} onClose={() => setTranslateOpen(false)} text={fullText} questionId={question.id} answered={Boolean(reveal)} />
 
       {/* Für Screenreader */}
       <p className="sr-only" aria-live="polite">
@@ -399,9 +408,10 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                         .join(", ")}. Die Frage wurde zu deinen Fehlern hinzugefügt.`}
                 </p>
               </div>
+              {fresh && reveal.reward?.box && <BoxShift from={reveal.reward.box.from} to={reveal.reward.box.to} nextReview={reveal.reward.box.nextReview} />}
             </div>
 
-            {!reveal.isCorrect && coachEnabled && <WhyPanel questionId={question.id} selectedOptionIds={reveal.selectedOptionIds} />}
+            {coachEnabled && <WhyPanel key={question.id} questionId={question.id} selectedOptionIds={reveal.selectedOptionIds} isCorrect={reveal.isCorrect} />}
 
             {/* Erklärungs-Drawer */}
             <div className="glass rounded-2xl border-t-2 border-t-primary/50 p-5 sm:p-6">
@@ -469,5 +479,55 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/** „Unsicher“-Schalter: vor dem Prüfen ankreuzen – richtig, aber unsicher → Frage bleibt im selben Fach. */
+function UnsureToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 px-4 text-sm font-semibold transition-colors",
+        checked ? "border-warning bg-warning/12 text-warning" : "border-border text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <span className={cn("flex size-5 items-center justify-center rounded-md border-2 transition-colors", checked ? "border-warning bg-warning text-white" : "border-current")}>
+        {checked && (
+          <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <motion.path d="M5 12.5l4.5 4.5L19 7.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.25 }} />
+          </svg>
+        )}
+      </span>
+      Unsicher 🤔
+    </button>
+  );
+}
+
+/** Kleiner Leitner-Hinweis nach der Antwort, z. B. „Fach 2 → 3“. */
+function BoxShift({ from, to, nextReview }: { from: number | null; to: number; nextReview: string }) {
+  const days = Math.max(1, Math.round((Date.parse(`${nextReview}T00:00:00Z`) - Date.parse(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`)) / 86_400_000));
+  const up = from !== null && to > from;
+  const same = from !== null && to === from;
+  return (
+    <motion.div
+      className="ml-auto flex shrink-0 flex-col items-end"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.35 }}
+      aria-label={`Karteikasten: ${from === null ? "neu" : `Fach ${from}`} nach Fach ${to}, wieder in ${days} ${days === 1 ? "Tag" : "Tagen"}`}
+    >
+      <span className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold">
+        {from === null ? "Neu" : `Fach ${from}`}
+        <motion.span initial={{ x: -4, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.55 }} aria-hidden>
+          {up ? "↗" : same ? "→" : "↘"}
+        </motion.span>
+        {to === 5 ? "Fach 5 🏆" : `Fach ${to}`}
+      </span>
+      <span className="mt-0.5 text-[11px] text-white/85">wieder in {days} {days === 1 ? "Tag" : "Tagen"}</span>
+    </motion.div>
   );
 }

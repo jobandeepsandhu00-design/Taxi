@@ -6,6 +6,7 @@ import { CountdownChip, Greeting } from "@/components/home/hero";
 import { AchievementStrip, CategoryList, QuickActions, StreakFlame, XpCard, ZeroState, type HomeCategory } from "@/components/home/cards";
 import { DailyRings, ReadinessRing } from "@/components/home/rings";
 import { CoachBubble, DailyPlanCard, PrognosisCard } from "@/components/home/coach-cards";
+import { LessonCta } from "@/components/home/lesson-cta";
 import { buildCoachContext } from "@/server/coach/context";
 import { getDailyPlanState } from "@/server/coach/plans";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
@@ -31,7 +32,9 @@ const actions = [
   { href: "/pruefung", label: "Prüfungsmodus", desc: "Echte Simulation", icon: "ClipboardCheck" },
   { href: "/fehler", label: "Falsche Antworten", desc: "Fehler trainieren", icon: "RotateCcw" },
   { href: "/lernkarten", label: "Lernkarten", desc: "Karteikarten üben", icon: "Layers" },
+  { href: "/zahlen", label: "Zahlen-Trainer", desc: "Promille, Abstände, Fristen", icon: "Hash" },
   { href: "/ortskunde", label: "Ortskunde-Karte", desc: "Wo liegt …?", icon: "Map" },
+  { href: "/ortskunde/routen", label: "Routen in Etappen", desc: "Lückentext & Reihenfolge", icon: "Route" },
   { href: "/duell", label: "Duell", desc: "1 gegen 1, live", icon: "Swords" },
   { href: "/fortschritt", label: "Mein Fortschritt", desc: "Statistiken", icon: "BarChart3" },
 ];
@@ -106,6 +109,8 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      <LessonCta due={due} />
+
       <CoachBubble message={bubble.message} href={bubble.href} start={"start" in bubble ? bubble.start : undefined} mood={bubbleMood} day={dayKey()} />
 
       {/* Laufende Prüfung */}
@@ -135,8 +140,10 @@ export default async function DashboardPage() {
         <StaggerItem>
           <Card className="flex h-full flex-col items-center p-5">
             <p className="mb-3 self-start text-xs font-bold tracking-wider text-link uppercase">Prüfungsreife</p>
-            <ReadinessRing score={stats.readiness.score} label={stats.readiness.label} level={stats.readiness.level} />
-            <p className="mt-3 text-center text-xs text-muted-foreground">Aus Fragenabdeckung, Trefferquote der letzten 100 Antworten und deinen Prüfungssimulationen.</p>
+            <Link href="/fortschritt/reife" className="rounded-full transition active:scale-95" aria-label="Prüfungsreife im Detail ansehen">
+              <ReadinessRing score={stats.readiness.score} label={stats.readiness.label} level={stats.readiness.level} />
+            </Link>
+            <p className="mt-3 text-center text-xs text-muted-foreground">Abdeckung, Beherrschung, Trefferquote und Simulationen – tippe für Details.</p>
           </Card>
         </StaggerItem>
         <StaggerItem>

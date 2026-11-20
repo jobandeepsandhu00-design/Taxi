@@ -1,7 +1,8 @@
 "use client";
 
 export type CoachStreamEvent =
-  | { type: "meta"; citations?: { id: string; text: string; category: string }[]; remaining?: number | null }
+  | { type: "meta"; citations?: { id: string; text: string; category: string }[]; remaining?: number | null; variantId?: string; cached?: boolean; verified?: boolean }
+  | { type: "extra"; kind: "why_wrong"; label: string; text: string; variantId?: string }
   | { type: "delta"; text: string }
   | { type: "done"; messageId?: string }
   | { type: "error"; message: string };

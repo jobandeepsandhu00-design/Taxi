@@ -8,6 +8,8 @@ import bcrypt from "bcryptjs";
 import { categories, syllabusNote } from "./seed-data/categories";
 import { questions } from "./seed-data/questions";
 import { sources } from "./seed-data/sources";
+import { seedVariants } from "./seed-data/variants";
+import { numberFacts, routes } from "./seed-data/learning-extras";
 
 const prisma = new PrismaClient();
 
@@ -157,6 +159,29 @@ async function main() {
     }
   }
 
+  // Vorab erzeugte KI-Varianten (ungeprüft) – bereits geprüfte/echte Varianten nie überschreiben
+  for (const v of seedVariants) {
+    const exists = await prisma.question.findUnique({ where: { id: v.questionId }, select: { id: true } });
+    if (!exists) continue;
+    const rows: { kind: string; lang: string; content: object }[] = [
+      { kind: "simple", lang: "de", content: v.simple },
+      { kind: "glossary", lang: "de", content: { terms: v.glossary } },
+      { kind: "translation", lang: "en", content: v.en },
+    ];
+    for (const r of rows) {
+      const cur = await prisma.questionVariant.findUnique({ where: { questionId_kind_lang: { questionId: v.questionId, kind: r.kind, lang: r.lang } } });
+      if (cur && !["testmodus", "migriert", "seed"].includes(cur.model)) continue;
+      if (cur?.verified) continue;
+      await prisma.questionVariant.upsert({
+        where: { questionId_kind_lang: { questionId: v.questionId, kind: r.kind, lang: r.lang } },
+        create: { questionId: v.questionId, kind: r.kind, lang: r.lang, content: r.content, model: "seed", verified: false },
+        update: { content: r.content, model: "seed" },
+      });
+    }
+  }
+
+  await seedLearningExtras();
+
   const counts = {
     kategorien: await prisma.category.count(),
     fragen: await prisma.question.count(),
@@ -165,6 +190,20 @@ async function main() {
   };
   console.log("Seed abgeschlossen:", counts);
   console.log(`Admin: ${adminEmail}`);
+}
+
+async function seedLearningExtras() {
+  // Zahlen-Fakten (ungeprüft); vorhandene nicht überschreiben
+  for (const f of numberFacts) {
+    const id = `nf-${f.key}`;
+    const { key, ...data } = f;
+    void key;
+    await prisma.numberFact.upsert({ where: { id }, create: { id, ...data, verified: false }, update: {} });
+  }
+  // Routen (ungeprüft)
+  for (const r of routes) {
+    await prisma.route.upsert({ where: { slug: r.slug }, create: { ...r, verified: false }, update: {} });
+  }
 }
 
 main()

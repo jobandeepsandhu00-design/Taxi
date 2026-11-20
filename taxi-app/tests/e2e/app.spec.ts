@@ -208,7 +208,7 @@ test.describe.serial("Lernende/r", () => {
     // Übersetzungshilfe öffnet sich als Bottom-Sheet
     await page.getByRole("button", { name: "Übersetzungshilfe öffnen" }).click();
     await expect(page.getByRole("dialog", { name: "Übersetzungshilfe" })).toBeVisible();
-    await page.getByRole("button", { name: "Türkçe" }).click();
+    await page.getByRole("radio", { name: "Türkçe" }).click();
     await page.getByRole("dialog", { name: "Übersetzungshilfe" }).getByRole("button", { name: "Schließen" }).last().click();
     await expect(page.getByRole("dialog", { name: "Übersetzungshilfe" })).toHaveCount(0);
     await answerFirstOption(page);

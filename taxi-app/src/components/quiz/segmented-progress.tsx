@@ -14,7 +14,7 @@ const fill: Record<SegmentState, string> = {
 };
 
 /** Segmentierter Fortschritt: ein Segment pro Frage, füllt sich farbig. */
-export function SegmentedProgress({ segments, current, label }: { segments: SegmentState[]; current: number; label?: string }) {
+export function SegmentedProgress({ segments, current, label, pop = false }: { segments: SegmentState[]; current: number; label?: string; pop?: boolean }) {
   const done = segments.filter((s) => s !== "open").length;
   return (
     <div
@@ -26,14 +26,20 @@ export function SegmentedProgress({ segments, current, label }: { segments: Segm
       aria-valuenow={done}
     >
       {segments.map((s, i) => (
-        <div key={i} className={cn("relative flex-1 overflow-hidden rounded-full bg-foreground/10", i === current && "ring-2 ring-primary/70 ring-offset-1 ring-offset-background")}>
+        <motion.div
+          key={i}
+          className={cn("relative flex-1 overflow-hidden rounded-full bg-foreground/10", i === current && "ring-2 ring-primary/70 ring-offset-1 ring-offset-background")}
+          initial={pop ? { scale: 0, opacity: 0 } : false}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 18, delay: pop ? 0.1 + i * 0.07 : 0 }}
+        >
           <motion.div
             className={cn("absolute inset-0 origin-left rounded-full", fill[s])}
             initial={false}
             animate={{ scaleX: s === "open" ? 0 : 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 26 }}
           />
-        </div>
+        </motion.div>
       ))}
     </div>
   );

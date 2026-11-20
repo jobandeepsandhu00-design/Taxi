@@ -3,7 +3,8 @@
 import { motion } from "motion/react";
 import { Languages, Music2, Smartphone, Volume2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import { TRANSLATE_LANGS } from "@/components/quiz/translate-sheet";
+import { HELPER_LANGS as TRANSLATE_LANGS } from "@/lib/languages";
+import { setHelperLangAction } from "@/server/actions/variants";
 import { ReduceMotionToggle } from "@/components/theme/theme-picker";
 import { AVATARS } from "@/lib/avatars";
 import { haptic, spring } from "@/lib/motion";
@@ -143,7 +144,7 @@ export function DeviceSettings({ vapidKey }: { vapidKey: string | null }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-navy">Übersetzungshilfe</span>
-          <span className="block text-xs text-muted-foreground">Bevorzugte Sprache (Frage lange drücken)</span>
+          <span className="block text-xs text-muted-foreground">Hilfssprache für Übersetzung und „Warum?“ (Frage lange drücken oder 🌐)</span>
         </span>
         <select
           value={lang}
@@ -154,6 +155,7 @@ export function DeviceSettings({ vapidKey }: { vapidKey: string | null }) {
             } catch {
               /* ignorieren */
             }
+            void setHelperLangAction(e.target.value).catch(() => undefined);
           }}
           className="h-10 rounded-xl border border-input bg-muted px-2 text-sm text-foreground"
           aria-label="Bevorzugte Übersetzungssprache"

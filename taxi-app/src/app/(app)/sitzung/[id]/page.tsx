@@ -5,7 +5,7 @@ import { StudyHeartbeat } from "@/components/quiz/study-heartbeat";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { modeLabel } from "@/lib/labels";
-import { buildReveal, getAnswerKey, getPublicQuestions, type AnswerReveal } from "@/server/questions";
+import { buildReveal, getAnswerKey, getPublicQuestions, publishedWhere, type AnswerReveal } from "@/server/questions";
 
 export const metadata: Metadata = { title: "Lernsitzung" };
 
@@ -28,6 +28,19 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     const key = await getAnswerKey(a.questionId);
     if (key) reveals[a.questionId] = buildReveal(key, a.selectedOptionIds, a.isCorrect);
   }
+  const s = (attempt.settings ?? {}) as { lesson?: string; kind?: string };
+  let lesson: { kind: string; categoryId: string | null; lessonIndex: number | null; hasNext: boolean } | null = null;
+  if (s.lesson) {
+    const l = await prisma.lesson.findFirst({ where: { id: s.lesson, userId: user.id } });
+    if (l) {
+      let hasNext = false;
+      if (l.kind === "category" && l.categoryId && l.lessonIndex) {
+        const total = await prisma.question.count({ where: { ...publishedWhere, categoryId: l.categoryId } });
+        hasNext = l.lessonIndex * 5 < total;
+      }
+      lesson = { kind: l.kind, categoryId: l.categoryId, lessonIndex: l.lessonIndex, hasNext };
+    }
+  }
   const firstOpen = questions.findIndex((q) => !reveals[q.id]);
   const initialIndex = reveals[questions[attempt.currentIndex]?.id] && firstOpen >= 0 ? firstOpen : attempt.currentIndex;
 
@@ -37,13 +50,14 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
       <QuizRunner
         attemptId={attempt.id}
         title={attempt.title}
-        modeLabel={modeLabel[attempt.mode]}
+        modeLabel={lesson ? "Mini-Lektion" : modeLabel[attempt.mode]}
         questions={questions}
         initialReveals={reveals}
         initialIndex={Math.max(0, initialIndex)}
         bookmarkedIds={bookmarks.map((b) => b.questionId)}
         finished={attempt.status !== "IN_PROGRESS"}
         isDailyChallenge={Boolean((attempt.settings as { dailyChallenge?: string } | null)?.dailyChallenge)}
+        lesson={lesson}
       />
     </>
   );

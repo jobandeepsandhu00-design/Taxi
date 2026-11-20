@@ -16,7 +16,7 @@ export function SingleQuestion({ question, bookmarked }: { question: ClientQuest
       key={round}
       question={question}
       bookmarked={bookmarked}
-      onSubmit={(selectedOptionIds, timeSpentSec) => answerSingleQuestionAction({ questionId: question.id, selectedOptionIds, timeSpentSec })}
+      onSubmit={(selectedOptionIds, timeSpentSec, unsure) => answerSingleQuestionAction({ questionId: question.id, selectedOptionIds, timeSpentSec, unsure })}
       onNext={() => router.back()}
       nextSlot={
         <div className="grid grid-cols-2 gap-2">

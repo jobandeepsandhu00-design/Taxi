@@ -29,6 +29,7 @@ function useIsActive() {
     if (query) return pathname === path && search.toString() === query;
     if (path === "/fragen" && search.get("merkliste")) return false;
     if (path === "/dashboard" || path === "/admin") return pathname === path;
+    if (path === "/ortskunde") return pathname === path || (pathname.startsWith("/ortskunde/") && !pathname.startsWith("/ortskunde/routen"));
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 }

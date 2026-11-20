@@ -27,11 +27,11 @@ function Arc({ r, stroke, value, color, size, delay = 0, gradientId }: { r: numb
   );
 }
 
-const levelStyle: Record<string, { color: string; bg: string }> = {
-  niedrig: { color: "#ef4444", bg: "rgba(239,68,68,0.16)" },
-  mittel: { color: "#f59e0b", bg: "rgba(245,158,11,0.16)" },
-  hoch: { color: "var(--primary)", bg: "var(--glow)" },
-  bereit: { color: "#22c55e", bg: "rgba(34,197,94,0.16)" },
+const levelStyle: Record<string, { color: string; bg: string; cls: string }> = {
+  niedrig: { color: "#ef4444", bg: "rgba(239,68,68,0.16)", cls: "bg-destructive/12 text-destructive" },
+  mittel: { color: "#f59e0b", bg: "rgba(245,158,11,0.16)", cls: "bg-warning/12 text-warning" },
+  hoch: { color: "#84cc16", bg: "rgba(132,204,22,0.16)", cls: "bg-lime-500/15 text-lime-700 dark:text-lime-300" },
+  bereit: { color: "#22c55e", bg: "rgba(34,197,94,0.16)", cls: "bg-success/12 text-success" },
 };
 
 /** Großer „Prüfungsreife"-Ring mit Verlaufsstrich, Glow ab 80 % und farbwechselndem Status-Badge. */
@@ -67,10 +67,10 @@ export function ReadinessRing({ score, label, level }: { score: number; label: s
         </div>
       </div>
       <motion.span
-        className="rounded-full px-3 py-1 text-xs font-bold"
-        initial={{ backgroundColor: levelStyle.niedrig.bg, color: levelStyle.niedrig.color }}
-        animate={{ backgroundColor: style.bg, color: style.color }}
-        transition={{ duration: 1.2, delay: 0.4 }}
+        className={`rounded-full px-3 py-1 text-xs font-bold ${style.cls}`}
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 380, damping: 18, delay: 0.6 }}
       >
         {label}
       </motion.span>

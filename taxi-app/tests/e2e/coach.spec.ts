@@ -85,8 +85,8 @@ test.describe.serial("Taxi-Coach", () => {
     }
     expect(wrong).toBe(true);
     await page.getByRole("button", { name: /Warum\? – Coach erklären lassen/ }).click();
-    await expect(page.getByText(/Beispiel aus dem Alltag:/)).toBeVisible();
-    await expect(page.getByText(/Rechtsgrundlage:/).first()).toBeVisible();
+    await expect(page.getByTestId("why-panel").getByText("Die Regel")).toBeVisible();
+    await expect(page.getByTestId("why-panel").getByText("Beispiel aus dem Taxi-Alltag")).toBeVisible();
   });
 
   test("Chat: Vorschläge, Streaming, Quellenkarten und Feedback", async () => {
