@@ -67,7 +67,7 @@ export function CoachChat({ enabled, initial, remaining: initialRemaining, limit
     const message = text.trim();
     if (!message || busy) return;
     if (message === "Prüfe mich mündlich") {
-      window.location.assign("/coach/muendlich");
+      window.location.assign("/muendlich");
       return;
     }
     haptic();
@@ -120,7 +120,7 @@ export function CoachChat({ enabled, initial, remaining: initialRemaining, limit
           <p className="text-xs text-muted-foreground">{remaining === null ? "Premium · unbegrenzt" : `${remaining} von ${limit} Nachrichten heute übrig`}</p>
         </div>
         <Button asChild size="sm" variant="outline">
-          <Link href="/coach/muendlich">
+          <Link href="/muendlich">
             <Mic /> Mündlich
           </Link>
         </Button>

@@ -10,6 +10,7 @@ import { questions } from "./seed-data/questions";
 import { sources } from "./seed-data/sources";
 import { seedVariants } from "./seed-data/variants";
 import { numberFacts, routes } from "./seed-data/learning-extras";
+import { oralQuestions } from "./seed-data/oral-questions";
 
 const prisma = new PrismaClient();
 
@@ -203,6 +204,16 @@ async function seedLearningExtras() {
   // Routen (ungeprüft)
   for (const r of routes) {
     await prisma.route.upsert({ where: { slug: r.slug }, create: { ...r, verified: false }, update: {} });
+  }
+  // Mündliche Prüfungsfragen (ungeprüft)
+  for (const o of oralQuestions) {
+    const category = await prisma.category.findUnique({ where: { slug: o.categorySlug }, select: { id: true } });
+    if (!category) continue;
+    const id = `oq-${o.key}`;
+    const { key, categorySlug, ...data } = o;
+    void key;
+    void categorySlug;
+    await prisma.oralQuestion.upsert({ where: { id }, create: { id, ...data, categoryId: category.id, verified: false, catalogVersion: "seed-2026-11" }, update: {} });
   }
 }
 

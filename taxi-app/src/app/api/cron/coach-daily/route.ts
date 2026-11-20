@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { addDays, dayKey, dayKeyToDate } from "@/lib/dates";
 import { ensureDailyPlan, getWeeklyReport } from "@/server/coach/plans";
+import { purgeOldAudio } from "@/server/oral";
 
 export const maxDuration = 300;
 
@@ -36,5 +37,12 @@ export async function GET(request: NextRequest) {
       console.error("Coach-Cron: Fehler bei Nutzer", u.id, e);
     }
   }
-  return NextResponse.json({ users: users.length, plans, reports, sunday });
+  // Mündliche Prüfung: Aufnahmen nach 30 Tagen löschen
+  let audioPurged = 0;
+  try {
+    audioPurged = await purgeOldAudio();
+  } catch (e) {
+    console.error("Coach-Cron: Audio-Bereinigung fehlgeschlagen", e);
+  }
+  return NextResponse.json({ users: users.length, plans, reports, sunday, audioPurged });
 }

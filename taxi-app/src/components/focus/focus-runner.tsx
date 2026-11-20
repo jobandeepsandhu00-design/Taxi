@@ -51,7 +51,7 @@ function vibrate(ms: number | number[]) {
 }
 
 /** Android: Vollbild beim ersten Tippen anfordern (iOS kann das im Browser nicht – dort Hinweis). */
-function useFullscreenOnFirstTap() {
+export function useFullscreenOnFirstTap() {
   useEffect(() => {
     const android = /Android/i.test(navigator.userAgent);
     const standalone = window.matchMedia("(display-mode: standalone)").matches;

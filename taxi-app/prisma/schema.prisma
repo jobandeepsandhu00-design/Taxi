@@ -120,6 +120,13 @@ model User {
   coachMessages     CoachMessage[]
   dailyPlans        DailyPlan[]
   weeklyReports     WeeklyReport[]
+  /// Mündliche Prüfung: Aufnahmen speichern (false = nur Transkript)
+  oralSaveAudio     Boolean             @default(true)
+  /// Zeitpunkt, an dem der Datenschutzhinweis zur mündlichen Prüfung bestätigt wurde
+  oralPrivacyAck    DateTime?
+  oralSessions      OralSession[]
+  oralAttempts      OralAttempt[]
+  oralProgress      OralProgress[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   lastLoginAt       DateTime?
@@ -165,6 +172,7 @@ model Category {
   topics           Topic[]
   questions        Question[]
   progress         UserProgress[]
+  oralQuestions    OralQuestion[]
 
   @@index([regionId, isActive, order])
 }
@@ -736,4 +744,86 @@ model RouteProgress {
   updatedAt       DateTime @updatedAt
 
   @@unique([userId, routeId, stageIndex])
+}
+
+/// Mündliche Prüfungsfrage mit Musterantwort und Kernpunkten (Bewertungsgrundlage)
+model OralQuestion {
+  id             String         @id @default(cuid())
+  examMode       ExamType?
+  categoryId     String
+  category       Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  questionDe     String         @db.Text
+  modelAnswerDe  String         @db.Text
+  /// [{ id, text, required }]
+  keyPoints      Json
+  legalReference String?        @db.VarChar(255)
+  difficulty     Difficulty     @default(MEDIUM)
+  /// [{ trigger_point_id, question_de }]
+  followUps      Json           @default("[]")
+  verified       Boolean        @default(false)
+  catalogVersion String?        @db.VarChar(40)
+  /// schriftliche Frage, aus der die KI den Entwurf erstellt hat
+  sourceQuestionId String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  attempts       OralAttempt[]
+  progress       OralProgress[]
+
+  @@index([categoryId])
+}
+
+model OralSession {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "ueben" | "pruefung"
+  mode       String        @db.VarChar(12)
+  questionIds String[]
+  totalScore Int?
+  startedAt  DateTime      @default(now())
+  finishedAt DateTime?
+  attempts   OralAttempt[]
+
+  @@index([userId, startedAt])
+}
+
+model OralAttempt {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oralQuestionId   String
+  oralQuestion     OralQuestion @relation(fields: [oralQuestionId], references: [id], onDelete: Cascade)
+  sessionId        String?
+  session          OralSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  audioPath        String?      @db.VarChar(300)
+  transcript       String       @db.Text
+  followUpQuestion String?      @db.Text
+  followUpTranscript String?    @db.Text
+  coveredPointIds  String[]
+  score            Int
+  /// "richtig" | "teilweise" | "falsch"
+  verdict          String       @db.VarChar(12)
+  feedbackDe       String       @db.Text
+  durationMs       Int?
+  createdAt        DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@index([sessionId])
+  @@index([audioPath])
+}
+
+model OralProgress {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oralQuestionId String
+  oralQuestion   OralQuestion @relation(fields: [oralQuestionId], references: [id], onDelete: Cascade)
+  box            Int          @default(1)
+  dueAt          DateTime     @default(now())
+  lastScore      Int?
+  attempts       Int          @default(0)
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, oralQuestionId])
+  @@index([userId, dueAt])
 }

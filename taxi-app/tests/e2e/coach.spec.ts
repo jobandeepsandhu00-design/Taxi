@@ -118,19 +118,10 @@ test.describe.serial("Taxi-Coach", () => {
     await page.waitForURL("**/fragen/**");
   });
 
-  test("Mündliche Prüfung per Texteingabe", async () => {
+  test("Alte mündliche Prüfung leitet zur Sprechprüfung", async () => {
     await page.goto("/coach/muendlich");
-    await settle(page);
-    await page.getByRole("button", { name: "Prüfung beginnen" }).click();
-    await expect(page.getByText(/Prüfer · Frage 1 von 10/)).toBeVisible();
-    for (let i = 0; i < 10; i++) {
-      await page.getByLabel("Deine Antwort").fill("Ich würde vorsichtig fahren und die Regeln beachten.");
-      await page.getByRole("button", { name: "Antwort abgeben" }).click();
-      await expect(page.getByText("Musterantwort:")).toBeVisible();
-      await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
-    }
-    await expect(page.getByText(/richtig = 1 Punkt/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Nochmal" })).toBeVisible();
+    await page.waitForURL("**/muendlich");
+    await expect(page.getByRole("heading", { name: "Mündliche Prüfung" })).toBeVisible();
   });
 
   test("Wochenbericht als Story-Karten", async () => {
