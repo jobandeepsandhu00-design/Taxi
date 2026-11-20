@@ -2,34 +2,25 @@
 
 import { motion } from "motion/react";
 import { useEffect, useId, useState } from "react";
-import { haptic } from "@/lib/motion";
+import { resolvedDark, useThemeState } from "@/lib/theme/client";
 import { cn } from "@/lib/utils";
+import { originOf, useThemeActions } from "./theme/use-theme-actions";
 
-/** Umschalter „Wien bei Nacht" / „Wien bei Tag" mit Sonne-/Mond-Morph. */
-export function ThemeToggle({ className }: { className?: string }) {
-  const [dark, setDark] = useState(true);
+/** Schneller Hell/Dunkel-Umschalter mit Sonne-/Mond-Morph und kreisförmiger Enthüllung. */
+export function ThemeToggle({ className, persistRemote = true }: { className?: string; persistRemote?: boolean }) {
+  const { mode } = useThemeState();
+  const [dark, setDark] = useState(false);
+  useEffect(() => setDark(resolvedDark(mode)), [mode]);
+  const change = useThemeActions(persistRemote);
   const maskId = `moon-${useId().replace(/:/g, "")}`;
-  useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
-
-  function toggle() {
-    const next = !dark;
-    setDark(next);
-    haptic();
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("tp-theme", next ? "dark" : "light");
-    } catch {
-      /* ignorieren */
-    }
-  }
 
   return (
     <button
       type="button"
-      onClick={toggle}
-      className={cn("relative flex size-10 items-center justify-center rounded-xl text-foreground/80 transition hover:bg-accent hover:text-foreground active:scale-95", className)}
-      aria-label={dark ? "Zu „Wien bei Tag“ wechseln" : "Zu „Wien bei Nacht“ wechseln"}
-      title={dark ? "Wien bei Tag" : "Wien bei Nacht"}
+      onClick={(e) => change({ mode: dark ? "light" : "dark" }, originOf(e))}
+      className={cn("relative flex size-11 items-center justify-center rounded-xl text-foreground/80 transition hover:bg-accent hover:text-foreground active:scale-95", className)}
+      aria-label={dark ? "Zum hellen Modus wechseln" : "Zum dunklen Modus wechseln"}
+      title={dark ? "Hell" : "Dunkel"}
     >
       <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <mask id={maskId}>

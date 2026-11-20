@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Languages, Music2, Smartphone, Volume2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { TRANSLATE_LANGS } from "@/components/quiz/translate-sheet";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ReduceMotionToggle } from "@/components/theme/theme-picker";
 import { AVATARS } from "@/lib/avatars";
 import { haptic, spring } from "@/lib/motion";
 import { playSound, setSoundEnabled, soundEnabled } from "@/lib/sound";
@@ -37,7 +37,7 @@ export function AvatarPicker({ initial }: { initial: string | null }) {
             }}
             className={cn("relative flex aspect-square items-center justify-center rounded-2xl border text-3xl transition-colors", active ? "border-primary bg-primary/12" : "border-border bg-muted hover:border-primary/40")}
           >
-            {active && <motion.span layoutId="avatar-ring" className="absolute inset-0 rounded-2xl ring-2 ring-primary shadow-[0_0_24px_-6px_rgba(255,196,0,0.7)]" transition={spring} />}
+            {active && <motion.span layoutId="avatar-ring" className="absolute inset-0 rounded-2xl ring-2 ring-primary shadow-[0_0_24px_-6px_var(--glow)]" transition={spring} />}
             <motion.span animate={{ scale: active ? 1.15 : 1, rotate: active ? [0, -10, 10, 0] : 0 }} transition={{ duration: 0.4 }}>
               {a.emoji}
             </motion.span>
@@ -95,12 +95,8 @@ export function DeviceSettings({ vapidKey }: { vapidKey: string | null }) {
 
   return (
     <div className="divide-y divide-border">
-      <div className="flex items-center gap-3 py-3">
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-navy">Erscheinungsbild</span>
-          <span className="block text-xs text-muted-foreground">„Wien bei Nacht“ oder „Wien bei Tag“</span>
-        </span>
-        <ThemeToggle className="glass" />
+      <div className="py-2">
+        <ReduceMotionToggle />
       </div>
       <Switch
         icon={Music2}

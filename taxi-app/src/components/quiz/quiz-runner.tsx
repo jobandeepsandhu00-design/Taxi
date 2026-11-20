@@ -231,7 +231,7 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
           {comboFlash && (
             <motion.div
               key={comboFlash}
-              className="rounded-full bg-primary px-5 py-2.5 font-display text-lg font-bold text-primary-foreground shadow-[0_10px_40px_-8px_rgba(255,196,0,0.8)]"
+              className="rounded-full bg-primary px-5 py-2.5 font-display text-lg font-bold text-primary-foreground shadow-[0_10px_40px_-8px_var(--glow)]"
               initial={{ scale: 0.3, opacity: 0, y: -20 }}
               animate={{ scale: [0.3, 1.18, 1], opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: -10 }}

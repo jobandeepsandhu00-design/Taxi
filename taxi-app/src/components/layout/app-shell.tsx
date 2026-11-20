@@ -56,7 +56,7 @@ function NavList({ items, pillId, onNavigate }: { items: typeof mainNav; pillId:
               {active && (
                 <motion.span
                   layoutId={pillId}
-                  className="absolute inset-0 rounded-xl bg-primary shadow-[0_6px_24px_-8px_rgba(255,196,0,0.6)]"
+                  className="absolute inset-0 rounded-xl bg-primary shadow-[0_6px_24px_-8px_var(--glow)]"
                   transition={spring}
                 />
               )}

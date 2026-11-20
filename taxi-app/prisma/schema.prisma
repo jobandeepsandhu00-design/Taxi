@@ -108,6 +108,8 @@ model User {
   pushSubscriptions PushSubscription[]
   /// Premium: unbegrenzte Coach-Nachrichten
   isPremium         Boolean             @default(false)
+  theme             String              @default("weiss") @db.VarChar(16)
+  themeMode         String              @default("light") @db.VarChar(8)
   coachMessages     CoachMessage[]
   dailyPlans        DailyPlan[]
   weeklyReports     WeeklyReport[]

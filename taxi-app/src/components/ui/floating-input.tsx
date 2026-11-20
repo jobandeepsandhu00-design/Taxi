@@ -10,7 +10,7 @@ export function FloatingInput({ label, id, className, ...props }: React.Componen
         placeholder=" "
         className={cn(
           "peer h-14 w-full rounded-xl border border-input bg-white/[0.04] px-4 pt-5 pb-1.5 text-[15px] text-foreground outline-none transition-[border-color,box-shadow] duration-300",
-          "focus:border-primary focus:shadow-[0_0_0_4px_rgba(255,196,0,0.14)] aria-invalid:border-destructive",
+          "focus:border-primary focus:shadow-[0_0_0_4px_var(--glow)] aria-invalid:border-destructive",
           className,
         )}
         {...props}

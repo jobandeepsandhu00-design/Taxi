@@ -30,7 +30,7 @@ function Arc({ r, stroke, value, color, size, delay = 0, gradientId }: { r: numb
 const levelStyle: Record<string, { color: string; bg: string }> = {
   niedrig: { color: "#ef4444", bg: "rgba(239,68,68,0.16)" },
   mittel: { color: "#f59e0b", bg: "rgba(245,158,11,0.16)" },
-  hoch: { color: "#ffc400", bg: "rgba(255,196,0,0.16)" },
+  hoch: { color: "var(--primary)", bg: "var(--glow)" },
   bereit: { color: "#22c55e", bg: "rgba(34,197,94,0.16)" },
 };
 
@@ -53,7 +53,7 @@ export function ReadinessRing({ score, label, level }: { score: number; label: s
           <defs>
             <linearGradient id={id} x1="0" y1="1" x2="1" y2="0">
               <stop offset="0" stopColor="#ef4444" />
-              <stop offset="0.5" stopColor="#ffc400" />
+              <stop offset="0.5" stopColor="var(--primary)" />
               <stop offset="1" stopColor="#22c55e" />
             </linearGradient>
           </defs>
@@ -83,7 +83,7 @@ export function DailyRings({ answered, correct, minutes, goalQuestions, goalMinu
   const size = 156;
   const goalCorrect = Math.max(1, Math.round(goalQuestions * 0.7));
   const rings = [
-    { label: "Fragen", value: answered, goal: goalQuestions, color: "#ffc400", r: 68 },
+    { label: "Fragen", value: answered, goal: goalQuestions, color: "var(--primary)", r: 68 },
     { label: "Richtig", value: correct, goal: goalCorrect, color: "#22c55e", r: 50 },
     { label: "Minuten", value: minutes, goal: goalMinutes, color: "#38bdf8", r: 32 },
   ];

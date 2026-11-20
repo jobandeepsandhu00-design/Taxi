@@ -79,7 +79,7 @@ function FlipCard({ selected, onSelect, front, back, label }: { selected: boolea
     <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={label} className="flip-scene block w-full text-left outline-none focus-visible:ring-4 focus-visible:ring-primary/40 rounded-2xl">
       <motion.div className="relative grid" animate={{ rotateY: selected ? 180 : 0 }} transition={spring} style={{ transformStyle: "preserve-3d" }}>
         <div className="flip-face col-start-1 row-start-1 rounded-2xl border border-white/10 bg-white/[0.04] p-4">{front}</div>
-        <div className="flip-face flip-back col-start-1 row-start-1 rounded-2xl border border-primary bg-primary/12 p-4 shadow-[0_0_40px_-10px_rgba(255,196,0,0.6)]">{back}</div>
+        <div className="flip-face flip-back col-start-1 row-start-1 rounded-2xl border border-primary bg-primary/12 p-4 shadow-[0_0_40px_-10px_var(--glow)]">{back}</div>
       </motion.div>
     </button>
   );
@@ -252,7 +252,7 @@ export function OnboardingFlow({ name, today }: { name: string | null; today: st
                         animate={{ y: active ? -4 : 0 }}
                         className={cn(
                           "flex flex-col items-center gap-1 rounded-2xl border p-4 text-center transition-colors",
-                          active ? "border-primary bg-primary/12 shadow-[0_0_40px_-10px_rgba(255,196,0,0.6)]" : "border-white/10 bg-white/[0.04]",
+                          active ? "border-primary bg-primary/12 shadow-[0_0_40px_-10px_var(--glow)]" : "border-white/10 bg-white/[0.04]",
                         )}
                       >
                         <Timer className={cn("size-5", active ? "text-primary" : "text-muted-foreground")} />

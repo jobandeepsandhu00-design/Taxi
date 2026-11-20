@@ -204,3 +204,12 @@ export async function changePasswordAction(_prev: FormState, formData: FormData)
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(next.data) } });
   return { success: "Passwort geändert." };
 }
+
+/** Design (Theme) und Hell/Dunkel-Modus im Profil speichern. */
+export async function setThemeAction(theme: string, mode: string): Promise<{ ok: boolean }> {
+  const user = await requireUser();
+  const { isThemeId, isThemeMode } = await import("@/lib/theme/themes");
+  if (!isThemeId(theme) || !isThemeMode(mode)) return { ok: false };
+  await prisma.user.update({ where: { id: user.id }, data: { theme, themeMode: mode } });
+  return { ok: true };
+}

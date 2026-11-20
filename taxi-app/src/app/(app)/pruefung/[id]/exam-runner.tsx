@@ -190,7 +190,7 @@ export function ExamRunner({ attemptId, title, expiresAt, durationSec, serverNow
                     whileTap={{ scale: 0.98 }}
                     className={cn(
                       "flex w-full items-start gap-3 rounded-xl border-2 p-3.5 text-left text-[15px] transition",
-                      selected ? "border-primary bg-primary/10 shadow-[0_0_24px_-8px_rgba(255,196,0,0.6)]" : "border-border bg-white/[0.02] hover:border-primary/50",
+                      selected ? "border-primary bg-primary/10 shadow-[0_0_24px_-8px_var(--glow)]" : "border-border bg-white/[0.02] hover:border-primary/50",
                     )}
                   >
                     <span className={cn("flex size-7 shrink-0 items-center justify-center font-display text-sm font-bold", current.multipleCorrect ? "rounded-lg" : "rounded-full", selected ? "bg-primary text-primary-foreground" : "bg-foreground/8 text-foreground/75")}>

@@ -250,7 +250,7 @@ function RouteTrainer() {
                   key={name}
                   value={name}
                   dragListener={!result}
-                  whileDrag={{ scale: 1.03, boxShadow: "0 12px 30px -10px rgba(255,196,0,0.6)" }}
+                  whileDrag={{ scale: 1.03, boxShadow: "0 12px 30px -10px var(--glow)" }}
                   className={cn(
                     "flex cursor-grab items-center gap-3 rounded-xl border-2 bg-card-solid px-3 py-2.5 text-sm font-semibold active:cursor-grabbing",
                     state === "idle" && "border-border",

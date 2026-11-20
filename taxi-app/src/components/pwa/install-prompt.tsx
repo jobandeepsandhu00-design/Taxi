@@ -71,7 +71,7 @@ export function InstallPrompt() {
           </button>
           <div className="flex items-center gap-3">
             <motion.span
-              className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_0_24px_-4px_rgba(255,196,0,0.7)]"
+              className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_0_24px_-4px_var(--glow)]"
               animate={{ y: [0, -6, 0], rotate: [0, -6, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1.5 }}
             >

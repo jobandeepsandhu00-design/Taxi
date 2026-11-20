@@ -30,7 +30,7 @@ export function ProgressRing({
   value,
   size = 120,
   stroke = 10,
-  color = "#ffc400",
+  color = "var(--primary)",
   track,
   children,
   label,

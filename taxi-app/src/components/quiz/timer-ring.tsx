@@ -11,7 +11,7 @@ export function TimerRing({ remaining, total }: { remaining: number; total: numb
   const frac = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0;
   const critical = remaining <= 10;
   const low = remaining <= 300;
-  const color = critical ? "#ef4444" : low ? "#f59e0b" : "#ffc400";
+  const color = critical ? "#ef4444" : low ? "#f59e0b" : "var(--primary)";
   return (
     <motion.div
       role="timer"

@@ -14,7 +14,7 @@ export function TaxiGlyph({ className = "size-5" }: { className?: string }) {
 export function Logo({ href = "/", compact = false }: { href?: string; compact?: boolean }) {
   return (
     <Link href={href} className="group flex items-center gap-2.5 font-bold tracking-tight text-navy" aria-label="TaxiPrüfung – Startseite">
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_24px_-4px_rgba(255,196,0,0.6)] transition-transform duration-300 group-hover:-rotate-6 group-active:scale-95">
+      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_24px_-4px_var(--glow)] transition-transform duration-300 group-hover:-rotate-6 group-active:scale-95">
         <TaxiGlyph />
       </span>
       {!compact && (

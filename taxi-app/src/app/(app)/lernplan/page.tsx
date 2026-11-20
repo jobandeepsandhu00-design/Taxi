@@ -63,7 +63,7 @@ export default async function StudyPlanPage() {
             const isToday = d.day === today;
             return (
               <StaggerItem as="li" key={d.day} className="relative flex gap-4">
-                <div className={cn("relative z-10 flex size-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-border bg-card-solid", isToday && "border-primary bg-primary text-primary-foreground shadow-[0_0_24px_-6px_rgba(255,196,0,0.7)]")}>
+                <div className={cn("relative z-10 flex size-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-border bg-card-solid", isToday && "border-primary bg-primary text-primary-foreground shadow-[0_0_24px_-6px_var(--glow)]")}>
                   <span className={cn("text-[10px] font-bold uppercase", isToday ? "text-primary-foreground/80" : "text-muted-foreground")}>{isToday ? "Heute" : weekdayShort(d.day)}</span>
                   <span className="font-display text-lg leading-none font-bold">{d.day.slice(8, 10)}.</span>
                 </div>

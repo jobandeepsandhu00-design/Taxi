@@ -41,7 +41,7 @@ function VsIntro({ host, guest, seconds }: { host: DuelPlayer; guest: DuelPlayer
           <span className="flex size-24 items-center justify-center rounded-full bg-primary/20 text-6xl ring-4 ring-primary">{host.avatar}</span>
           <span className="font-display text-lg font-bold text-white">{host.name}</span>
         </motion.div>
-        <motion.span className="font-display text-6xl font-black text-primary [text-shadow:0_0_40px_rgba(255,196,0,0.8)]" initial={{ scale: 0, rotate: -30 }} animate={{ scale: [0, 1.4, 1], rotate: 0 }} transition={{ delay: 0.35, duration: 0.5 }}>
+        <motion.span className="font-display text-6xl font-black text-primary [text-shadow:0_0_40px_var(--glow)]" initial={{ scale: 0, rotate: -30 }} animate={{ scale: [0, 1.4, 1], rotate: 0 }} transition={{ delay: 0.35, duration: 0.5 }}>
           VS
         </motion.span>
         <motion.div className="flex flex-col items-center gap-2" initial={{ x: 200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 220, damping: 18 }}>

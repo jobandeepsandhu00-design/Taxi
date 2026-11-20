@@ -11,7 +11,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_6px_24px_-8px_rgba(255,196,0,0.55)] hover:bg-[#ffd23f] hover:shadow-[0_8px_32px_-6px_rgba(255,196,0,0.65)]",
+        default: "bg-primary text-primary-foreground shadow-[0_6px_24px_-8px_var(--glow)] hover:brightness-105 hover:shadow-[0_8px_32px_-6px_var(--glow)]",
         navy: "bg-foreground text-background hover:opacity-90",
         destructive: "bg-destructive text-white hover:brightness-110",
         success: "bg-success text-white hover:brightness-110",
@@ -40,6 +40,7 @@ function Button({ className, variant, size, asChild = false, onPointerDown, ...p
   return (
     <Comp
       data-slot="button"
+      data-variant={variant ?? "default"}
       className={cn(buttonVariants({ variant, size, className }))}
       onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => {
         haptic();

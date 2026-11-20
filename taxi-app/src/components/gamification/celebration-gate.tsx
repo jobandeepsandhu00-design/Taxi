@@ -65,12 +65,12 @@ function LevelUp({ item, onClose }: { item: CelebrationItem; onClose: () => void
     <motion.div className="relative w-full max-w-sm text-center" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={spring}>
       {/* Strahlenkranz */}
       <motion.div
-        className="pointer-events-none absolute top-14 left-1/2 -z-10 -ml-[260px] -mt-[260px] size-[520px] rounded-full [background:repeating-conic-gradient(rgba(255,196,0,0.32)_0deg_14deg,transparent_14deg_40deg)] [mask-image:radial-gradient(circle,black_25%,transparent_68%)]"
+        className="pointer-events-none absolute top-14 left-1/2 -z-10 -ml-[260px] -mt-[260px] size-[520px] rounded-full [background:repeating-conic-gradient(var(--glow)_0deg_14deg,transparent_14deg_40deg)] [mask-image:radial-gradient(circle,black_25%,transparent_68%)]"
         animate={{ rotate: 360 }}
         transition={{ duration: 18, ease: "linear", repeat: Infinity }}
       />
       <motion.div
-        className="mx-auto flex size-28 items-center justify-center rounded-[32px] bg-primary text-primary-foreground shadow-[0_0_80px_-10px_rgba(255,196,0,0.9)]"
+        className="mx-auto flex size-28 items-center justify-center rounded-[32px] bg-primary text-primary-foreground shadow-[0_0_80px_-10px_var(--glow)]"
         initial={{ rotate: -20, scale: 0 }}
         animate={{ rotate: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 14, delay: 0.15 }}
@@ -98,7 +98,7 @@ function LevelUp({ item, onClose }: { item: CelebrationItem; onClose: () => void
 function Badge({ item, onClose }: { item: CelebrationItem; onClose: () => void }) {
   return (
     <motion.div
-      className="relative w-full max-w-xs rounded-3xl border border-primary/40 bg-[#151b2b] p-8 text-center shadow-[0_0_80px_-20px_rgba(255,196,0,0.7)]"
+      className="relative w-full max-w-xs rounded-3xl border border-primary/40 bg-[#151b2b] p-8 text-center shadow-[0_0_80px_-20px_var(--glow)]"
       initial={{ rotateY: 180, scale: 0.7, opacity: 0 }}
       animate={{ rotateY: 0, scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}

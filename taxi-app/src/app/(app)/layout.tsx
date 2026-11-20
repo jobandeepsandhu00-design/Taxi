@@ -7,6 +7,7 @@ import { CoachProvider } from "@/components/coach/coach-provider";
 import { coachConfigured } from "@/server/coach/llm";
 import { CelebrationGate } from "@/components/gamification/celebration-gate";
 import { getUnseenAchievements } from "@/server/gamification";
+import { ThemeSync } from "@/components/theme/theme-sync";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, settings] = await Promise.all([requireUser(), getSettings()]);
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <CoachProvider enabled={coachConfigured()}>
     <AppShell user={{ name: user.name, email: user.email, role: user.role, isGuest: user.isGuest, avatar: avatarEmoji(user.avatar) }} disclaimer={settings.disclaimer}>
+      <ThemeSync uid={user.id} theme={user.theme} mode={user.themeMode} />
       {children}
       {unseen.length > 0 && <CelebrationGate items={unseen} />}
     </AppShell>

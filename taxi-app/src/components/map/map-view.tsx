@@ -91,6 +91,8 @@ export default function MapView({ onPick, onDistrictClick, markers = [], line, h
   useEffect(() => {
     if (!container.current) return;
     const dark = document.documentElement.classList.contains("dark");
+    // Akzentfarbe des aktiven Themes (MapLibre braucht echte Farbwerte)
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "#ffc400";
     let m: MLMap;
     try {
       m = new maplibregl.Map({
@@ -121,15 +123,15 @@ export default function MapView({ onPick, onDistrictClick, markers = [], line, h
         type: "line",
         source: "districts",
         paint: {
-          "line-color": ["case", ["boolean", ["feature-state", "highlight"], false], "#ffc400", dark ? "rgba(255,255,255,0.35)" : "rgba(15,23,42,0.35)"],
+          "line-color": ["case", ["boolean", ["feature-state", "highlight"], false], accent, dark ? "rgba(255,255,255,0.35)" : "rgba(15,23,42,0.35)"],
           "line-width": ["case", ["boolean", ["feature-state", "highlight"], false], 3, 1],
         },
       });
       m.addSource("line", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      m.addLayer({ id: "line", type: "line", source: "line", paint: { "line-color": "#ffc400", "line-width": 2.5, "line-dasharray": [2, 1.5] } });
+      m.addLayer({ id: "line", type: "line", source: "line", paint: { "line-color": accent, "line-width": 2.5, "line-dasharray": [2, 1.5] } });
       m.addSource("route", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-      m.addLayer({ id: "route-glow", type: "line", source: "route", paint: { "line-color": "#ffc400", "line-width": 10, "line-opacity": 0.25, "line-blur": 4 } });
-      m.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#ffc400", "line-width": 4 } });
+      m.addLayer({ id: "route-glow", type: "line", source: "route", paint: { "line-color": accent, "line-width": 10, "line-opacity": 0.25, "line-blur": 4 } });
+      m.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": accent, "line-width": 4 } });
       setReady(true);
     });
     m.on("error", () => {

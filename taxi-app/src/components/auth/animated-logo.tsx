@@ -11,7 +11,7 @@ export function AnimatedLogo() {
     <div className="flex items-center gap-3" aria-label="TaxiPrüfung">
       <span className="relative flex size-11 items-center justify-center">
         <motion.span
-          className="absolute inset-0 rounded-2xl bg-primary shadow-[0_0_30px_-4px_rgba(255,196,0,0.7)]"
+          className="absolute inset-0 rounded-2xl bg-primary shadow-[0_0_30px_-4px_var(--glow)]"
           initial={{ scale: 0.4, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.85 }}

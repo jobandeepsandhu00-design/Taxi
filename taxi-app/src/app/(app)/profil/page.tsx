@@ -13,6 +13,7 @@ import { logoutAction } from "@/server/actions/auth";
 import { vapidPublicKey } from "@/server/push";
 import { PasswordForm, ProfileForm } from "./forms";
 import { AvatarPicker, DeviceSettings } from "./settings";
+import { ModeSwitch, ThemePicker } from "@/components/theme/theme-picker";
 
 export const metadata: Metadata = { title: "Profil" };
 
@@ -38,6 +39,18 @@ export default async function ProfilePage() {
                 <Link href="/registrieren">Konto erstellen</Link>
               </Button>
             )}
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card id="design">
+            <CardHeader>
+              <CardTitle>Design</CardTitle>
+              <CardDescription>Fünf Designs, jedes mit eigener Bewegung. Wird in deinem Profil gespeichert.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ModeSwitch />
+              <ThemePicker />
+            </CardContent>
           </Card>
         </StaggerItem>
         <StaggerItem>

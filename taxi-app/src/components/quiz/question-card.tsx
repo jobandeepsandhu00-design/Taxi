@@ -297,7 +297,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                     className={cn(
                       "flex w-full items-start gap-3 rounded-xl border-2 p-3.5 text-left text-[15px] transition-colors duration-200 disabled:cursor-default",
                       state === "idle" && "border-border bg-white/[0.02] hover:border-primary/50 hover:bg-primary/5",
-                      state === "selected" && "border-primary bg-primary/10 shadow-[0_0_24px_-8px_rgba(255,196,0,0.6)]",
+                      state === "selected" && "border-primary bg-primary/10 shadow-[0_0_24px_-8px_var(--glow)]",
                       state === "correct" && "border-success bg-success/12",
                       state === "wrong" && "border-destructive bg-destructive/12",
                       state === "dim" && "border-border opacity-50",
@@ -342,7 +342,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               {xp ? (
                 <motion.span
                   key="xp"
-                  className="pointer-events-none absolute right-6 bottom-6 font-display text-2xl font-bold text-primary [text-shadow:0_0_20px_rgba(255,196,0,0.7)]"
+                  className="pointer-events-none absolute right-6 bottom-6 font-display text-2xl font-bold text-primary [text-shadow:0_0_20px_var(--glow)]"
                   initial={{ opacity: 0, y: 10, scale: 0.8 }}
                   animate={{ opacity: [0, 1, 1, 0], y: -70, scale: 1.1 }}
                   transition={{ duration: 1.5, ease: "easeOut" }}

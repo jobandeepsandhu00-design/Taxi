@@ -27,8 +27,8 @@ export function DailyChart({ data }: { data: { label: string; minutes: number; a
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={grid} />
         <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} interval="preserveStartEnd" />
         <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} />
-        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,196,0,0.08)" }} formatter={(v, n) => [n === "minutes" ? `${v} Min.` : v, n === "minutes" ? "Lernzeit" : "Fragen"]} />
-        <Bar dataKey="minutes" fill="#ffc400" radius={[6, 6, 0, 0]} maxBarSize={22} {...anim} />
+        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--glow)" }} formatter={(v, n) => [n === "minutes" ? `${v} Min.` : v, n === "minutes" ? "Lernzeit" : "Fragen"]} />
+        <Bar dataKey="minutes" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={22} {...anim} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -40,8 +40,8 @@ export function AnsweredChart({ data }: { data: { label: string; answered: numbe
       <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
         <defs>
           <linearGradient id="gAnswered" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ffc400" stopOpacity={0.35} />
-            <stop offset="100%" stopColor="#ffc400" stopOpacity={0} />
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="gCorrect" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
@@ -52,7 +52,7 @@ export function AnsweredChart({ data }: { data: { label: string; answered: numbe
         <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} interval="preserveStartEnd" />
         <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [v, n === "answered" ? "Beantwortet" : "Richtig"]} />
-        <Area type="monotone" dataKey="answered" stroke="#ffc400" strokeWidth={2} fill="url(#gAnswered)" {...anim} />
+        <Area type="monotone" dataKey="answered" stroke="var(--primary)" strokeWidth={2} fill="url(#gAnswered)" {...anim} />
         <Area type="monotone" dataKey="correct" stroke="#22c55e" strokeWidth={2} fill="url(#gCorrect)" {...anim} />
       </AreaChart>
     </ResponsiveContainer>
@@ -67,7 +67,7 @@ export function AccuracyTrendChart({ data }: { data: { label: string; accuracy: 
         <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} />
         <YAxis domain={[0, 100]} tick={axis} tickLine={false} axisLine={false} unit="%" />
         <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} %`, "Trefferquote"]} />
-        <Line type="monotone" dataKey="accuracy" stroke="#ffc400" strokeWidth={3} dot={{ r: 4, fill: "#ffc400" }} activeDot={{ r: 6 }} {...anim} />
+        <Line type="monotone" dataKey="accuracy" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--primary)" }} activeDot={{ r: 6 }} {...anim} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -82,7 +82,7 @@ export function ExamHistoryChart({ data, passLine }: { data: { label: string; sc
         <YAxis domain={[0, 100]} tick={axis} tickLine={false} axisLine={false} unit="%" />
         <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} %`, "Ergebnis"]} />
         <ReferenceLine y={passLine} stroke="#22c55e" strokeDasharray="6 4" label={{ value: `Bestehen ${passLine} %`, fontSize: 11, fill: "#22c55e", position: "insideTopRight" }} />
-        <Line type="monotone" dataKey="score" stroke="#ffc400" strokeWidth={3} dot={{ r: 4, fill: "#ffc400" }} activeDot={{ r: 6 }} {...anim} />
+        <Line type="monotone" dataKey="score" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--primary)" }} activeDot={{ r: 6 }} {...anim} />
       </LineChart>
     </ResponsiveContainer>
   );

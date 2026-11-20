@@ -1,8 +1,29 @@
 import type { Transition, Variants } from "motion/react";
+import { THEMES, type ThemeId } from "./theme/themes";
 
-/** Globale Feder-Einstellung für alle Animationen. */
-export const spring: Transition = { type: "spring", stiffness: 260, damping: 24 };
+/**
+ * Globale Feder-Einstellung für alle Animationen.
+ * Wird beim Theme-Wechsel *an Ort und Stelle* auf die Motion-Persönlichkeit des Themes gesetzt
+ * (applyMotionPersonality), damit alle bestehenden Komponenten automatisch mitziehen.
+ */
+export const spring: Transition = { type: "spring", stiffness: 300, damping: 26 };
 export const softSpring: Transition = { type: "spring", stiffness: 170, damping: 26 };
+
+export function personalityTransition(id: ThemeId): Transition {
+  const m = THEMES[id].motion;
+  return m.type === "tween" ? { type: "tween", duration: m.duration, ease: m.ease } : { type: "spring", stiffness: m.stiffness, damping: m.damping };
+}
+
+export function applyMotionPersonality(id: ThemeId) {
+  const t = personalityTransition(id) as Record<string, unknown>;
+  const target = spring as Record<string, unknown>;
+  for (const k of Object.keys(target)) delete target[k];
+  Object.assign(target, t);
+  const m = THEMES[id].motion;
+  const soft = softSpring as Record<string, unknown>;
+  for (const k of Object.keys(soft)) delete soft[k];
+  Object.assign(soft, m.type === "tween" ? { type: "tween", duration: m.duration * 1.3, ease: m.ease } : { type: "spring", stiffness: Math.round(m.stiffness * 0.6), damping: m.damping + 4 });
+}
 
 export const listVariants: Variants = {
   hidden: {},
