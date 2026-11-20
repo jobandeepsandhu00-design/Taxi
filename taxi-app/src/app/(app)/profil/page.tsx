@@ -10,6 +10,7 @@ import { avatarEmoji } from "@/lib/avatars";
 import { levelFor } from "@/lib/gamification";
 import { formatDate } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
+import { vapidPublicKey } from "@/server/push";
 import { PasswordForm, ProfileForm } from "./forms";
 import { AvatarPicker, DeviceSettings } from "./settings";
 
@@ -74,7 +75,7 @@ export default async function ProfilePage() {
               <CardDescription>Gelten für dieses Gerät.</CardDescription>
             </CardHeader>
             <CardContent>
-              <DeviceSettings />
+              <DeviceSettings vapidKey={vapidPublicKey()} />
             </CardContent>
           </Card>
         </StaggerItem>

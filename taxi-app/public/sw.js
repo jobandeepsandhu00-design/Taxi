@@ -2,7 +2,7 @@
  * Strategie: statische Assets cache-first, Seiten network-first mit Offline-Fallback.
  * API-/Server-Action-Anfragen (POST) werden nie gecacht – Lernfortschritt wird immer in der Datenbank gespeichert.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `tp-static-${VERSION}`;
 const PAGE_CACHE = `tp-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -58,4 +58,49 @@ self.addEventListener("fetch", (event) => {
         .catch(async () => (await caches.match(request)) || (await caches.match(OFFLINE_URL))),
     );
   }
+});
+
+// Offline-Pakete: Seiten gezielt für die Offline-Nutzung zwischenspeichern
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "cache-urls" && Array.isArray(event.data.urls)) {
+    event.waitUntil(
+      caches.open(PAGE_CACHE).then((c) =>
+        Promise.all(event.data.urls.map((u) => fetch(u, { credentials: "same-origin" }).then((res) => res.ok && c.put(u, res)).catch(() => {}))),
+      ),
+    );
+  }
+});
+
+// Push-Erinnerungen (z. B. „Deine Serie ist in Gefahr!“)
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || "TaxiPrüfung", {
+      body: data.body || "Zeit für eine kurze Lerneinheit!",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: data.tag || "tp-reminder",
+      data: { url: data.url || "/dashboard" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const existing = list.find((c) => new URL(c.url).origin === self.location.origin);
+      if (existing) {
+        existing.navigate(url);
+        return existing.focus();
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
 });

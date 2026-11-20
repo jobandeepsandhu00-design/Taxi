@@ -100,6 +100,12 @@ model User {
   xp                Int                 @default(0)
   achievements      UserAchievement[]
   reviewItems       ReviewItem[]
+  ortskundeAttempts OrtskundeAttempt[]
+  dailyChallenges   DailyChallengeResult[]
+  hostedDuels       Duel[]              @relation("DuelHost")
+  joinedDuels       Duel[]              @relation("DuelGuest")
+  duelAnswers       DuelAnswer[]
+  pushSubscriptions PushSubscription[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   lastLoginAt       DateTime?
@@ -455,4 +461,87 @@ model ReviewItem {
 
   @@unique([userId, questionId])
   @@index([userId, dueDate])
+}
+
+/// „Wo liegt …?“-Antworten auf der Ortskunde-Karte (für die Bezirks-Heatmap)
+model OrtskundeAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String   @db.VarChar(12)
+  placeKey  String   @db.VarChar(40)
+  district  Int
+  correct   Boolean
+  distanceM Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId, district])
+}
+
+/// Tägliche Challenge: 5 Fragen pro Tag, für alle gleich
+model DailyChallengeResult {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day         DateTime @db.Date
+  correct     Int
+  total       Int
+  durationSec Int
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, day])
+  @@index([day, correct])
+}
+
+enum DuelStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+/// 1-gegen-1-Duell (Echtzeit über kurzes Polling)
+model Duel {
+  id          String       @id @default(cuid())
+  code        String       @unique @db.VarChar(8)
+  hostId      String
+  host        User         @relation("DuelHost", fields: [hostId], references: [id], onDelete: Cascade)
+  guestId     String?
+  guest       User?        @relation("DuelGuest", fields: [guestId], references: [id], onDelete: Cascade)
+  questionIds String[]
+  status      DuelStatus   @default(WAITING)
+  createdAt   DateTime     @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  answers     DuelAnswer[]
+
+  @@index([hostId, status])
+  @@index([guestId, status])
+}
+
+model DuelAnswer {
+  id        String   @id @default(cuid())
+  duelId    String
+  duel      Duel     @relation(fields: [duelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  index     Int
+  isCorrect Boolean
+  timeMs    Int
+  createdAt DateTime @default(now())
+
+  @@unique([duelId, userId, index])
+}
+
+/// Web-Push-Abos für Serien-Erinnerungen
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

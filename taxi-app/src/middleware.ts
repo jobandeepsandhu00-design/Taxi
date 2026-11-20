@@ -6,7 +6,8 @@ const PUBLIC_PATHS = ["/", "/login", "/registrieren", "/offline", "/impressum", 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-  const isPublic = PUBLIC_PATHS.includes(pathname);
+  // Cron-Endpunkte prüfen ihr eigenes Geheimnis (CRON_SECRET)
+  const isPublic = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/api/cron/");
 
   // Gäste dürfen zur Registrierung (Gastkonto in echtes Konto umwandeln)
   if (session && (pathname === "/login" || (pathname === "/registrieren" && !session.guest))) {

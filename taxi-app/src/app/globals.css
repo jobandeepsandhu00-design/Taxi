@@ -267,3 +267,31 @@
 @media (prefers-reduced-motion: reduce) {
   .star-twinkle, .window-twinkle, .beacon-blink, .neon-flicker, .wheel-spin, .headlight-beam, .road-dashes { animation: none; }
 }
+
+/* ── Ortskunde-Karte ─────────────────────────────────────── */
+.map-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--pin, #ffc400);
+  transform: rotate(-45deg);
+  border: 2px solid #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  animation: pin-drop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.map-taxi {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+}
+@keyframes pin-drop {
+  from { transform: translateY(-30px) rotate(-45deg); opacity: 0; }
+  to { transform: translateY(0) rotate(-45deg); opacity: 1; }
+}
+.maplibregl-ctrl-attrib { font-size: 10px; }
+.dark .maplibregl-ctrl-attrib, .dark .maplibregl-ctrl-group { background: rgba(21, 27, 43, 0.85) !important; color: #94a3b8; }
+.dark .maplibregl-ctrl-attrib a { color: #cbd5e1; }
+.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+@media (prefers-reduced-motion: reduce) { .map-pin { animation: none; } }
+@keyframes podium { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { [class*="animate-[podium"] { animation: none !important; } }

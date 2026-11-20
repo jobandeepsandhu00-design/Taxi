@@ -11,6 +11,7 @@ import { playSound, setSoundEnabled, soundEnabled } from "@/lib/sound";
 import { audioModeEnabled, setAudioMode, speak, speechSupported } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import { setAvatarAction } from "@/server/actions/auth";
+import { PushToggle } from "./push-toggle";
 
 /** Avatar-Auswahl mit Feder-Animation. */
 export function AvatarPicker({ initial }: { initial: string | null }) {
@@ -73,7 +74,7 @@ function Switch({ checked, onChange, label, description, icon: Icon, disabled }:
 }
 
 /** Geräte-Einstellungen (im Browser gespeichert). */
-export function DeviceSettings() {
+export function DeviceSettings({ vapidKey }: { vapidKey: string | null }) {
   const [sound, setSound] = useState(true);
   const [haptics, setHaptics] = useState(true);
   const [audio, setAudio] = useState(false);
@@ -139,6 +140,7 @@ export function DeviceSettings() {
           if (v) speak("Audio-Modus ist eingeschaltet.");
         }}
       />
+      <PushToggle vapidKey={vapidKey} />
       <label className="flex items-center gap-3 py-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-link">
           <Languages className="size-[18px]" />

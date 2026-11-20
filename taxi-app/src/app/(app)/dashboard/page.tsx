@@ -22,11 +22,14 @@ import { getCategoryOverview, getDashboardStats } from "@/server/stats";
 export const metadata: Metadata = { title: "Start" };
 
 const actions = [
+  { href: "/challenge", label: "Daily Challenge", desc: "5 Fragen · Rangliste", icon: "Trophy" },
   { href: "/lernen", label: "Lernen starten", desc: "Nach Kategorien", icon: "BookOpen" },
   { href: "/quiz", label: "Quiz starten", desc: "Zufällige Fragen", icon: "Sparkles" },
   { href: "/pruefung", label: "Prüfungsmodus", desc: "Echte Simulation", icon: "ClipboardCheck" },
   { href: "/fehler", label: "Falsche Antworten", desc: "Fehler trainieren", icon: "RotateCcw" },
   { href: "/lernkarten", label: "Lernkarten", desc: "Karteikarten üben", icon: "Layers" },
+  { href: "/ortskunde", label: "Ortskunde-Karte", desc: "Wo liegt …?", icon: "Map" },
+  { href: "/duell", label: "Duell", desc: "1 gegen 1, live", icon: "Swords" },
   { href: "/fortschritt", label: "Mein Fortschritt", desc: "Statistiken", icon: "BarChart3" },
 ];
 

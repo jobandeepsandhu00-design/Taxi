@@ -29,6 +29,7 @@ interface Props {
   initialIndex: number;
   bookmarkedIds: string[];
   finished: boolean;
+  isDailyChallenge?: boolean;
 }
 
 function categoryScores(questions: ClientQuestion[], reveals: Record<string, AnswerReveal>): CategoryScore[] {
@@ -45,7 +46,7 @@ function categoryScores(questions: ClientQuestion[], reveals: Record<string, Ans
   return [...map.values()].sort((a, b) => a.pct - b.pct);
 }
 
-export function QuizRunner({ attemptId, title, modeLabel, questions, initialReveals, initialIndex, bookmarkedIds, finished: initialFinished }: Props) {
+export function QuizRunner({ attemptId, title, modeLabel, questions, initialReveals, initialIndex, bookmarkedIds, finished: initialFinished, isDailyChallenge = false }: Props) {
   const router = useRouter();
   const [index, setIndex] = useState(Math.min(initialIndex, questions.length - 1));
   const [direction, setDirection] = useState(1);
@@ -145,8 +146,13 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
               <p className="text-xs text-white/70">falsch</p>
             </div>
           </div>
+          {isDailyChallenge && (
+            <Button asChild size="lg" className="mt-6 w-full sm:w-auto">
+              <Link href="/challenge">🏆 Zur Rangliste</Link>
+            </Button>
+          )}
           <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
-            {wrong.length > 0 && (
+            {!isDailyChallenge && wrong.length > 0 && (
               <form action={repeatAttemptAction}>
                 <input type="hidden" name="attemptId" value={attemptId} />
                 <input type="hidden" name="onlyWrong" value="1" />
@@ -155,12 +161,12 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
                 </Button>
               </form>
             )}
-            <form action={repeatAttemptAction}>
+            {!isDailyChallenge && <form action={repeatAttemptAction}>
               <input type="hidden" name="attemptId" value={attemptId} />
               <Button type="submit" variant="outline" className="w-full border-white/20 bg-white/5 text-white">
                 <RotateCcw /> Alle wiederholen
               </Button>
-            </form>
+            </form>}
             <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white">
               <Link href="/dashboard">
                 <Home /> Zur Übersicht

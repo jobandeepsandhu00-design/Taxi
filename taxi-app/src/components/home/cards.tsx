@@ -2,9 +2,9 @@
 
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import Link from "next/link";
-import { ArrowRight, BarChart3, BookOpen, ChevronDown, ClipboardCheck, Layers, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpen, ChevronDown, ClipboardCheck, Layers, Map as MapIcon, RotateCcw, Sparkles, Swords, Trophy, type LucideIcon } from "lucide-react";
 
-const ACTION_ICONS: Record<string, LucideIcon> = { BarChart3, BookOpen, ClipboardCheck, Layers, RotateCcw, Sparkles };
+const ACTION_ICONS: Record<string, LucideIcon> = { BarChart3, BookOpen, ClipboardCheck, Layers, RotateCcw, Sparkles, Map: MapIcon, Swords, Trophy };
 import { useState } from "react";
 import { categoryIcon } from "@/components/category-style";
 import { AnimatedNumber } from "@/components/motion/animated-number";
@@ -111,7 +111,7 @@ export function QuickActions({ actions }: { actions: { href: string; label: stri
       variants={listVariants}
       initial="hidden"
       animate="show"
-      className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-6"
+      className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0"
     >
       {actions.map((a) => (
         <TiltCard key={a.href} {...a} />

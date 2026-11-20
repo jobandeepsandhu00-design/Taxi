@@ -7,6 +7,7 @@ import { LogOut, Menu, Shield, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { haptic, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
@@ -235,6 +236,7 @@ export function AppShell({ user, children, disclaimer }: { user: ShellUser; chil
       </div>
 
       <BottomNav />
+      <InstallPrompt />
     </div>
   );
 }

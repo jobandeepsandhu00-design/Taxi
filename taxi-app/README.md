@@ -166,3 +166,12 @@ Das Modell `Region` ist bereits mit allen neun Bundesländern angelegt (nur Wien
 ## Lizenz und Haftung
 
 Unabhängiges Lernangebot, ohne Verbindung zu Behörden, Prüfungsstellen oder zur Wirtschaftskammer. Für die Richtigkeit der Inhalte wird keine Haftung übernommen. Maßgeblich sind ausschließlich die geltenden Rechtsvorschriften und die Vorgaben der zuständigen Prüfungsstelle.
+
+
+## Phase 6: Ortskunde, Challenge, Duell, Offline & Push
+
+- **Ortskunde-Karte** (`/ortskunde`): „Wo liegt …?“ auf einer unbeschrifteten Wien-Karte (MapLibre, Vektorkacheln von OpenFreeMap/OpenStreetMap), Bezirks-Heatmap und Routen-Trainer für die Ringstraße. Bezirksgrenzen: Statistik Austria (CC BY 4.0), aufbereitet von Flooh Perlot (CC BY 4.0) – `src/data/wien-bezirke.json`.
+- **Daily Challenge** (`/challenge`): 5 Fragen pro Tag, deterministisch für alle gleich, Rangliste (nur Vorname + Initiale).
+- **Duell** (`/duell`): 1 gegen 1 per Code/Link, VS-Intro, Live-Fortschritt über kurzes Polling (ca. 1,5 s).
+- **Offline lernen** (`/offline-lernen`): Fragenpakete in IndexedDB, Üben ohne Netz (fließt nicht in die Statistik ein).
+- **Push-Erinnerungen**: Web-Push „Deine Serie ist in Gefahr!“ über einen täglichen Vercel-Cron (`vercel.json`). Benötigt die Umgebungsvariablen `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (Erzeugung: `npx web-push generate-vapid-keys`), optional `VAPID_SUBJECT`, sowie `CRON_SECRET`. Ohne diese Variablen ist der Schalter im Profil deaktiviert.

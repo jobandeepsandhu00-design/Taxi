@@ -239,6 +239,84 @@ test.describe.serial("Lernende/r", () => {
     await expect(page.getByText("Lernserie")).toBeVisible();
   });
 
+  test("Daily Challenge mit Rangliste", async ({ page }) => {
+    await login(page, STUDENT.email, STUDENT.password);
+    await gotoSettled(page, "/challenge");
+    await page.getByRole("button", { name: "Challenge starten" }).click();
+    await page.waitForURL("**/sitzung/**");
+    for (let i = 0; i < 5; i++) {
+      await answerFirstOption(page);
+      await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
+    }
+    await expect(page.getByRole("heading", { name: "Sitzung abgeschlossen" })).toBeVisible();
+    await page.getByRole("link", { name: /Zur Rangliste/ }).click();
+    await page.waitForURL("**/challenge");
+    await expect(page.getByText("Heute geschafft")).toBeVisible();
+    await expect(page.getByText("(du)")).toBeVisible();
+  });
+
+  test("Ortskunde-Karte: Tippen, Bezirke und Routen", async ({ page }) => {
+    await login(page, STUDENT.email, STUDENT.password);
+    await gotoSettled(page, "/ortskunde");
+    const map = page.locator('[aria-label="Karte von Wien"]');
+    await expect(map).toHaveAttribute("data-ready", "true", { timeout: 20_000 });
+    const box = (await map.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.getByText(/^(Richtig! \+\d+ Punkte|Leider daneben)$/).first()).toBeVisible();
+    await page.getByRole("tab", { name: "Bezirke" }).click();
+    await expect(page.getByText(/von 23 Bezirken gemeistert/)).toBeVisible();
+    await page.getByRole("tab", { name: "Routen" }).click();
+    await page.getByRole("button", { name: "Route prüfen" }).click();
+    await expect(page.getByText(/Perfekte Route|Nicht ganz/)).toBeVisible();
+  });
+
+  test("Offline-Paket herunterladen und üben", async ({ page }) => {
+    await login(page, STUDENT.email, STUDENT.password);
+    await gotoSettled(page, "/offline-lernen");
+    await page.getByRole("button", { name: /Straßenverkehrsordnung/ }).click();
+    await expect(page.getByRole("button", { name: "Üben" })).toBeVisible();
+    await page.getByRole("button", { name: "Üben" }).click();
+    await page.locator("button", { hasText: /^A/ }).first().click();
+    await page.getByRole("button", { name: "Antwort prüfen" }).click();
+    await expect(page.getByText(/^(Richtig!|Leider falsch)$/)).toBeVisible();
+  });
+
+  test("Duell: zwei Personen spielen live gegeneinander", async ({ browser }) => {
+    const a = await browser.newContext();
+    const b = await browser.newContext();
+    const host = await a.newPage();
+    const guest = await b.newPage();
+    for (const p of [host, guest]) {
+      await p.addLocatorHandler(p.locator('[aria-labelledby="celebration-title"]'), async (d) => {
+        await d.getByRole("button").click();
+      });
+    }
+    await login(host, ADMIN.email, ADMIN.password);
+    await gotoSettled(host, "/duell");
+    await host.getByRole("button", { name: "Duell erstellen" }).click();
+    await host.waitForURL(/\/duell\/[A-Z0-9]{6}$/);
+    const code = host.url().split("/").pop()!;
+    await expect(host.getByText("Warte auf deinen Gegner")).toBeVisible();
+
+    await login(guest, STUDENT.email, STUDENT.password);
+    await gotoSettled(guest, "/duell");
+    await guest.getByLabel("Duell-Code").fill(code);
+    await guest.getByRole("button", { name: "Beitreten" }).click();
+    await guest.waitForURL(`**/duell/${code}`);
+
+    for (const p of [host, guest]) {
+      for (let i = 0; i < 5; i++) {
+        await expect(p.getByText(`Frage ${i + 1} von 5`)).toBeVisible({ timeout: 15_000 });
+        await p.locator("main button", { hasText: /^A/ }).first().click();
+      }
+    }
+    for (const p of [host, guest]) {
+      await expect(p.getByRole("heading", { name: /gewonnen|verloren|Unentschieden/ })).toBeVisible({ timeout: 15_000 });
+    }
+    await a.close();
+    await b.close();
+  });
+
   test("Lernende haben keinen Zugriff auf die Administration", async ({ page, request }) => {
     await login(page, STUDENT.email, STUDENT.password);
     await gotoSettled(page, "/admin");

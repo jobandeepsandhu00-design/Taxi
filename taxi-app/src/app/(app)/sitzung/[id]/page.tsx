@@ -43,6 +43,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         initialIndex={Math.max(0, initialIndex)}
         bookmarkedIds={bookmarks.map((b) => b.questionId)}
         finished={attempt.status !== "IN_PROGRESS"}
+        isDailyChallenge={Boolean((attempt.settings as { dailyChallenge?: string } | null)?.dailyChallenge)}
       />
     </>
   );

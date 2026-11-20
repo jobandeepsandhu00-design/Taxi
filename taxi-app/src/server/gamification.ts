@@ -99,6 +99,13 @@ export async function rewardAnswer(params: { userId: string; questionId: string;
   return toReward(gained, xp, levelUp, keys);
 }
 
+/** Pauschale XP (z. B. Ortskunde, Routen, Challenge, Duell) inkl. Level-Aufstieg. */
+export async function rewardXp(userId: string, amount: number, extraKeys: string[] = []): Promise<Reward> {
+  const { xp, levelUp } = await addXp(userId, amount);
+  const keys = await unlock(userId, [...extraKeys, ...(levelUp ? [`level-${levelUp.index}`] : [])]);
+  return toReward(amount, xp, levelUp, keys);
+}
+
 /** Nach einer Prüfungssimulation: XP für Abschluss, Bonus fürs Bestehen, Abzeichen „Bestanden!". */
 export async function rewardExam(userId: string, passed: boolean): Promise<Reward> {
   const gained = XP.examCompleted + (passed ? XP.examPassedBonus : 0);

@@ -1,6 +1,8 @@
 "use server";
 
 import { dayKey, dayKeyToDate } from "@/lib/dates";
+import { dailyQuestionIds } from "@/lib/challenge";
+import { rewardXp } from "@/server/gamification";
 import type { QuizMode } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -109,6 +111,25 @@ export async function startMistakeTrainingAction(formData: FormData) {
   redirect(`/sitzung/${attempt.id}`);
 }
 
+/** Daily Challenge: 5 Fragen pro Tag, für alle gleich – ein Versuch pro Tag. */
+export async function startDailyChallengeAction() {
+  const user = await requireUser();
+  const day = dayKey();
+  const done = await prisma.dailyChallengeResult.findUnique({ where: { userId_day: { userId: user.id, day: dayKeyToDate(day) } } });
+  if (done) redirect("/challenge");
+  const open = await prisma.quizAttempt.findFirst({
+    where: { userId: user.id, status: "IN_PROGRESS", settings: { path: ["dailyChallenge"], equals: day } },
+  });
+  if (open) redirect(`/sitzung/${open.id}`);
+  const pool = await prisma.question.findMany({ where: publishedWhere, select: { id: true } });
+  const ids = dailyQuestionIds(day, pool.map((p) => p.id));
+  if (ids.length === 0) redirect("/challenge");
+  const attempt = await prisma.quizAttempt.create({
+    data: { userId: user.id, mode: "PRACTICE", title: `Daily Challenge · ${day.slice(8, 10)}.${day.slice(5, 7)}.`, questionIds: ids, settings: { dailyChallenge: day } },
+  });
+  redirect(`/sitzung/${attempt.id}`);
+}
+
 /** Leitner-Wiederholung: heute fällige Fragen (max. 20), schwächste Fächer zuerst. */
 export async function startReviewAction() {
   const user = await requireUser();
@@ -202,7 +223,25 @@ export async function finishQuizAction(attemptId: string): Promise<ActionResult>
   const attempt = await prisma.quizAttempt.findFirst({ where: { id: attemptId, userId: user.id } });
   if (!attempt) return { ok: false, error: "Sitzung nicht gefunden." };
   if (attempt.status === "IN_PROGRESS") {
-    await prisma.quizAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", finishedAt: new Date() } });
+    const finishedAt = new Date();
+    await prisma.quizAttempt.update({ where: { id: attempt.id }, data: { status: "COMPLETED", finishedAt } });
+    // Daily Challenge: Ergebnis einmal pro Tag für die Rangliste speichern
+    const challengeDay = (attempt.settings as { dailyChallenge?: string } | null)?.dailyChallenge;
+    if (challengeDay) {
+      const correct = await prisma.userAnswer.count({ where: { quizAttemptId: attempt.id, isCorrect: true } });
+      const created = await prisma.dailyChallengeResult
+        .create({
+          data: {
+            userId: user.id,
+            day: dayKeyToDate(challengeDay),
+            correct,
+            total: attempt.questionIds.length,
+            durationSec: Math.max(1, Math.round((finishedAt.getTime() - attempt.startedAt.getTime()) / 1000)),
+          },
+        })
+        .catch(() => null);
+      if (created) await rewardXp(user.id, 20 + correct * 5).catch(() => null);
+    }
   }
   revalidatePath("/dashboard");
   return { ok: true, data: undefined };
