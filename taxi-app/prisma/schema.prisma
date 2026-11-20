@@ -60,6 +60,7 @@ enum ExamStatus {
   IN_PROGRESS
   SUBMITTED
   EXPIRED
+  ABANDONED
 }
 
 enum FlashcardStatus {

@@ -22,7 +22,7 @@ export async function startExamAction(formData: FormData) {
   const open = await prisma.examAttempt.findFirst({
     where: { userId: user.id, examConfigId: config.id, status: "IN_PROGRESS", expiresAt: { gt: new Date() } },
   });
-  if (open) redirect(`/pruefung/${open.id}`);
+  if (open) redirect(`/quiz/${open.id}`);
 
   const pool = await prisma.question.findMany({
     where: { ...publishedWhere, ...(config.allowedOrigins.length ? { origin: { in: config.allowedOrigins } } : {}) },
@@ -45,7 +45,7 @@ export async function startExamAction(formData: FormData) {
       responses: { create: ids.map((questionId, order) => ({ questionId, order })) },
     },
   });
-  redirect(`/pruefung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
 }
 
 const saveSchema = z.object({
@@ -100,6 +100,15 @@ export async function submitExamAction(attemptId: string): Promise<ActionResult>
   if (attempt.status === "IN_PROGRESS") {
     await finalizeExam(attempt.id, attempt.expiresAt.getTime() + 10_000 < Date.now() ? "EXPIRED" : "SUBMITTED");
   }
+  revalidatePath("/pruefung");
+  revalidatePath("/dashboard");
+  return { ok: true, data: undefined };
+}
+
+/** Fokus-Modus: Prüfung abbrechen – wird nicht gewertet. */
+export async function abandonExamAction(attemptId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  await prisma.examAttempt.updateMany({ where: { id: idSchema.parse(attemptId), userId: user.id, status: "IN_PROGRESS" }, data: { status: "ABANDONED", submittedAt: new Date() } });
   revalidatePath("/pruefung");
   revalidatePath("/dashboard");
   return { ok: true, data: undefined };

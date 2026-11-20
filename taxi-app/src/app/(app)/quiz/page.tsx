@@ -86,7 +86,7 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
                   const pct = h.answeredCount ? Math.round((h.correctCount / h.answeredCount) * 100) : 0;
                   return (
                     <li key={h.id}>
-                      <a href={`/sitzung/${h.id}`} className="flex items-center justify-between rounded-xl border p-3 text-sm hover:bg-muted/50">
+                      <a href={`/quiz/${h.id}`} className="flex items-center justify-between rounded-xl border p-3 text-sm hover:bg-muted/50">
                         <span>
                           <span className="block font-semibold text-navy">{h.correctCount}/{h.answeredCount} richtig</span>
                           <span className="text-xs text-muted-foreground">{h.finishedAt ? formatDate(h.finishedAt, true) : ""}</span>

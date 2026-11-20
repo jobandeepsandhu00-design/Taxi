@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Flag, Home, RotateCcw, XCircle } from "lucide-react";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { categoryColor } from "@/components/category-style";
 import { CelebrationGate, type CelebrationItem } from "@/components/gamification/celebration-gate";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,16 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
   const [combo, setCombo] = useState(0);
   const [comboFlash, setComboFlash] = useState<number | null>(null);
   const [sessionXp, setSessionXp] = useState(0);
+  // Ergebnis nach dem Fokus-Modus: dort gesammelte XP übernehmen
+  useEffect(() => {
+    if (!initialFinished) return;
+    try {
+      const v = Number(sessionStorage.getItem(`tp-session-xp-${attemptId}`) ?? 0);
+      if (v > 0) setSessionXp(v);
+    } catch {
+      /* ignorieren */
+    }
+  }, [initialFinished, attemptId]);
   const [celebrations, setCelebrations] = useState<CelebrationItem[]>([]);
   const [pending, start] = useTransition();
   const bookmarks = useMemo(() => new Set(bookmarkedIds), [bookmarkedIds]);

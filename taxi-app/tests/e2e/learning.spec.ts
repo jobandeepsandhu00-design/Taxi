@@ -38,9 +38,10 @@ test.describe.serial("Easy Learning", () => {
 
   test("Mini-Lektion: 5 Fragen, Unsicher-Schalter, Fach-Hinweis, kurzes Ergebnis", async () => {
     await page.getByTestId("lesson-cta").getByRole("button").click();
-    await page.waitForURL("**/sitzung/**");
+    await page.waitForURL("**/quiz/**");
     await settle(page);
-    await expect(page.getByText("Mini-Lektion")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "3-Minuten-Lektion" })).toBeVisible();
+    await expect(page.getByTestId("focus-mode")).toBeVisible();
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "5");
     for (let i = 0; i < 5; i++) {
       await options(page).locator("button").first().click();
@@ -51,7 +52,7 @@ test.describe.serial("Easy Learning", () => {
       await page.getByRole("button", { name: "Antwort prüfen" }).click();
       await expect(page.getByText(/^(Richtig!|Leider falsch)$/)).toBeVisible();
       if (i === 0) await expect(page.getByLabel(/^Karteikasten:/)).toBeVisible();
-      await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
+      await page.getByTestId("focus-primary").click();
     }
     const result = page.getByTestId("lesson-result");
     await expect(result).toBeVisible();
@@ -69,7 +70,7 @@ test.describe.serial("Easy Learning", () => {
     const first = page.getByRole("button", { name: /^Lektion 1 starten/ });
     await expect(first).toBeVisible();
     await first.click();
-    await page.waitForURL("**/sitzung/**");
+    await page.waitForURL("**/quiz/**");
     await expect(page.getByRole("heading", { name: /^Lektion 1 ·/ })).toBeVisible();
   });
 

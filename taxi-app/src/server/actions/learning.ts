@@ -64,7 +64,7 @@ export async function startLearnSessionAction(formData: FormData) {
     questionIds: shuffle(questions.map((q) => q.id)),
     settings: { topicId, difficulty, onlyUnanswered },
   });
-  redirect(`/sitzung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
 }
 
 export async function startPracticeQuizAction(formData: FormData) {
@@ -90,7 +90,7 @@ export async function startPracticeQuizAction(formData: FormData) {
     questionIds: ids,
     settings: parsed,
   });
-  redirect(`/sitzung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
 }
 
 export async function startMistakeTrainingAction(formData: FormData) {
@@ -118,7 +118,7 @@ export async function startMistakeTrainingAction(formData: FormData) {
     categoryId,
     questionIds: shuffle(mistakes.map((m) => m.questionId)),
   });
-  redirect(`/sitzung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
 }
 
 /** Daily Challenge: 5 Fragen pro Tag, für alle gleich – ein Versuch pro Tag. */
@@ -130,14 +130,14 @@ export async function startDailyChallengeAction() {
   const open = await prisma.quizAttempt.findFirst({
     where: { userId: user.id, status: "IN_PROGRESS", settings: { path: ["dailyChallenge"], equals: day } },
   });
-  if (open) redirect(`/sitzung/${open.id}`);
+  if (open) redirect(`/quiz/${open.id}`);
   const pool = await prisma.question.findMany({ where: publishedWhere, select: { id: true } });
   const ids = dailyQuestionIds(day, pool.map((p) => p.id));
   if (ids.length === 0) redirect("/challenge");
   const attempt = await prisma.quizAttempt.create({
     data: { userId: user.id, mode: "PRACTICE", title: `Daily Challenge · ${day.slice(8, 10)}.${day.slice(5, 7)}.`, questionIds: ids, settings: { dailyChallenge: day } },
   });
-  redirect(`/sitzung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
 }
 
 /** Leitner-Wiederholung: heute fällige Fragen (max. 10 auf einmal), am längsten fällige zuerst. */
@@ -155,7 +155,7 @@ export async function startReviewAction() {
     title: `Wiederholung (${due.length} ${due.length === 1 ? "Frage" : "Fragen"})`,
     questionIds: due.map((d) => d.questionId),
   });
-  redirect(`/sitzung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
 }
 
 /** Wiederholt eine abgeschlossene Sitzung – alle oder nur falsch beantwortete Fragen. */
@@ -174,14 +174,14 @@ export async function repeatAttemptAction(formData: FormData) {
   const published = await prisma.question.findMany({ where: { id: { in: ids }, ...publishedWhere }, select: { id: true } });
   const allowed = new Set(published.map((p) => p.id));
   ids = ids.filter((id) => allowed.has(id));
-  if (ids.length === 0) redirect(`/sitzung/${attempt.id}`);
+  if (ids.length === 0) redirect(`/quiz/${attempt.id}`);
   const next = await createAttempt(user.id, {
     mode: attempt.mode,
     title: `${attempt.title.replace(/ – Wiederholung$/, "")} – Wiederholung`,
     categoryId: attempt.categoryId,
     questionIds: shuffle(ids),
   });
-  redirect(`/sitzung/${next.id}`);
+  redirect(`/quiz/${next.id}`);
 }
 
 const submitSchema = z.object({
@@ -383,5 +383,24 @@ export async function startLessonAction(formData: FormData) {
     data: { userId: user.id, mode: "PRACTICE", title, categoryId, questionIds, settings: { lesson: lesson.id, kind } },
   });
   await prisma.lesson.update({ where: { id: lesson.id }, data: { quizAttemptId: attempt.id } });
-  redirect(`/sitzung/${attempt.id}`);
+  redirect(`/quiz/${attempt.id}`);
+}
+
+/** Fokus-Modus: Sitzung beenden (ohne Weiterleitung). */
+export async function abandonQuizSessionAction(attemptId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  await prisma.quizAttempt.updateMany({ where: { id: idSchema.parse(attemptId), userId: user.id, status: "IN_PROGRESS" }, data: { status: "ABANDONED", finishedAt: new Date() } });
+  revalidatePath("/dashboard");
+  return { ok: true, data: undefined };
+}
+
+/** Fokus-Modus: markierte Fragen einer Lernsitzung speichern. */
+export async function setQuizFlagsAction(attemptId: string, questionIds: string[]): Promise<ActionResult> {
+  const user = await requireUser();
+  const attempt = await prisma.quizAttempt.findFirst({ where: { id: idSchema.parse(attemptId), userId: user.id } });
+  if (!attempt) return { ok: false, error: "Sitzung nicht gefunden." };
+  const flags = z.array(idSchema).max(200).parse(questionIds).filter((id) => attempt.questionIds.includes(id));
+  const settings = { ...((attempt.settings as Record<string, unknown> | null) ?? {}), flags };
+  await prisma.quizAttempt.update({ where: { id: attempt.id }, data: { settings } });
+  return { ok: true, data: undefined };
 }

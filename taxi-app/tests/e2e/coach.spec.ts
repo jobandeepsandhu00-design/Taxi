@@ -66,12 +66,12 @@ test.describe.serial("Taxi-Coach", () => {
     await settle(page);
     await page.getByLabel("Anzahl Fragen").selectOption("20");
     await page.getByRole("button", { name: "Quiz starten" }).click();
-    await page.waitForURL("**/sitzung/**");
+    await page.waitForURL("**/quiz/**");
     await settle(page);
 
     await page.getByRole("button", { name: "Einfache Sprache" }).click();
-    await expect(page.getByText(/Einfache Sprache \(B1\) – die Prüfung findet in der Originalfassung statt/)).toBeVisible();
-    await expect(page.getByText(/^Einfach gesagt:/)).toBeVisible();
+    await expect(page.getByText(/^Einfache Sprache \(B1\)/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Einfache Sprache" })).toHaveAttribute("aria-pressed", "true");
 
     let wrong = false;
     for (let i = 0; i < 20 && !wrong; i++) {
@@ -81,9 +81,10 @@ test.describe.serial("Taxi-Coach", () => {
       const result = page.getByText(/^(Richtig!|Leider falsch)$/);
       await expect(result).toBeVisible();
       wrong = (await result.textContent()) === "Leider falsch";
-      if (!wrong) await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
+      if (!wrong) await page.getByTestId("focus-primary").click();
     }
     expect(wrong).toBe(true);
+    await page.getByRole("button", { name: /Erklärung & Warum/ }).click();
     await page.getByRole("button", { name: /Warum\? – Coach erklären lassen/ }).click();
     await expect(page.getByTestId("why-panel").getByText("Die Regel")).toBeVisible();
     await expect(page.getByTestId("why-panel").getByText("Beispiel aus dem Taxi-Alltag")).toBeVisible();

@@ -35,7 +35,8 @@ export default async function ExamResultPage({ params }: { params: Promise<{ id:
     },
   });
   if (!attempt) notFound();
-  if (attempt.status === "IN_PROGRESS") redirect(`/pruefung/${attempt.id}`);
+  if (attempt.status === "IN_PROGRESS") redirect(`/quiz/${attempt.id}`);
+  if (attempt.status === "ABANDONED") redirect("/pruefung");
 
   const passed = Boolean(attempt.passed);
   const pct = attempt.scorePercent ?? 0;

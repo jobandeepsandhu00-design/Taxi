@@ -119,7 +119,7 @@ export default async function DashboardPage() {
 
       {/* Laufende Prüfung */}
       {openExam && (
-        <Link href={`/pruefung/${openExam.id}`} className="flex items-center gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 transition active:scale-[0.99]">
+        <Link href={`/quiz/${openExam.id}`} className="flex items-center gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 transition active:scale-[0.99]">
           <ClipboardCheck className="size-5 text-warning" />
           <div className="flex-1">
             <p className="font-bold text-navy">Laufende Prüfung fortsetzen</p>
@@ -198,7 +198,7 @@ export default async function DashboardPage() {
         <StaggerItem>
           <Card className="h-full p-5">
             {resume ? (
-              <Link href={`/sitzung/${resume.id}`} className="group block">
+              <Link href={`/quiz/${resume.id}`} className="group block">
                 <div className="flex items-center gap-3">
                   <PlayCircle className="size-9 shrink-0 text-link" />
                   <div className="min-w-0 flex-1">

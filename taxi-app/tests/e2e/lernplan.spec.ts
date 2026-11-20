@@ -66,13 +66,13 @@ test("Lernplan: Home-Karte, Filter, Suche, Sperre, Vorschau, Lektion starten und
 
   // Nächster Schritt → Lektion starten, 5 Fragen beantworten
   await page.getByTestId("next-step").click();
-  await page.waitForURL("**/sitzung/**");
+  await page.waitForURL("**/quiz/**");
   await settle(page);
   for (let i = 0; i < 5; i++) {
     await page.getByRole("radiogroup", { name: "Antwortmöglichkeiten" }).or(page.getByRole("group", { name: "Antwortmöglichkeiten" })).locator("button").first().click();
     await page.getByRole("button", { name: "Antwort prüfen" }).click();
     await expect(page.getByText(/^(Richtig!|Leider falsch)$/)).toBeVisible();
-    await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
+    await page.getByTestId("focus-primary").click();
   }
   await expect(page.getByTestId("lesson-result")).toBeVisible();
 

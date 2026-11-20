@@ -91,7 +91,7 @@ test.describe.serial("Lernende/r", () => {
     await page.getByRole("link", { name: /Straßenverkehrsordnung/ }).click();
     await expect(page.getByRole("heading", { name: "Einführung" })).toBeVisible();
     await page.getByRole("button", { name: "Lernen starten" }).click();
-    await page.waitForURL("**/sitzung/**");
+    await page.waitForURL("**/quiz/**");
 
     // Vor dem Absenden: keine Lösung im HTML
     const html = await page.content();
@@ -99,20 +99,28 @@ test.describe.serial("Lernende/r", () => {
     expect(html).not.toContain("correctOptionIds");
     await expect(page.getByText("Erklärung")).toHaveCount(0);
 
+    // Fokus-Modus: keine App-Navigation, kein Avatar
+    await expect(page.getByTestId("focus-mode")).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Schnellnavigation" })).toHaveCount(0);
+
     await answerFirstOption(page);
+    await page.getByRole("button", { name: /Erklärung & Warum/ }).click();
     await expect(page.getByRole("heading", { name: "Erklärung" })).toBeVisible();
     await expect(page.getByText("Die Antworten im Einzelnen")).toBeVisible();
+    await page.getByRole("button", { name: "Erklärung schließen" }).click();
 
     // Neu laden: beantwortete Frage bleibt gespeichert, Sitzung setzt bei der nächsten offenen Frage fort
     await page.reload();
-    await expect(page.getByText("✓ 1 richtig").or(page.getByText("✗ 1 falsch"))).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
     await expect(page.getByRole("button", { name: "Antwort prüfen" })).toBeVisible();
     await answerFirstOption(page);
-    await expect(page.getByRole("button", { name: /Nächste Frage/ })).toBeVisible();
+    await expect(page.getByTestId("focus-primary")).toContainText(/Weiter|Fertig/);
 
-    // Zurück zur ersten Frage: Lösung wird aus der Datenbank wiederhergestellt
-    await page.getByRole("button", { name: "Frage 1", exact: false }).first().click();
-    await expect(page.getByRole("heading", { name: "Erklärung" })).toBeVisible();
+    // Zurück zur ersten Frage über die Fragen-Übersicht: Lösung wird aus der Datenbank wiederhergestellt
+    await page.getByRole("button", { name: /Fragen-Übersicht öffnen/ }).click();
+    await page.getByRole("button", { name: /^Frage 1,/ }).click();
+    await expect(page.getByText("Frage 1 /", { exact: false })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Erklärung & Warum/ })).toBeVisible();
 
     // Sitzung erscheint auf dem Dashboard als fortsetzbar
     await gotoSettled(page, "/dashboard");
@@ -124,10 +132,10 @@ test.describe.serial("Lernende/r", () => {
     await gotoSettled(page, "/quiz");
     await page.getByLabel("Anzahl Fragen").selectOption("10");
     await page.getByRole("button", { name: "Quiz starten" }).click();
-    await page.waitForURL("**/sitzung/**");
+    await page.waitForURL("**/quiz/**");
     for (let i = 0; i < 10; i++) {
       await answerFirstOption(page);
-      await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
+      await page.getByTestId("focus-primary").click();
     }
     await expect(page.getByRole("heading", { name: "Sitzung abgeschlossen" })).toBeVisible();
     await expect(page.getByText("beantwortet", { exact: true })).toBeVisible();
@@ -140,8 +148,8 @@ test.describe.serial("Lernende/r", () => {
     const open = Number(await page.locator("p", { hasText: /^\d+$/ }).first().textContent());
     if (open > 0) {
       await page.getByRole("button", { name: "Fehler wiederholen" }).click();
-      await page.waitForURL("**/sitzung/**");
-      await expect(page.getByText("Fehlertraining", { exact: true })).toBeVisible();
+      await page.waitForURL("**/quiz/**");
+      await expect(page.getByRole("heading", { name: /^Fehlertraining/ })).toBeVisible();
       await answerFirstOption(page);
     } else {
       await expect(page.getByText("Keine offenen Fehler")).toBeVisible();
@@ -153,27 +161,33 @@ test.describe.serial("Lernende/r", () => {
     await gotoSettled(page, "/pruefung");
     const card = page.locator("div.rounded-2xl", { hasText: "Kurztest (15 Minuten)" }).last();
     await card.getByRole("button", { name: /Prüfung starten/ }).click();
-    await page.waitForURL(/\/pruefung\/[^/]+$/);
-    await expect(page.getByRole("timer")).toBeVisible();
+    await page.waitForURL(/\/quiz\/[^/]+$/);
+    await expect(page.getByRole("timer")).toHaveText(/^\d{2}:\d{2}$/);
+    await expect(page.getByText("Frage 1 / 15")).toBeVisible();
 
     // Kein Feedback während der Prüfung
     await page.locator("[role=radiogroup] button, [role=group] button").first().click();
     await expect(page.getByText(/^(Richtig!|Leider falsch)$/)).toHaveCount(0);
-    await page.getByRole("button", { name: "Zur Überprüfung markieren" }).click();
-    await expect(page.getByRole("button", { name: "Markiert", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: /Weiter/ }).click();
-    await page.locator("[role=radiogroup] button, [role=group] button").nth(1).click();
-    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Frage markieren" }).click();
+    await expect(page.getByRole("button", { name: "Markierung entfernen" })).toHaveAttribute("aria-pressed", "true");
+    await page.getByTestId("focus-primary").click();
+    await expect(page.getByText("Frage 2 / 15")).toBeVisible();
+    await page.keyboard.press("b");
+    await page.waitForTimeout(600);
 
     // Neu laden: Antworten und Markierung bleiben erhalten
     page.on("dialog", (d) => d.accept());
     await page.reload();
-    await expect(page.getByText("2/15 beantwortet")).toBeVisible();
-    await expect(page.getByText("1 markiert")).toBeVisible();
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "2");
+    await page.getByRole("button", { name: /Fragen-Übersicht öffnen/ }).click();
+    await expect(page.getByRole("button", { name: "Frage 1, beantwortet, markiert" })).toBeVisible();
+    await page.getByRole("button", { name: /^Frage 15,/ }).click();
 
-    await page.getByRole("complementary").getByRole("button", { name: /Prüfung abgeben/ }).click();
-    await expect(page.getByRole("dialog", { name: "Prüfung abgeben?" })).toBeVisible();
-    await page.getByRole("dialog").getByRole("button", { name: "Abgeben" }).click();
+    // Abgabe mit Übersicht
+    await page.getByTestId("focus-primary").click();
+    await expect(page.getByTestId("review-summary")).toHaveText("2 beantwortet · 13 offen · 1 markiert");
+    await page.getByRole("button", { name: "Jetzt abgeben" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Jetzt abgeben" }).click();
     await page.waitForURL("**/ergebnis");
     await expect(page.getByRole("heading", { name: /Bestanden!|Nicht bestanden/ })).toBeVisible();
     await expect(page.getByText("Ergebnis nach Kategorie")).toBeVisible();
@@ -243,10 +257,10 @@ test.describe.serial("Lernende/r", () => {
     await login(page, STUDENT.email, STUDENT.password);
     await gotoSettled(page, "/challenge");
     await page.getByRole("button", { name: "Challenge starten" }).click();
-    await page.waitForURL("**/sitzung/**");
+    await page.waitForURL("**/quiz/**");
     for (let i = 0; i < 5; i++) {
       await answerFirstOption(page);
-      await page.getByRole("button", { name: /Nächste Frage|Ergebnis anzeigen/ }).click();
+      await page.getByTestId("focus-primary").click();
     }
     await expect(page.getByRole("heading", { name: "Sitzung abgeschlossen" })).toBeVisible();
     await page.getByRole("link", { name: /Zur Rangliste/ }).click();
