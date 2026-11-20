@@ -106,6 +106,11 @@ model User {
   joinedDuels       Duel[]              @relation("DuelGuest")
   duelAnswers       DuelAnswer[]
   pushSubscriptions PushSubscription[]
+  /// Premium: unbegrenzte Coach-Nachrichten
+  isPremium         Boolean             @default(false)
+  coachMessages     CoachMessage[]
+  dailyPlans        DailyPlan[]
+  weeklyReports     WeeklyReport[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   lastLoginAt       DateTime?
@@ -209,6 +214,7 @@ model Question {
   examResponses   ExamResponse[]
   flashcards      FlashcardProgress[]
   reviewItems     ReviewItem[]
+  simplified      SimplifiedQuestion?
   mistakes        MistakeEntry[]
   bookmarks       Bookmark[]
 
@@ -544,4 +550,54 @@ model PushSubscription {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+/// Coach-Verlauf (Chat, „Warum?“, Einfache Sprache, mündliche Prüfung) – auch Basis für Tageslimit und Feedback
+model CoachMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String   @db.VarChar(16)
+  role      String   @db.VarChar(12)
+  content   String   @db.Text
+  citations Json?
+  /// 1 = 👍, -1 = 👎
+  feedback  Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, kind, createdAt])
+}
+
+/// Frage in Einfacher Sprache (B1), einmal erzeugt und für alle zwischengespeichert
+model SimplifiedQuestion {
+  questionId String   @id
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String   @db.Text
+  options    Json
+  createdAt  DateTime @default(now())
+}
+
+/// Tagesplan des Coaches (per Cron um 06:00 Wien oder beim ersten Öffnen erzeugt)
+model DailyPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       DateTime @db.Date
+  items     Json
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day])
+}
+
+/// Wochenbericht (sonntags): Stärken, Schwächen, Prognose, 3 Schritte
+model WeeklyReport {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date
+  data      Json
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekStart])
 }

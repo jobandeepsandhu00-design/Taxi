@@ -18,5 +18,7 @@ export default defineConfig({
     port: PORT,
     reuseExistingServer: true,
     timeout: 120_000,
+    // KI-Coach im Testmodus: deterministische Antworten ohne API-Aufrufe
+    env: { ...process.env, COACH_FAKE: "1" } as Record<string, string>,
   },
 });

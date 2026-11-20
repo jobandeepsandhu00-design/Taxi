@@ -5,6 +5,9 @@ import { categoryColor } from "@/components/category-style";
 import { CountdownChip, Greeting } from "@/components/home/hero";
 import { AchievementStrip, CategoryList, QuickActions, StreakFlame, XpCard, ZeroState, type HomeCategory } from "@/components/home/cards";
 import { DailyRings, ReadinessRing } from "@/components/home/rings";
+import { CoachBubble, DailyPlanCard, PrognosisCard } from "@/components/home/coach-cards";
+import { buildCoachContext } from "@/server/coach/context";
+import { getDailyPlanState } from "@/server/coach/plans";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -54,6 +57,8 @@ export default async function DashboardPage() {
     prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { xp: true } }),
     prisma.userAchievement.findMany({ where: { userId: user.id }, select: { key: true } }),
   ]);
+  const coachCtx = await buildCoachContext(user.id);
+  const plan = await getDailyPlanState(user.id, coachCtx);
   const daysToExam = user.targetExamDate ? diffDays(dayKey(), dateToDayKey(user.targetExamDate)) : null;
   const firstName = user.isGuest ? "Gast" : user.name.split(" ")[0];
   const goalQuestions = dailyGoalQuestions(user.dailyGoalMinutes);
@@ -77,6 +82,16 @@ export default async function DashboardPage() {
     mastered: c.mastered,
   }));
   const resume = openQuizzes[0];
+  const bubble =
+    due > 0
+      ? { message: `Du hast ${due} fällige ${due === 1 ? "Frage" : "Fragen"} – 5 Minuten reichen! 🚕`, href: "/dashboard", start: "review" as const }
+      : stats.openMistakes > 0
+        ? { message: `${stats.openMistakes} Fehler warten auf dich – schnapp sie dir! 🎯`, href: "/fehler", start: "mistakes" as const }
+        : stats.todayAnswered < goalQuestions
+          ? { message: `Noch ${goalQuestions - stats.todayAnswered} Fragen bis zum Tagesziel – gemma! 🚕`, href: "/quiz" }
+          : { message: "Tagesziel geschafft! Frag mich, was du als Nächstes üben sollst. 💬", href: "/coach" };
+  const acc = coachCtx.categories.reduce((s, c) => s + (c.accuracy30 ?? 0) * c.answered30, 0) / Math.max(1, coachCtx.categories.reduce((s, c) => s + c.answered30, 0));
+  const bubbleMood = stats.answered === 0 ? "idle" : stats.todayAnswered >= goalQuestions || acc >= 75 ? "happy" : acc > 0 && acc < 50 ? "sad" : "idle";
 
   return (
     <div className="space-y-6">
@@ -91,6 +106,8 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      <CoachBubble message={bubble.message} href={bubble.href} start={"start" in bubble ? bubble.start : undefined} mood={bubbleMood} day={dayKey()} />
+
       {/* Laufende Prüfung */}
       {openExam && (
         <Link href={`/pruefung/${openExam.id}`} className="flex items-center gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 transition active:scale-[0.99]">
@@ -102,6 +119,16 @@ export default async function DashboardPage() {
           <ArrowRight className="size-5 text-warning" />
         </Link>
       )}
+
+      {/* Coach: Tagesplan + Prognose */}
+      <Stagger className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <StaggerItem>
+          <DailyPlanCard items={plan} />
+        </StaggerItem>
+        <StaggerItem>
+          <PrognosisCard readyDate={coachCtx.prognosis.readyDate} confidence={coachCtx.prognosis.confidence} readiness={coachCtx.prognosis.readiness} onTrack={coachCtx.prognosis.onTrack} trend={coachCtx.prognosis.trend} examDate={coachCtx.examDate} />
+        </StaggerItem>
+      </Stagger>
 
       {/* Prüfungsreife + Tagesziel */}
       <Stagger className="grid grid-cols-1 gap-4 md:grid-cols-2">

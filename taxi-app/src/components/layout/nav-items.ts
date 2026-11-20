@@ -13,6 +13,7 @@ import {
   Trophy,
   Swords,
   WifiOff,
+  MessageCircleHeart,
   Settings,
   Shield,
   Sparkles,
@@ -20,6 +21,7 @@ import {
 
 export const mainNav = [
   { href: "/dashboard", label: "Übersicht", icon: Home },
+  { href: "/coach", label: "Dein Taxi-Coach", icon: MessageCircleHeart },
   { href: "/lernen", label: "Lernen", icon: BookOpen },
   { href: "/quiz", label: "Quiz", icon: Sparkles },
   { href: "/pruefung", label: "Prüfungsmodus", icon: ClipboardCheck },
@@ -38,6 +40,7 @@ export const mainNav = [
 export const mobileNav = [
   { href: "/dashboard", label: "Start", icon: Home },
   { href: "/lernen", label: "Lernen", icon: BookOpen },
+  { href: "/coach", label: "Coach", icon: MessageCircleHeart },
   { href: "/pruefung", label: "Prüfung", icon: ClipboardCheck },
   { href: "/fehler", label: "Fehler", icon: RotateCcw },
   { href: "/fortschritt", label: "Fortschritt", icon: BarChart3 },

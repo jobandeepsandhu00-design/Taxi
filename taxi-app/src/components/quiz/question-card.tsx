@@ -17,6 +17,9 @@ import type { ActionResult } from "@/server/actions/types";
 import { BookmarkButton } from "./bookmark-button";
 import { SpeakButton } from "./speak-button";
 import { TranslateSheet } from "./translate-sheet";
+import { useCoach } from "@/components/coach/coach-provider";
+import { WhyPanel } from "@/components/coach/why-panel";
+import { simplifyQuestionAction } from "@/server/actions/coach";
 import type { ClientQuestion } from "./types";
 
 interface Props {
@@ -56,6 +59,32 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
   const submitRef = useRef<HTMLButtonElement>(null);
   const card = useAnimationControls();
   const [translateOpen, setTranslateOpen] = useState(false);
+  const { enabled: coachEnabled } = useCoach();
+  const [simple, setSimple] = useState(false);
+  const [simplified, setSimplified] = useState<{ text: string; options: { id: string; text: string }[] } | null>(null);
+  const [simplifying, setSimplifying] = useState(false);
+  const [simplifyError, setSimplifyError] = useState<string | null>(null);
+  const toggleSimple = async () => {
+    haptic();
+    if (simple) {
+      setSimple(false);
+      return;
+    }
+    if (!simplified) {
+      setSimplifying(true);
+      setSimplifyError(null);
+      const res = await simplifyQuestionAction(question.id).catch(() => null);
+      setSimplifying(false);
+      if (!res || !res.ok) {
+        setSimplifyError(res && !res.ok ? res.error : "Vereinfachung nicht verfügbar.");
+        return;
+      }
+      setSimplified(res.data);
+    }
+    setSimple(true);
+  };
+  const shownText = simple && simplified ? simplified.text : question.text;
+  const optionText = (id: string, fallback: string) => (simple && simplified ? (simplified.options.find((o) => o.id === id)?.text ?? fallback) : fallback);
   const pressTimer = useRef<number | null>(null);
   const fullText = `${question.text}\n\n${question.options.map((o) => `${o.label}) ${o.text}`).join("\n")}`;
   const speechText = `${question.text} ${question.options.map((o) => `Antwort ${o.label}: ${o.text}.`).join(" ")}`;
@@ -188,6 +217,20 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               <OriginBadge origin={question.origin} verifiedSource={question.source?.verified} />
               <div className="ml-auto flex items-center gap-2">
                 {headerSlot}
+                {coachEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => void toggleSimple()}
+                    disabled={simplifying}
+                    aria-pressed={simple}
+                    aria-label="Einfache Sprache"
+                    title="Einfache Sprache (B1)"
+                    className={cn("flex h-9 items-center gap-1 rounded-xl border px-2.5 text-xs font-bold transition-colors", simple ? "border-primary/50 bg-primary/12 text-primary" : "glass text-muted-foreground hover:text-navy")}
+                  >
+                    {simplifying ? <Loader2 className="size-3.5 animate-spin" /> : "B1"}
+                    <span className="hidden sm:inline">Einfach</span>
+                  </button>
+                )}
                 <SpeakButton text={speechText} />
                 <button
                   type="button"
@@ -215,8 +258,14 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               onPointerCancel={cancelPress}
               onContextMenu={(e) => e.preventDefault()}
             >
-              {question.text}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span key={simple ? "b1" : "orig"} className="block" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
+                  {shownText}
+                </motion.span>
+              </AnimatePresence>
             </h2>
+            {simple && <p className="mt-1 text-xs font-semibold text-primary">Einfache Sprache (B1) – die Prüfung findet in der Originalfassung statt.</p>}
+            {simplifyError && <p className="mt-1 text-xs text-destructive">{simplifyError}</p>}
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
               {question.multipleCorrect ? "Mehrfachauswahl: Es können mehrere Antworten richtig sein." : "Wähle die richtige Antwort."}
             </p>
@@ -267,7 +316,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                     >
                       {state === "correct" ? <DrawCheck /> : state === "wrong" ? <X className="size-4" /> : o.label}
                     </span>
-                    <span className="flex-1 pt-0.5 text-foreground">{o.text}</span>
+                    <span className="flex-1 pt-0.5 text-foreground">{optionText(o.id, o.text)}</span>
                   </motion.button>
                 );
               })}
@@ -351,6 +400,8 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                 </p>
               </div>
             </div>
+
+            {!reveal.isCorrect && coachEnabled && <WhyPanel questionId={question.id} selectedOptionIds={reveal.selectedOptionIds} />}
 
             {/* Erklärungs-Drawer */}
             <div className="glass rounded-2xl border-t-2 border-t-primary/50 p-5 sm:p-6">

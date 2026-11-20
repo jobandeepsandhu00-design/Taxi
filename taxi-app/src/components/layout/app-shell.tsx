@@ -155,7 +155,7 @@ function BottomNav() {
   const isActive = useIsActive();
   return (
     <nav aria-label="Schnellnavigation" className="pb-safe fixed inset-x-0 bottom-0 z-30 px-3 lg:hidden">
-      <ul className="glass mx-auto mb-2 grid max-w-md grid-cols-5 rounded-2xl p-1.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]">
+      <ul className="glass mx-auto mb-2 grid max-w-md grid-cols-6 rounded-2xl p-1.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]">
         {mobileNav.map((item) => {
           const active = isActive(item.href);
           return (
@@ -165,7 +165,7 @@ function BottomNav() {
                 onClick={() => haptic()}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 rounded-xl py-2 text-[10.5px] font-semibold transition-colors",
+                  "relative flex flex-col items-center gap-0.5 rounded-xl py-2 text-[10px] font-semibold transition-colors",
                   active ? "text-primary-foreground" : "text-foreground/60 active:text-foreground",
                 )}
               >
