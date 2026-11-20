@@ -20,6 +20,8 @@ import { SoundToggle } from "./sound-toggle";
 import { SegmentedProgress, type SegmentState } from "./segmented-progress";
 import { LessonResult, type LessonInfo } from "./lesson-result";
 import type { ClientQuestion } from "./types";
+import { useQueryClient } from "@tanstack/react-query";
+import { LEARN_PLAN_KEY } from "@/components/query-provider";
 
 interface Props {
   attemptId: string;
@@ -50,6 +52,7 @@ function categoryScores(questions: ClientQuestion[], reveals: Record<string, Ans
 
 export function QuizRunner({ attemptId, title, modeLabel, questions, initialReveals, initialIndex, bookmarkedIds, finished: initialFinished, isDailyChallenge = false, lesson = null }: Props) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [index, setIndex] = useState(Math.min(initialIndex, questions.length - 1));
   const [direction, setDirection] = useState(1);
   const [reveals, setReveals] = useState<Record<string, AnswerReveal>>(initialReveals);
@@ -80,11 +83,12 @@ export function QuizRunner({ attemptId, title, modeLabel, questions, initialReve
   const finish = useCallback(() => {
     start(async () => {
       await finishQuizAction(attemptId);
+      void queryClient.invalidateQueries({ queryKey: LEARN_PLAN_KEY });
       setFinished(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       router.refresh();
     });
-  }, [attemptId, router]);
+  }, [attemptId, router, queryClient]);
 
   const next = useCallback(() => {
     if (!reveals[current.id]) return;

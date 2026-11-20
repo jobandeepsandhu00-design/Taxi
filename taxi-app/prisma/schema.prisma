@@ -213,6 +213,8 @@ model Question {
   source          QuestionSource?     @relation(fields: [sourceId], references: [id], onDelete: SetNull)
   /// Genaue Fundstelle, z. B. "§ 20 Abs. 2 StVO"
   sourceDetail    String?             @db.VarChar(255)
+  /// Lektion innerhalb der Kategorie (je 5 Fragen); automatisch vergeben, im Admin-Bereich änderbar
+  lessonIndex     Int?
   createdById     String?
   createdBy       User?               @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt       DateTime            @default(now())
@@ -227,6 +229,7 @@ model Question {
   bookmarks       Bookmark[]
 
   @@index([categoryId, status])
+  @@index([categoryId, lessonIndex])
   @@index([status, difficulty])
   @@index([topicId])
   @@index([origin])

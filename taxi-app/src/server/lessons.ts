@@ -49,23 +49,17 @@ export async function buildLesson(userId: string, categoryId?: string | null): P
   return shuffle(picked);
 }
 
-export type LessonStatus = "offen" | "erledigt" | "gemeistert";
+export type { LessonStatus } from "@/lib/learn-plan-types";
 
-/** Feste Kategorie-Lektionen: veröffentlichte Fragen in stabiler Reihenfolge, je 5 Fragen. */
-export async function categoryLessons(userId: string, categoryId: string): Promise<{ index: number; questionIds: string[]; status: LessonStatus; best: number | null }[]> {
-  const [questions, done] = await Promise.all([
-    prisma.question.findMany({ where: { ...publishedWhere, categoryId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }], select: { id: true } }),
-    prisma.lesson.findMany({ where: { userId, categoryId, kind: "category", completedAt: { not: null } }, select: { lessonIndex: true, score: true } }),
-  ]);
-  const best = new Map<number, number>();
-  for (const d of done) if (d.lessonIndex !== null) best.set(d.lessonIndex, Math.max(best.get(d.lessonIndex) ?? 0, d.score ?? 0));
-  const out = [];
-  for (let i = 0; i * LESSON_SIZE < questions.length; i++) {
-    const ids = questions.slice(i * LESSON_SIZE, (i + 1) * LESSON_SIZE).map((q) => q.id);
-    const b = best.get(i + 1) ?? null;
-    out.push({ index: i + 1, questionIds: ids, best: b, status: (b === null ? "offen" : b >= ids.length ? "gemeistert" : "erledigt") as LessonStatus });
-  }
-  return out;
+/**
+ * Feste Kategorie-Lektionen laut Lernplan (Question.lessonIndex, je 5 Fragen nach Schwierigkeit).
+ * Status kommt aus get_learn_plan: gesperrt / offen / in_arbeit / gemeistert.
+ */
+export async function categoryLessons(userId: string, categoryId: string): Promise<{ index: number; questionIds: string[]; status: import("@/lib/learn-plan-types").LessonStatus; progress: number }[]> {
+  const { getLearnPlan } = await import("./learn-plan");
+  const plan = await getLearnPlan(userId);
+  const section = plan.sections.find((s) => s.id === categoryId);
+  return (section?.lessons ?? []).map((l) => ({ index: l.index, questionIds: l.questions.map((q) => q.id), status: l.status, progress: l.progress }));
 }
 
 /** Wiederholungs-Lektion: fällige Fragen, max. 10, am längsten fällige zuerst. */

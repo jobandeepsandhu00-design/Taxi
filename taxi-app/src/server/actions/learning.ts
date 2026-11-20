@@ -366,6 +366,8 @@ export async function startLessonAction(formData: FormData) {
     const lessons = await categoryLessons(user.id, categoryId);
     const l = lessons.find((x) => x.index === lessonIndex);
     if (!l) redirect("/lernen");
+    // gesperrte Lektion: erst die vorige zu mind. 60 % beantworten
+    if (l.status === "gesperrt") redirect(`/lernplan?gesperrt=${categoryId}:${lessonIndex}`);
     const cat = await prisma.category.findUnique({ where: { id: categoryId }, select: { name: true } });
     questionIds = l.questionIds;
     kind = "category";

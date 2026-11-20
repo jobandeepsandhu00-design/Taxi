@@ -22,6 +22,8 @@ import { WhyPanel } from "@/components/coach/why-panel";
 import { getSimpleAction } from "@/server/actions/variants";
 import { GlossaryText, type GlossaryTerm } from "./glossary-text";
 import type { ClientQuestion } from "./types";
+import { useQueryClient } from "@tanstack/react-query";
+import { LEARN_PLAN_KEY } from "@/components/query-provider";
 
 interface Props {
   question: ClientQuestion;
@@ -62,6 +64,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
   const card = useAnimationControls();
   const [translateOpen, setTranslateOpen] = useState(false);
   const { enabled: coachEnabled } = useCoach();
+  const queryClient = useQueryClient();
   const [simple, setSimple] = useState(false);
   const [simplified, setSimplified] = useState<{ text: string; options: { id: string; text: string }[]; verified: boolean } | null>(null);
   const [glossary, setGlossary] = useState<GlossaryTerm[]>(question.glossary ?? []);
@@ -151,11 +154,13 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
       }
       setFresh(true);
       setReveal(res.data);
+      // Lernplan neu laden (Status der Frage hat sich geändert)
+      void queryClient.invalidateQueries({ queryKey: LEARN_PLAN_KEY });
       celebrate(res.data);
       onRevealed?.(res.data);
       window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 250);
     });
-  }, [reveal, pending, selected, unsure, onSubmit, onRevealed, celebrate, card]);
+  }, [reveal, pending, selected, unsure, onSubmit, onRevealed, celebrate, card, queryClient]);
 
   // Tastatursteuerung: A–D / 1–4 auswählen, Enter = prüfen bzw. weiter
   useEffect(() => {

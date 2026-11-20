@@ -7,6 +7,8 @@ import { AchievementStrip, CategoryList, QuickActions, StreakFlame, XpCard, Zero
 import { DailyRings, ReadinessRing } from "@/components/home/rings";
 import { CoachBubble, DailyPlanCard, PrognosisCard } from "@/components/home/coach-cards";
 import { LessonCta } from "@/components/home/lesson-cta";
+import { LearnPlanCard } from "@/components/learn-plan/learn-plan-card";
+import { getLearnPlan } from "@/server/learn-plan";
 import { buildCoachContext } from "@/server/coach/context";
 import { getDailyPlanState } from "@/server/coach/plans";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
@@ -61,7 +63,7 @@ export default async function DashboardPage() {
     prisma.userAchievement.findMany({ where: { userId: user.id }, select: { key: true } }),
   ]);
   const coachCtx = await buildCoachContext(user.id);
-  const plan = await getDailyPlanState(user.id, coachCtx);
+  const [plan, learnPlan] = await Promise.all([getDailyPlanState(user.id, coachCtx), getLearnPlan(user.id)]);
   const daysToExam = user.targetExamDate ? diffDays(dayKey(), dateToDayKey(user.targetExamDate)) : null;
   const firstName = user.isGuest ? "Gast" : user.name.split(" ")[0];
   const goalQuestions = dailyGoalQuestions(user.dailyGoalMinutes);
@@ -110,6 +112,8 @@ export default async function DashboardPage() {
       </section>
 
       <LessonCta due={due} />
+
+      <LearnPlanCard initial={learnPlan} />
 
       <CoachBubble message={bubble.message} href={bubble.href} start={"start" in bubble ? bubble.start : undefined} mood={bubbleMood} day={dayKey()} />
 

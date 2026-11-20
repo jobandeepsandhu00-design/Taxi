@@ -63,6 +63,7 @@ export const adminNav = [
   { href: "/admin/quellen", label: "Quellen", icon: BookmarkCheck },
   { href: "/admin/varianten", label: "KI-Varianten", icon: Languages },
   { href: "/admin/zahlen", label: "Zahlen-Fakten", icon: Hash },
+  { href: "/admin/lernplan", label: "Lernplan", icon: CalendarDays },
   { href: "/admin/import", label: "Import / Export", icon: Layers },
   { href: "/admin/pruefungen", label: "Prüfungen", icon: ClipboardCheck },
   { href: "/admin/benutzer", label: "Benutzer", icon: Home },

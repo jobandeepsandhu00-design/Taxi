@@ -35,8 +35,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     if (l) {
       let hasNext = false;
       if (l.kind === "category" && l.categoryId && l.lessonIndex) {
-        const total = await prisma.question.count({ where: { ...publishedWhere, categoryId: l.categoryId } });
-        hasNext = l.lessonIndex * 5 < total;
+        hasNext = (await prisma.question.count({ where: { ...publishedWhere, categoryId: l.categoryId, lessonIndex: l.lessonIndex + 1 } })) > 0;
       }
       lesson = { kind: l.kind, categoryId: l.categoryId, lessonIndex: l.lessonIndex, hasNext };
     }

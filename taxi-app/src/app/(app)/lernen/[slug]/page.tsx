@@ -123,10 +123,10 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           <Card>
             <CardHeader>
               <CardTitle>Lektionen</CardTitle>
-              <p className="text-sm text-muted-foreground">Je 5 Fragen, ca. 3 Minuten. Gemeistert = alle 5 richtig.</p>
+              <p className="text-sm text-muted-foreground">Je 5 Fragen, ca. 3 Minuten. Gemeistert = alle 5 im Karteikasten-Fach 4 oder höher.</p>
             </CardHeader>
             <CardContent>
-              <LessonPath categoryId={category.id} lessons={lessons.map((l) => ({ index: l.index, status: l.status, best: l.best, size: l.questionIds.length }))} />
+              <LessonPath categoryId={category.id} lessons={lessons.map((l) => ({ index: l.index, status: l.status, progress: l.progress, size: l.questionIds.length }))} />
               <form action={startLessonAction} className="mt-4">
                 <input type="hidden" name="categoryId" value={category.id} />
                 <SubmitButton variant="outline" className="w-full">⚡ Gemischte 3-Minuten-Lektion aus dieser Kategorie</SubmitButton>
