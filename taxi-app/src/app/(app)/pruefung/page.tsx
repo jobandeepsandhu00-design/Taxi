@@ -42,6 +42,19 @@ export default async function ExamOverviewPage({ searchParams }: { searchParams:
       <PageHeader eyebrow="Prüfungsmodus" title="Prüfungssimulation" description="Realistische Simulation: Zeitlimit, kein Feedback während der Prüfung, Fragen markieren und am Ende auswerten." />
       {fehler && errors[fehler] && <Alert variant="error" className="mb-4">{errors[fehler]}</Alert>}
 
+      <Link href="/muendlich" className="mb-6 flex items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-sm hover:shadow-md" data-testid="pruefung-oral">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFC107] text-2xl text-black" aria-hidden>
+          🎙️
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-base font-bold text-navy">Mündliche Prüfung</span>
+          <span className="block text-sm text-muted-foreground">Fragen laut beantworten – mit Feedback zu den Kernpunkten.</span>
+        </span>
+        <span className="text-xl text-muted-foreground" aria-hidden>
+          ›
+        </span>
+      </Link>
+
       <Alert variant="warning" className="mb-6" title="Wichtiger Hinweis zu den Prüfungsregeln">
         Dauer, Fragenanzahl und Bestehensgrenze sind konfigurierbar. Nicht als „verifiziert“ gekennzeichnete Konfigurationen sind
         Übungsvorgaben und entsprechen nicht zwingend der offiziellen Prüfungsordnung. Bitte informiere dich bei der zuständigen

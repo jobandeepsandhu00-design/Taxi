@@ -32,6 +32,7 @@ const actions = [
   { href: "/lernen", label: "Lernen starten", desc: "Nach Kategorien", icon: "BookOpen" },
   { href: "/quiz", label: "Quiz starten", desc: "Zufällige Fragen", icon: "Sparkles" },
   { href: "/pruefung", label: "Prüfungsmodus", desc: "Echte Simulation", icon: "ClipboardCheck" },
+  { href: "/muendlich", label: "Mündliche Prüfung", desc: "Laut antworten, Toni bewertet", icon: "Mic" },
   { href: "/fehler", label: "Falsche Antworten", desc: "Fehler trainieren", icon: "RotateCcw" },
   { href: "/lernkarten", label: "Lernkarten", desc: "Karteikarten üben", icon: "Layers" },
   { href: "/zahlen", label: "Zahlen-Trainer", desc: "Promille, Abstände, Fristen", icon: "Hash" },
@@ -114,6 +115,19 @@ export default async function DashboardPage() {
       <LessonCta due={due} />
 
       <LearnPlanCard initial={learnPlan} />
+
+      <Link href="/muendlich" className="glass glow-hover flex items-center gap-4 rounded-3xl p-4" data-testid="home-oral">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFC107] text-2xl text-black" aria-hidden>
+          🎙️
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-base font-bold text-navy">Mündliche Prüfung üben</span>
+          <span className="block text-sm text-muted-foreground">Frage hören, laut antworten – Toni prüft die Kernpunkte.</span>
+        </span>
+        <span className="text-xl text-muted-foreground" aria-hidden>
+          ›
+        </span>
+      </Link>
 
       <CoachBubble message={bubble.message} href={bubble.href} start={"start" in bubble ? bubble.start : undefined} mood={bubbleMood} day={dayKey()} />
 
