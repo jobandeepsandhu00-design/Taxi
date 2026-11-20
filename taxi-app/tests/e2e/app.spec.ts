@@ -205,6 +205,12 @@ test.describe.serial("Lernende/r", () => {
     await page.getByRole("link", { name: /Rettungsgasse/ }).click();
     await page.getByRole("button", { name: "Zur Merkliste hinzufügen" }).click();
     await expect(page.getByRole("button", { name: "Von der Merkliste entfernen" })).toBeVisible();
+    // Übersetzungshilfe öffnet sich als Bottom-Sheet
+    await page.getByRole("button", { name: "Übersetzungshilfe öffnen" }).click();
+    await expect(page.getByRole("dialog", { name: "Übersetzungshilfe" })).toBeVisible();
+    await page.getByRole("button", { name: "Türkçe" }).click();
+    await page.getByRole("dialog", { name: "Übersetzungshilfe" }).getByRole("button", { name: "Schließen" }).last().click();
+    await expect(page.getByRole("dialog", { name: "Übersetzungshilfe" })).toHaveCount(0);
     await answerFirstOption(page);
     await gotoSettled(page, "/fragen?merkliste=1");
     await expect(page.getByRole("link", { name: /Rettungsgasse/ })).toBeVisible();
@@ -216,7 +222,15 @@ test.describe.serial("Lernende/r", () => {
     await expect(page.getByRole("heading", { name: "Mein Fortschritt" })).toBeVisible();
     await expect(page.getByText("Trefferquote je Kategorie")).toBeVisible();
     await expect(page.locator(".recharts-wrapper").first()).toBeVisible();
+    await expect(page.getByText("Lernkalender")).toBeVisible();
+    await gotoSettled(page, "/lernplan");
+    await expect(page.getByRole("heading", { name: "Dein Lernplan" })).toBeVisible();
+    await expect(page.getByText("Heute").first()).toBeVisible();
     await gotoSettled(page, "/profil");
+    await page.getByRole("radio", { name: "Riesenrad" }).click();
+    await expect(page.getByRole("radio", { name: "Riesenrad" })).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("switch", { name: "Soundeffekte" }).click();
+    await expect(page.getByRole("switch", { name: "Soundeffekte" })).toHaveAttribute("aria-checked", "false");
     await page.getByLabel("Geplanter Prüfungstermin").fill("2027-03-15");
     await page.getByRole("button", { name: "Speichern" }).click();
     await expect(page.getByText("Profil gespeichert.")).toBeVisible();

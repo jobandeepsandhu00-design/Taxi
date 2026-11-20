@@ -152,23 +152,42 @@ export async function completeOnboardingAction(input: { examType: string; target
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Bitte den Namen angeben.").max(120),
   targetExamDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
+  examType: z.union([z.literal(""), z.enum(["TAXILENKER", "KONZESSION"])]),
+  dailyGoalMinutes: z.union([z.literal(""), z.coerce.number().int().refine((v) => [10, 20, 30].includes(v))]),
 });
 
 const GUEST_LOCKED = "Im Gastmodus nicht möglich. Erstelle ein kostenloses Konto, um dein Profil zu ändern.";
 
+/** Name (nicht im Gastmodus), Prüfungstermin, Prüfungsart und Tagesziel speichern. */
 export async function updateProfileAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
-  if (user.isGuest) return { error: GUEST_LOCKED };
-  const parsed = profileSchema.safeParse({ name: formData.get("name"), targetExamDate: formData.get("targetExamDate") ?? "" });
+  const parsed = profileSchema.safeParse({
+    name: user.isGuest ? user.name : formData.get("name"),
+    targetExamDate: formData.get("targetExamDate") ?? "",
+    examType: formData.get("examType") ?? "",
+    dailyGoalMinutes: formData.get("dailyGoalMinutes") ?? "",
+  });
   if (!parsed.success) return { error: "Bitte Eingaben prüfen.", fieldErrors: parsed.error.flatten().fieldErrors };
+  const d = parsed.data;
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      name: parsed.data.name,
-      targetExamDate: parsed.data.targetExamDate ? new Date(`${parsed.data.targetExamDate}T00:00:00Z`) : null,
+      ...(user.isGuest ? {} : { name: d.name }),
+      targetExamDate: d.targetExamDate ? new Date(`${d.targetExamDate}T00:00:00Z`) : null,
+      ...(d.examType ? { examType: d.examType } : {}),
+      ...(d.dailyGoalMinutes ? { dailyGoalMinutes: d.dailyGoalMinutes } : {}),
     },
   });
   return { success: "Profil gespeichert." };
+}
+
+/** Avatar wählen (auch im Gastmodus erlaubt). */
+export async function setAvatarAction(key: string): Promise<{ ok: boolean }> {
+  const user = await requireUser();
+  const { AVATARS } = await import("@/lib/avatars");
+  if (!AVATARS.some((a) => a.key === key)) return { ok: false };
+  await prisma.user.update({ where: { id: user.id }, data: { avatar: key } });
+  return { ok: true };
 }
 
 export async function changePasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {

@@ -94,6 +94,8 @@ model User {
   examType          ExamType?
   dailyGoalMinutes  Int?
   onboardedAt       DateTime?
+  /// Gewählter Avatar (Schlüssel, z. B. "taxi")
+  avatar            String?             @db.VarChar(20)
   /// Erfahrungspunkte (Level-System)
   xp                Int                 @default(0)
   achievements      UserAchievement[]

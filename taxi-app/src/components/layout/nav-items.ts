@@ -8,6 +8,7 @@ import {
   ListChecks,
   RotateCcw,
   Search,
+  CalendarDays,
   Settings,
   Shield,
   Sparkles,
@@ -21,6 +22,7 @@ export const mainNav = [
   { href: "/fehler", label: "Falsche Antworten", icon: RotateCcw },
   { href: "/lernkarten", label: "Lernkarten", icon: Layers },
   { href: "/fortschritt", label: "Mein Fortschritt", icon: BarChart3 },
+  { href: "/lernplan", label: "Lernplan", icon: CalendarDays },
   { href: "/fragen", label: "Fragensuche", icon: Search },
   { href: "/fragen?merkliste=1", label: "Merkliste", icon: BookmarkCheck },
 ];

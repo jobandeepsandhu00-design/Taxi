@@ -82,6 +82,9 @@ export default async function DashboardPage() {
         <Greeting name={firstName} hour={viennaHour()} subtitle={subtitle} />
         <div className="flex flex-wrap gap-2">
           <CountdownChip days={daysToExam} />
+          <Link href="/lernplan" className="glass glow-hover inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold text-navy">
+            🗓️ Lernplan
+          </Link>
         </div>
       </section>
 

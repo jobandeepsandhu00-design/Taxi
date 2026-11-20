@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useAnimationControls } from "motion/react";
-import { ExternalLink, Info, Loader2, Scale, X } from "lucide-react";
+import { ExternalLink, Info, Languages, Loader2, Scale, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { DifficultyBadge } from "@/components/difficulty-badge";
 import { OriginBadge } from "@/components/origin-badge";
@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import type { AnswerReveal } from "@/server/questions";
 import type { ActionResult } from "@/server/actions/types";
 import { BookmarkButton } from "./bookmark-button";
+import { SpeakButton } from "./speak-button";
+import { TranslateSheet } from "./translate-sheet";
 import type { ClientQuestion } from "./types";
 
 interface Props {
@@ -53,6 +55,19 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
   const resultRef = useRef<HTMLDivElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
   const card = useAnimationControls();
+  const [translateOpen, setTranslateOpen] = useState(false);
+  const pressTimer = useRef<number | null>(null);
+  const fullText = `${question.text}\n\n${question.options.map((o) => `${o.label}) ${o.text}`).join("\n")}`;
+  const speechText = `${question.text} ${question.options.map((o) => `Antwort ${o.label}: ${o.text}.`).join(" ")}`;
+  const startPress = () => {
+    pressTimer.current = window.setTimeout(() => {
+      haptic(20);
+      setTranslateOpen(true);
+    }, 550);
+  };
+  const cancelPress = () => {
+    if (pressTimer.current) window.clearTimeout(pressTimer.current);
+  };
 
   const toggle = useCallback(
     (id: string) => {
@@ -173,6 +188,16 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               <OriginBadge origin={question.origin} verifiedSource={question.source?.verified} />
               <div className="ml-auto flex items-center gap-2">
                 {headerSlot}
+                <SpeakButton text={speechText} />
+                <button
+                  type="button"
+                  onClick={() => setTranslateOpen(true)}
+                  aria-label="Übersetzungshilfe öffnen"
+                  title="Übersetzen (oder Frage lange drücken)"
+                  className="glass flex size-9 items-center justify-center rounded-xl text-muted-foreground transition hover:text-navy"
+                >
+                  <Languages className="size-[18px]" />
+                </button>
                 <BookmarkButton questionId={question.id} initial={bookmarked} />
               </div>
             </div>
@@ -182,7 +207,16 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               <img src={question.imageUrl} alt="Abbildung zur Frage" className="mb-4 max-h-72 w-full rounded-xl border object-contain" />
             )}
 
-            <h2 className="text-lg leading-relaxed font-bold text-navy sm:text-xl">{question.text}</h2>
+            <h2
+              className="text-lg leading-relaxed font-bold text-navy select-none sm:text-xl [-webkit-touch-callout:none]"
+              onPointerDown={startPress}
+              onPointerUp={cancelPress}
+              onPointerLeave={cancelPress}
+              onPointerCancel={cancelPress}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              {question.text}
+            </h2>
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
               {question.multipleCorrect ? "Mehrfachauswahl: Es können mehrere Antworten richtig sein." : "Wähle die richtige Antwort."}
             </p>
@@ -273,6 +307,8 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
           </div>
         </motion.div>
       </motion.div>
+
+      <TranslateSheet open={translateOpen} onClose={() => setTranslateOpen(false)} text={fullText} />
 
       {/* Für Screenreader */}
       <p className="sr-only" aria-live="polite">

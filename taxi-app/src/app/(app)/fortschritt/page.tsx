@@ -10,12 +10,24 @@ import { weekdayShort } from "@/lib/dates";
 import { formatDate, formatDuration } from "@/lib/utils";
 import { getAnalytics, getDashboardStats } from "@/server/stats";
 import { AccuracyTrendChart, AnsweredChart, DailyChart, ExamHistoryChart } from "./charts";
+import { LearningHeatmap } from "./heatmap";
+import { AnimatedNumber } from "@/components/motion/animated-number";
+import { Stagger, StaggerItem } from "@/components/motion/stagger";
+import { prisma } from "@/lib/db";
+import { dateToDayKey, lastNDays } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "Mein Fortschritt" };
 
 export default async function ProgressPage() {
   const user = await requireUser();
-  const [stats, analytics] = await Promise.all([getDashboardStats(user.id), getAnalytics(user.id)]);
+  const calendarDays = lastNDays(26 * 7);
+  const [stats, analytics, activity] = await Promise.all([
+    getDashboardStats(user.id),
+    getAnalytics(user.id),
+    prisma.dailyActivity.findMany({ where: { userId: user.id, date: { gte: new Date(`${calendarDays[0]}T00:00:00Z`) } }, select: { date: true, questionsAnswered: true } }),
+  ]);
+  const activityMap = new Map(activity.map((a) => [dateToDayKey(a.date), a.questionsAnswered]));
+  const heatmap = calendarDays.map((day) => ({ day, answered: activityMap.get(day) ?? 0 }));
   const daily = analytics.daily.map((d) => ({ ...d, label: `${weekdayShort(d.day)} ${d.day.slice(8, 10)}.` }));
   const last7 = daily.slice(-7);
   const weekMinutes = last7.reduce((s, d) => s + d.minutes, 0);
@@ -25,17 +37,22 @@ export default async function ProgressPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Analyse" title="Mein Fortschritt" description="Alle Lernaktivitäten, Trefferquoten und Prüfungsergebnisse auf einen Blick." />
+      <PageHeader eyebrow="Statistik" title="Mein Fortschritt" description="Alle Lernaktivitäten, Trefferquoten und Prüfungsergebnisse auf einen Blick." />
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="flex items-center gap-4 p-4">
-          <ProgressRing value={stats.accuracy} size={64} stroke={7} color="#059669"><span className="text-sm font-extrabold text-navy">{stats.accuracy}%</span></ProgressRing>
+      <Card>
+        <CardHeader><CardTitle>Lernkalender</CardTitle><CardDescription>Beantwortete Fragen pro Tag, letzte 26 Wochen</CardDescription></CardHeader>
+        <CardContent><LearningHeatmap days={heatmap} /></CardContent>
+      </Card>
+
+      <Stagger as="section" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StaggerItem><Card className="flex h-full items-center gap-4 p-4">
+          <ProgressRing value={stats.accuracy} size={64} stroke={7} color="#22c55e"><span className="text-sm font-bold text-navy"><AnimatedNumber value={stats.accuracy} />%</span></ProgressRing>
           <div><p className="text-sm font-bold text-navy">Trefferquote</p><p className="text-xs text-muted-foreground">{stats.correct} / {stats.answered}</p></div>
-        </Card>
-        <Card className="p-4"><Target className="size-5 text-link" /><p className="mt-2 text-2xl font-extrabold text-navy">{weekAnswered}</p><p className="text-xs text-muted-foreground">Fragen in 7 Tagen {prev7 > 0 && <span className={weekAnswered >= prev7 ? "text-success" : "text-destructive"}>({weekAnswered >= prev7 ? "+" : ""}{weekAnswered - prev7} ggü. Vorwoche)</span>}</p></Card>
-        <Card className="p-4"><Clock className="size-5 text-link" /><p className="mt-2 text-2xl font-extrabold text-navy">{formatDuration(weekMinutes * 60)}</p><p className="text-xs text-muted-foreground">Lernzeit in 7 Tagen</p></Card>
-        <Card className="p-4"><Flame className="size-5 text-warning" /><p className="mt-2 text-2xl font-extrabold text-navy">{stats.streak} Tage</p><p className="text-xs text-muted-foreground">Serie · Rekord {stats.longestStreak}</p></Card>
-      </section>
+        </Card></StaggerItem>
+        <StaggerItem><Card className="h-full p-4"><Target className="size-5 text-link" /><p className="mt-2 font-display text-2xl font-bold text-navy"><AnimatedNumber value={weekAnswered} /></p><p className="text-xs text-muted-foreground">Fragen in 7 Tagen {prev7 > 0 && <span className={weekAnswered >= prev7 ? "text-success" : "text-destructive"}>({weekAnswered >= prev7 ? "+" : ""}{weekAnswered - prev7} ggü. Vorwoche)</span>}</p></Card></StaggerItem>
+        <StaggerItem><Card className="h-full p-4"><Clock className="size-5 text-link" /><p className="mt-2 font-display text-2xl font-bold text-navy">{formatDuration(weekMinutes * 60)}</p><p className="text-xs text-muted-foreground">Lernzeit in 7 Tagen</p></Card></StaggerItem>
+        <StaggerItem><Card className="h-full p-4"><Flame className="size-5 text-warning" /><p className="mt-2 font-display text-2xl font-bold text-navy"><AnimatedNumber value={stats.streak} /> Tage</p><p className="text-xs text-muted-foreground">Serie · Rekord {stats.longestStreak}</p></Card></StaggerItem>
+      </Stagger>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
@@ -55,14 +72,14 @@ export default async function ProgressPage() {
             {analytics.categories.map((c) => {
               const color = categoryColor(c.color);
               return (
-                <div key={c.id}>
+                <div key={c.id} style={{ "--cat": color.hex } as React.CSSProperties}>
                   <div className="mb-1 flex items-center justify-between gap-2 text-sm">
                     <Link href={`/lernen/${c.slug}`} className="truncate font-semibold text-foreground/85 hover:text-link">{c.name}</Link>
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {c.answered} beantwortet · <strong className="text-navy">{c.accuracy === null ? "–" : `${c.accuracy} %`}</strong>
                     </span>
                   </div>
-                  <Progress value={c.accuracy ?? 0} barClassName={`bg-gradient-to-r ${color.gradient}`} />
+                  <Progress value={c.accuracy ?? 0} barClassName="bg-[var(--cat)]" />
                 </div>
               );
             })}
@@ -110,7 +127,7 @@ export default async function ProgressPage() {
             ) : (
               <>
                 <ExamHistoryChart data={analytics.exams.map((e) => ({ label: formatDate(e.startedAt).slice(0, 6), score: e.scorePercent ?? 0 }))} passLine={passLine} />
-                <ul className="mt-3 divide-y text-sm">
+                <ul className="mt-3 divide-y divide-border text-sm">
                   {analytics.exams.slice(-5).reverse().map((e) => (
                     <li key={e.id}>
                       <Link href={`/pruefung/${e.id}/ergebnis`} className="flex justify-between py-2 hover:text-link">

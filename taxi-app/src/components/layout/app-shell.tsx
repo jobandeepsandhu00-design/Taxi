@@ -17,6 +17,7 @@ interface ShellUser {
   email: string;
   role: "STUDENT" | "ADMIN";
   isGuest?: boolean;
+  avatar?: string | null;
 }
 
 function useIsActive() {
@@ -86,8 +87,8 @@ function SidebarContent({ user, pillPrefix, onNavigate }: { user: ShellUser; pil
       </nav>
       <div className="glass rounded-2xl p-3">
         <Link href="/profil" onClick={onNavigate} className="flex items-center gap-3 rounded-xl p-1 transition hover:bg-accent">
-          <span className="flex size-9 items-center justify-center rounded-full bg-primary font-display text-sm font-bold text-primary-foreground">
-            {user.name.slice(0, 1).toUpperCase()}
+          <span className={cn("flex size-9 items-center justify-center rounded-full font-display text-sm font-bold", user.avatar ? "bg-primary/15 text-xl ring-1 ring-primary/50" : "bg-primary text-primary-foreground")}>
+            {user.avatar ?? user.name.slice(0, 1).toUpperCase()}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-bold text-navy">{user.name}</span>
