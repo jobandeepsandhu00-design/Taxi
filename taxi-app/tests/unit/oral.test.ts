@@ -187,3 +187,18 @@ describe("Skript Gewerbeordnung, Wirtschaftskammer, Gesellschaftsrecht", () => {
     }
   });
 });
+
+import { buchRestChapters } from "../../prisma/seed-data/buch-rest";
+
+describe("Skript Kapitel 14–25", () => {
+  it("alle Fragen eindeutig, 4 verschiedene Antworten, mündlich bewertbar", () => {
+    const all = buchRestChapters.flatMap((c) => c.questions);
+    expect(all.length).toBe(28 + 6 + 1 + 4 + 4 + 8 + 6 + 16 + 4 + 13 + 5 + 6);
+    expect(new Set(all.map((q) => q.id)).size).toBe(all.length);
+    for (const q of all) {
+      expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+      expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
+    }
+    for (const o of buchRestChapters.flatMap((c) => c.oral)) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+  });
+});

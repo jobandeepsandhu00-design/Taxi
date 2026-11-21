@@ -34,9 +34,11 @@ function derivePoints(a: string): (string | [string, false])[] {
 }
 
 /** Drei Antworten anderer Fragen als Ablenker (deterministisch, ähnliche Länge bevorzugt). */
-function pickDistractors(items: BookItem[], idx: number): [string, string, string] {
+function pickDistractors(items: BookItem[], idx: number, extra: string[] = []): [string, string, string] {
   const own = items[idx].a;
-  const others = items.filter((_, i) => i !== idx).map((it) => it.a).filter((a) => a !== own);
+  const mine = items.filter((_, i) => i !== idx).map((it) => it.a);
+  // Kleine Kapitel: zusätzlich Antworten aus verwandten Kapiteln
+  const others = Array.from(new Set([...mine, ...(mine.length < 6 ? extra : [])])).filter((a) => a !== own);
   const sorted = others
     .map((a, i) => ({ a, d: Math.abs(a.length - own.length) + ((i * 7919 + idx * 104729) % 97) }))
     .sort((x, y) => x.d - y.d)
@@ -44,10 +46,10 @@ function pickDistractors(items: BookItem[], idx: number): [string, string, strin
   return [sorted[0], sorted[1], sorted[2]];
 }
 
-export function buildBookChapter(opts: { category: string; prefix: string; chapterName: string; items: BookItem[] }) {
+export function buildBookChapter(opts: { category: string; prefix: string; chapterName: string; items: BookItem[]; extraAnswers?: string[] }) {
   const questions: SeedQuestion[] = opts.items.map((it, idx) => {
     const id = `${opts.prefix}-${String(it.nr).padStart(2, "0")}`;
-    const wrong = it.wrong ?? pickDistractors(opts.items, idx);
+    const wrong = it.wrong ?? pickDistractors(opts.items, idx, opts.extraAnswers);
     return {
       id,
       category: opts.category,

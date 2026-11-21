@@ -12,10 +12,10 @@ export interface SeedVariant {
 
 export const seedVariants: SeedVariant[] = [
   {
-    questionId: "kz-ka-02",
-    simple: { text: "Wie viel Umsatzsteuer musst du auf eine normale Taxifahrt in Österreich verrechnen?", options: [{ label: "A", text: "0 %" }, { label: "B", text: "20 %" }, { label: "C", text: "13 %" }, { label: "D", text: "10 %" }] },
-    glossary: [{ term: "Umsatzsteuersatz", definition: "Der Prozentsatz an Steuer, der auf den Preis aufgeschlagen und an das Finanzamt abgeführt wird." }, { term: "Personenbeförderung", definition: "Menschen gegen Bezahlung von einem Ort zu einem anderen bringen." }],
-    en: { question: "Which VAT rate (Umsatzsteuersatz) applies to domestic passenger transport (Personenbeförderung) by taxi?", options: [{ label: "A", text: "0 %" }, { label: "B", text: "20 %" }, { label: "C", text: "13 %" }, { label: "D", text: "10 %" }], explanation: "Passenger transport by taxi is subject to the reduced VAT rate (ermäßigter Steuersatz) of 10 %." },
+    questionId: "bbb-04",
+    simple: { text: "Wie berechnest du das Eigenkapital einer Firma?", options: [{ label: "A", text: "Gesamt Vermögen + Gesamt Fremdkapital = Eigenkapital" }, { label: "B", text: "Fremdkapital - Umlaufvermögen = Eigenkapital" }, { label: "C", text: "Gesamt Vermögen - Gesamt Fremdkapital = Eigenkapital" }, { label: "D", text: "Umsatz - Ausgaben = Eigenkapital" }] },
+    glossary: [{ term: "Eigenkapital", definition: "Das Geld und Vermögen, das dem Unternehmer selbst gehört – nicht geliehen." }],
+    en: { question: "How do you calculate equity (Eigenkapital)?", options: [{ label: "A", text: "Total assets + total liabilities = equity" }, { label: "B", text: "Liabilities - current assets = equity" }, { label: "C", text: "Total assets - total liabilities (Fremdkapital) = equity" }, { label: "D", text: "Revenue - expenses = equity" }], explanation: "Equity (Eigenkapital) is total assets (Gesamtvermögen) minus total liabilities (Fremdkapital)." },
   },
   {
     questionId: "demo-stvo-01",
