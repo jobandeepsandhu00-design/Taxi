@@ -131,9 +131,9 @@ describe("Skript Vollkosten, Deckungsbeitrag, Finanzierung", () => {
 import { buchArChapter } from "../../prisma/seed-data/buch-arbeitsrecht";
 
 describe("Skript Arbeits- und Sozialrecht", () => {
-  it("151 Fragen (Nr. 138 fehlt), 4 verschiedene Antworten, mündlich bewertbar", () => {
-    expect(buchArChapter.questions).toHaveLength(151);
-    expect(new Set(buchArChapter.questions.map((q) => q.id)).size).toBe(151);
+  it("157 Fragen (Nr. 138 und 157 fehlen), 4 verschiedene Antworten, mündlich bewertbar", () => {
+    expect(buchArChapter.questions).toHaveLength(157);
+    expect(new Set(buchArChapter.questions.map((q) => q.id)).size).toBe(157);
     for (const q of buchArChapter.questions) {
       expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
       expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
