@@ -40,6 +40,8 @@ import { getSimpleAction, getTranslationAction, type SimpleView, type Translatio
 
 type Settings = { autoAdvanceSec: number | null; showWrongAnswers: boolean; textSize: "s" | "m" | "l" | "xl"; audioSpeed: number; quizOnlyUnlocked: boolean };
 type Chapter = { id: string; slug: string; title: string; order: number; estMinutes: number; checkPassed: boolean };
+/** Abschnitt (10 Fragen) eines Kapitels */
+export type StorySection = { number: number; total: number; from: number; to: number; offset: number; nextHref: string | null };
 
 const TEXT: Record<Settings["textSize"], { q: string; a: string }> = {
   s: { q: "text-lg", a: "text-sm" },
@@ -55,6 +57,7 @@ export function StoryPlayer({
   startAt,
   settings: initialSettings,
   exitHref,
+  section = null,
 }: {
   kind: "chapter" | "repeat";
   chapter: Chapter | null;
@@ -62,7 +65,9 @@ export function StoryPlayer({
   startAt: number;
   settings: Settings;
   exitHref: string;
+  section?: StorySection | null;
 }) {
+  const offset = section?.offset ?? 0;
   const router = useRouter();
   const reduce = useReducedMotion();
   const { enabled: coachEnabled } = useCoach();
@@ -109,14 +114,14 @@ export function StoryPlayer({
   useEffect(() => {
     if (!card) return;
     if (kind === "chapter" && chapter) {
-      const pos = index;
+      const pos = offset + index;
       void saveChapterPositionAction(chapter.id, pos).catch(() => undefined);
     }
     if (card.status) return;
     readTimer.current = setTimeout(() => {
       setStatus(card.id, "gelesen");
       void sendMark(card.id, "gelesen").then(() => {
-        if (kind === "chapter" && chapter) void saveChapterPositionAction(chapter.id, index).catch(() => undefined);
+        if (kind === "chapter" && chapter) void saveChapterPositionAction(chapter.id, offset + index).catch(() => undefined);
       });
     }, READ_AFTER_MS);
     return () => {
@@ -233,7 +238,7 @@ export function StoryPlayer({
             <motion.div className="h-full origin-left rounded-full bg-primary" animate={{ scaleX: progress }} transition={spring} style={{ width: "100%" }} />
           </div>
           <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">
-            {kind === "repeat" ? "Wiederholung" : chapter?.title} {card && <>· Karte {index + 1} von {total}</>}
+            {kind === "repeat" ? "Wiederholung" : chapter?.title} {section && <>· Abschnitt {section.number}</>} {card && <>· Karte {index + 1} von {total}</>}
           </p>
         </div>
         <button type="button" onClick={() => setSheet("settings")} className="rounded-full p-2 hover:bg-accent" aria-label="Einstellungen" data-testid="story-settings">
@@ -258,7 +263,7 @@ export function StoryPlayer({
             onDragEnd={onDragEnd}
           >
             <div className="mx-auto max-w-2xl py-2" aria-live="polite">
-              {index === -1 && chapter && <IntroCard chapter={chapter} total={total} read={readCount} onStart={() => go(0)} />}
+              {index === -1 && chapter && <IntroCard chapter={chapter} section={section} total={total} read={readCount} onStart={() => go(0)} />}
               {card && (
                 <QuestionCard
                   card={card}
@@ -268,7 +273,7 @@ export function StoryPlayer({
                 />
               )}
               {index >= total && (
-                <SummaryCard kind={kind} chapter={chapter} total={total} read={readCount} session={session} cards={cards} exitHref={exitHref} onRestart={() => go(0)} />
+                <SummaryCard kind={kind} chapter={chapter} section={section} total={total} read={readCount} session={session} cards={cards} exitHref={exitHref} onRestart={() => go(0)} />
               )}
             </div>
           </motion.div>
@@ -365,16 +370,20 @@ function ToolButton({ onClick, label, active, children, testid }: { onClick: () 
   );
 }
 
-function IntroCard({ chapter, total, read, onStart }: { chapter: Chapter; total: number; read: number; onStart: () => void }) {
+function IntroCard({ chapter, section, total, read, onStart }: { chapter: Chapter; section: StorySection | null; total: number; read: number; onStart: () => void }) {
   return (
     <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-4 text-center" data-testid="story-intro">
       <span className="flex size-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
         <BookOpen className="size-8" />
       </span>
-      <p className="text-xs font-bold tracking-wider text-link uppercase">Kapitel {chapter.order}</p>
+      <p className="text-xs font-bold tracking-wider text-link uppercase">
+        Kapitel {chapter.order}
+        {section && <> · Abschnitt {section.number} von {section.total}</>}
+      </p>
       <h1 className="text-3xl font-extrabold text-navy">{chapter.title}</h1>
       <p className="text-muted-foreground">
-        {total} Karten · ca. {chapter.estMinutes} Min.{read > 0 && <> · {read} schon gelesen</>}
+        {section ? <>Fragen {section.from}–{section.to} · </> : null}
+        {total} Karten · ca. {section ? Math.max(1, Math.round(total * 0.5)) : chapter.estMinutes} Min.{read > 0 && <> · {read} schon gelesen</>}
       </p>
       <ul className="max-w-sm space-y-1 text-left text-sm text-muted-foreground">
         <li>👉 Wischen oder rechts tippen: nächste Karte</li>
@@ -445,6 +454,7 @@ function QuestionCard({ card, textClass, showWrong, onToggleWrong }: { card: Sto
 function SummaryCard({
   kind,
   chapter,
+  section,
   total,
   read,
   session,
@@ -454,6 +464,7 @@ function SummaryCard({
 }: {
   kind: "chapter" | "repeat";
   chapter: Chapter | null;
+  section: StorySection | null;
   total: number;
   read: number;
   session: { verstanden: number; nochmal: number };
@@ -481,7 +492,7 @@ function SummaryCard({
       <motion.span initial={{ scale: 0.6, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={spring} className="flex size-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
         <Trophy className="size-8" />
       </motion.span>
-      <h1 className="text-2xl font-extrabold text-navy">{kind === "repeat" ? "Wiederholung geschafft!" : allRead ? "Kapitel gelesen!" : "Ende des Kapitels"}</h1>
+      <h1 className="text-2xl font-extrabold text-navy">{kind === "repeat" ? "Wiederholung geschafft!" : section ? (allRead ? `Abschnitt ${section.number} geschafft!` : `Ende von Abschnitt ${section.number}`) : allRead ? "Kapitel gelesen!" : "Ende des Kapitels"}</h1>
       <div className="grid w-full max-w-sm grid-cols-3 gap-2">
         <SumStat value={`${read}/${total}`} label="gelesen" />
         <SumStat value={String(understood)} label="verstanden" />
@@ -493,13 +504,18 @@ function SummaryCard({
         </p>
       )}
       <div className="flex w-full max-w-sm flex-col gap-2">
-        {kind === "chapter" && chapter && allRead && !chapter.checkPassed && (
+        {section?.nextHref && (
+          <a href={section.nextHref} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground" data-testid="summary-next-section">
+            Weiter mit Abschnitt {section.number + 1} <ChevronRight className="size-4" />
+          </a>
+        )}
+        {kind === "chapter" && chapter && allRead && !chapter.checkPassed && !section?.nextHref && (
           <Link href={exitHref} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground" data-testid="summary-check">
             <Trophy className="size-4" /> Weiter zum Kapitel-Check
           </Link>
         )}
         {kind === "chapter" && !allRead && (
-          <p className="text-sm text-warning">Noch {total - read} {total - read === 1 ? "Karte" : "Karten"} ungelesen – für den Kapitel-Check musst du alle lesen.</p>
+          <p className="text-sm text-warning">Noch {total - read} {total - read === 1 ? "Karte" : "Karten"} {section ? "in diesem Abschnitt " : ""}ungelesen – für den Kapitel-Check musst du alle lesen.</p>
         )}
         <button type="button" onClick={onRestart} className="h-12 rounded-xl border border-border font-bold">
           Nochmal von vorne

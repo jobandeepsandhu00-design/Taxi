@@ -40,12 +40,13 @@ test("Lernbuch: Navigation, Story-Modus lesen, Kapitel-Check, Ergebnis", async (
   await nav.getByRole("link", { name: "Lernbuch" }).click();
   await page.waitForURL("**/lernbuch");
   await settle(page);
-  await page.getByRole("link", { name: /Marketing, Umwelt & Sonstiges/ }).click();
-  await page.waitForURL("**/lernbuch/sonstiges");
+  // 25 Kapitel in Buch-Reihenfolge
+  await expect(page.getByTestId("lernbuch-chapters").getByRole("listitem")).toHaveCount(25);
   await page.getByTestId("chapter-k-umweltschutz").click();
   await page.waitForURL("**/lernbuch/sonstiges/k-umweltschutz");
   await settle(page);
   await expect(page.getByTestId("start-chapter-check")).toBeDisabled();
+  await expect(page.getByTestId("section-1")).toBeVisible();
 
   // Story-Modus: Intro → Karte → Verstanden → Zusammenfassung
   await page.getByTestId("mode-story").click();
@@ -101,4 +102,25 @@ test("Üben-Hub: Unter-Tabs und Lese-Liste / Karteikarten / Hör-Modus", async (
   await page.goto("/lernbuch/sonstiges/k-marketing/hoeren");
   await settle(page);
   await expect(page.getByTestId("audio-card")).toBeVisible();
+});
+
+test("Lernbuch: Kapitel in Abschnitte à 10 Fragen, weiter zum nächsten Abschnitt", async ({ page }) => {
+  await guest(page);
+  await page.goto("/lernbuch/rechnungswesen/k-rechnungswesen");
+  await settle(page);
+  // 43 Fragen → 5 Abschnitte
+  await expect(page.getByTestId("chapter-sections").locator(":scope > li")).toHaveCount(5);
+  await expect(page.getByTestId("section-5")).toContainText("Fragen 41–43");
+  await page.getByTestId("section-read-2").click();
+  await page.waitForURL("**abschnitt=2**");
+  await settle(page);
+  await expect(page.getByTestId("story-intro")).toContainText("Abschnitt 2 von 5");
+  await expect(page.getByTestId("story-intro")).toContainText("Fragen 11–20");
+  await page.getByTestId("story-start").click();
+  for (let i = 0; i < 10; i++) await page.getByTestId("story-understood").click();
+  await expect(page.getByTestId("story-summary")).toContainText("Abschnitt 2 geschafft!");
+  await page.getByTestId("summary-next-section").click();
+  await page.waitForURL("**abschnitt=3**");
+  await settle(page);
+  await expect(page.getByTestId("story-intro")).toContainText("Fragen 21–30");
 });

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, Library, Repeat } from "lucide-react";
 import { ProgressRing } from "@/components/ui/progress";
-import type { LernbuchOverview } from "@/lib/lernbuch";
+import { SECTION_SIZE, type LernbuchOverview } from "@/lib/lernbuch";
 
 /** Dashboard-Widget: Lernbuch-Fortschritt + Weiterlesen. */
 export function LernbuchWidget({ o }: { o: LernbuchOverview }) {
   const pct = o.total ? Math.round((o.read / o.total) * 100) : 0;
   const c = o.current;
-  const href = c ? `/lernbuch/story/${c.slug}?pos=${Math.min(c.lastPosition, Math.max(0, c.total - 1))}` : "/lernbuch";
+  const pos = c ? Math.min(c.lastPosition, Math.max(0, c.total - 1)) : 0;
+  const href = c ? `/lernbuch/story/${c.slug}?abschnitt=${Math.floor(pos / SECTION_SIZE) + 1}&pos=${pos % SECTION_SIZE}` : "/lernbuch";
   return (
     <section className="glass rounded-3xl p-4" data-testid="home-lernbuch" aria-label="Lernbuch">
       <div className="flex items-center gap-4">

@@ -6,6 +6,12 @@ export type ChapterState = "neu" | "weiterlesen" | "gelesen" | "check";
 export const CHECK_PASS_PERCENT = 80;
 export const CHECK_QUESTIONS = 5;
 export const READ_AFTER_MS = 3000;
+/** Fragen pro Abschnitt eines Kapitels */
+export const SECTION_SIZE = 10;
+
+export function sectionCount(total: number): number {
+  return Math.max(1, Math.ceil(total / SECTION_SIZE));
+}
 
 export const LERNBUCH_TOPICS: { id: string; title: string; description: string; icon: string; color: string; slugs: string[] }[] = [
   { id: "rechnungswesen", title: "Rechnungswesen & Steuern", description: "Buchführung, Bilanz, Personalverrechnung, Steuern und Registrierkasse.", icon: "Calculator", color: "amber", slugs: ["k-rechnungswesen", "k-buchhaltung-bilanz", "k-personalverrechnung", "steuerrecht", "k-registrierkassa"] },
