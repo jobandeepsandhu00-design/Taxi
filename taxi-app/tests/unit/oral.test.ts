@@ -79,7 +79,7 @@ describe("Konzession-Kapitel", () => {
 describe("Skript Rechnungswesen", () => {
   it("43 mündliche Fragen und mindestens 43 MC-Fragen", () => {
     expect(buchRwOral).toHaveLength(43);
-    expect(buchRwQuestions.length).toBeGreaterThanOrEqual(43);
+    expect(buchRwQuestions).toHaveLength(43);
     for (const o of buchRwOral) {
       expect(o.keyPoints.some((k) => k.required), o.key).toBe(true);
       expect(o.keyPoints.some((k) => k.id === o.followUps[0].trigger_point_id), o.key).toBe(true);

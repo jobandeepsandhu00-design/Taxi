@@ -690,4 +690,4 @@ export const ORAL_CHAPTER: Record<string, string> = {
 };
 
 /** Frühere eigene Übungsfragen, die durch Skript-Fragen ersetzt wurden (werden archiviert). */
-export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05"];
+export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c"];
