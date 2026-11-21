@@ -465,7 +465,7 @@ function QuestionSheet({ id, onClose }: { id: string | null; onClose: () => void
                   {data.options.map((o) => (
                     <li key={o.label} className={cn("flex gap-2 rounded-xl border px-3 py-2 text-sm", o.isCorrect ? "border-success/50 bg-success/8" : data.lastAnswer?.labels.includes(o.label) ? "border-destructive/40 bg-destructive/6" : "border-border")}>
                       <strong>{o.label})</strong>
-                      <span className="flex-1">{o.text}</span>
+                      <span className="flex-1 whitespace-pre-line">{o.text}</span>
                       {o.isCorrect && <span className="text-xs font-bold text-success">richtig</span>}
                     </li>
                   ))}

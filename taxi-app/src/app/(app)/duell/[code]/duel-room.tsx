@@ -280,7 +280,7 @@ export function DuelRoom({ initial }: { initial: DuelState }) {
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/8 font-display text-sm font-bold">
                       {reveal && isRight ? <Check className="size-4 text-success" /> : reveal && isSel ? <X className="size-4 text-destructive" /> : o.label}
                     </span>
-                    <span className="flex-1 pt-0.5">{o.text}</span>
+                    <span className="flex-1 pt-0.5 whitespace-pre-line">{o.text}</span>
                   </motion.button>
                 );
               })}

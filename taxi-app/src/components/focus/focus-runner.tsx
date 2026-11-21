@@ -491,7 +491,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
                         >
                           {state === "correct" ? <Check className="size-4" /> : state === "wrong" ? <X className="size-4" /> : o.label}
                         </motion.span>
-                        <span className="min-w-0 flex-1 leading-snug break-words">{simpleQ?.options[o.id] ?? o.text}</span>
+                        <span className="min-w-0 flex-1 leading-snug break-words whitespace-pre-line">{simpleQ?.options[o.id] ?? o.text}</span>
                       </motion.button>
                     );
                   })}
@@ -665,15 +665,15 @@ function ExplainContent({ q, reveal, coachEnabled }: { q: ClientQuestion; reveal
           <Scale className="size-3.5" /> {legal}
         </p>
       )}
-      <p className="flex gap-2 text-[15px] leading-relaxed text-foreground">
+      <p className="flex gap-2 text-[15px] leading-relaxed whitespace-pre-line text-foreground">
         <Info className="mt-1 size-4 shrink-0 text-link" />
-        {reveal.explanation}
+        <span>{reveal.explanation}</span>
       </p>
       <div>
         <p className="mb-2 text-xs font-bold text-navy">Die Antworten im Einzelnen</p>
         <ul className="space-y-2">
           {reveal.options.map((o) => (
-            <li key={o.id} className={cn("rounded-xl border px-3 py-2 text-sm", o.isCorrect ? "border-success/50 bg-success/8" : reveal.selectedOptionIds.includes(o.id) ? "border-destructive/40 bg-destructive/6" : "border-border")}>
+            <li key={o.id} className={cn("rounded-xl border px-3 py-2 text-sm whitespace-pre-line", o.isCorrect ? "border-success/50 bg-success/8" : reveal.selectedOptionIds.includes(o.id) ? "border-destructive/40 bg-destructive/6" : "border-border")}>
               <strong>{o.label})</strong> {q.options.find((x) => x.id === o.id)?.text}
               {o.explanation && <span className="mt-0.5 block text-xs text-muted-foreground">{o.explanation}</span>}
             </li>

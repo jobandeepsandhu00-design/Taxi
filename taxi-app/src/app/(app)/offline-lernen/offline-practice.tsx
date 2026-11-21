@@ -71,7 +71,7 @@ function Practice({ pack, onExit }: { pack: OfflinePack; onExit: () => void }) {
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground/8 font-display text-xs font-bold">
                   {state === "ok" ? <Check className="size-3.5 text-success" /> : state === "bad" ? <X className="size-3.5 text-destructive" /> : o.label}
                 </span>
-                <span className="flex-1">{o.text}</span>
+                <span className="flex-1 whitespace-pre-line">{o.text}</span>
               </button>
             );
           })}

@@ -41,7 +41,7 @@ function CardFaces({ card, flipped }: { card: Flashcard; flipped: boolean }) {
         <span className="text-xs font-bold tracking-wider text-primary uppercase">Antwort</span>
         <ul className="mt-3 space-y-1.5">
           {card.answers.map((a) => (
-            <li key={a} className="text-lg font-bold">
+            <li key={a} className="text-lg font-bold whitespace-pre-line">
               {a}
             </li>
           ))}

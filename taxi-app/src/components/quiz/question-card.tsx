@@ -330,7 +330,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                     >
                       {state === "correct" ? <DrawCheck /> : state === "wrong" ? <X className="size-4" /> : o.label}
                     </span>
-                    <span className="flex-1 pt-0.5 text-foreground">{optionText(o.id, o.text)}</span>
+                    <span className="flex-1 pt-0.5 whitespace-pre-line text-foreground">{optionText(o.id, o.text)}</span>
                   </motion.button>
                 );
               })}
