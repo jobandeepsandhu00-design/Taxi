@@ -88,28 +88,28 @@ test.describe.serial("Easy Learning", () => {
 
   test("Einfach (B1) mit Glossar, Übersetzungshilfe und strukturiertes „Warum?“", async () => {
     await page.evaluate(() => localStorage.setItem("tp-lang", "en"));
-    await page.goto("/fragen/demo-stvo-01");
+    await page.goto("/fragen/kz-ka-02");
     await settle(page);
     // Glossar aus dem Cache: Fachbegriff im Originaltext antippen
-    await page.getByRole("button", { name: "Ortsgebiet", exact: true }).click();
-    await expect(page.getByRole("tooltip")).toContainText("Ortstafeln");
+    await page.getByRole("button", { name: "Umsatzsteuersatz", exact: true }).click();
+    await expect(page.getByRole("tooltip")).toContainText("Finanzamt");
     await page.keyboard.press("Escape");
     // Einfache Sprache (vorab erzeugt, ungeprüft)
     await page.getByRole("button", { name: "Einfache Sprache" }).click();
-    await expect(page.getByText("Wie schnell darfst du im Ortsgebiet normalerweise höchstens fahren?")).toBeVisible();
+    await expect(page.getByText("Wie viel Umsatzsteuer musst du auf eine normale Taxifahrt in Österreich verrechnen?")).toBeVisible();
     await expect(page.getByText("Ungeprüft").first()).toBeVisible();
     await page.getByRole("button", { name: "Einfache Sprache" }).click();
     // Übersetzungshilfe
     await page.getByRole("button", { name: "Übersetzungshilfe öffnen" }).click();
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText(/Die Prüfung ist auf Deutsch/)).toBeVisible();
-    await expect(sheet.getByTestId("translation")).toContainText("What is the general speed limit");
+    await expect(sheet.getByTestId("translation")).toContainText("Which VAT rate");
     // RTL für Arabisch (Testmodus erzeugt die Übersetzung)
     await sheet.getByRole("radio", { name: "العربية" }).click();
     await expect(sheet.getByTestId("translation")).toHaveAttribute("dir", "rtl");
     await sheet.getByRole("button", { name: "Schließen" }).last().click();
     await expect(sheet).toHaveCount(0);
-    // falsch antworten (A = 30 km/h) → Warum?
+    // falsch antworten (A = 0 %) → Warum?
     await options(page).getByRole("radio").first().click();
     await page.getByRole("button", { name: "Antwort prüfen" }).click();
     await expect(page.getByText("Leider falsch", { exact: true })).toBeVisible();

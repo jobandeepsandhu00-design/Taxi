@@ -11,7 +11,7 @@ import { sources } from "./seed-data/sources";
 import { seedVariants } from "./seed-data/variants";
 import { numberFacts, routes } from "./seed-data/learning-extras";
 import { oralQuestions } from "./seed-data/oral-questions";
-import { konzessionCategories, konzessionQuestions } from "./seed-data/konzession";
+import { BOOK_CHAPTERS, isBookCategory, konzessionCategories, konzessionQuestions, ORAL_CHAPTER } from "./seed-data/konzession";
 
 const prisma = new PrismaClient();
 
@@ -72,13 +72,15 @@ async function main() {
   const categoryIds = new Map<string, string>();
   const topicIds = new Map<string, string>();
   for (const c of [...categories, ...konzessionCategories]) {
+    const chapter = BOOK_CHAPTERS[c.slug];
     const data = {
-      name: c.name,
+      name: chapter?.name ?? c.name,
       shortDescription: c.shortDescription,
       introduction: c.introduction,
       color: c.color,
       icon: c.icon,
-      order: c.order,
+      order: chapter?.order ?? (isBookCategory(c.slug) ? c.order : 100 + c.order),
+      isActive: isBookCategory(c.slug),
       difficulty: c.difficulty,
       regionId: wien.id,
     };
@@ -208,13 +210,14 @@ async function seedLearningExtras() {
   }
   // Mündliche Prüfungsfragen (ungeprüft)
   for (const o of oralQuestions) {
-    const category = await prisma.category.findUnique({ where: { slug: o.categorySlug }, select: { id: true } });
+    const slug = ORAL_CHAPTER[o.categorySlug] ?? o.categorySlug;
+    const category = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
     if (!category) continue;
     const id = `oq-${o.key}`;
     const { key, categorySlug, ...data } = o;
     void key;
     void categorySlug;
-    await prisma.oralQuestion.upsert({ where: { id }, create: { id, ...data, categoryId: category.id, verified: false, catalogVersion: "seed-2026-11" }, update: {} });
+    await prisma.oralQuestion.upsert({ where: { id }, create: { id, ...data, categoryId: category.id, verified: false, catalogVersion: "seed-2026-11" }, update: { categoryId: category.id } });
   }
 }
 

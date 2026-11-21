@@ -1,6 +1,6 @@
 /**
  * Kapitel der Konzessionsprüfung (Gliederung nach dem Skript „Inhaltsverzeichnis“, Kapitel 1–25).
- * Steuerrecht (Kap. 4) und Arbeits- und Sozialrecht (Kap. 8) sind bereits eigene Kategorien.
+ * Steuerrecht (Kap. 4) und Arbeits- und Sozialrecht (Kap. 8) sind die bestehenden Kategorien „steuerrecht“ und „arbeitsrecht“ (siehe BOOK_CHAPTERS).
  *
  * Die Fragen sind eigenständig erstellte ÜBUNGSFRAGEN (origin = DEMO, Tag „konzession“) –
  * keine offiziellen Prüfungsfragen. Rechtliche Angaben vor produktivem Einsatz prüfen.
@@ -25,103 +25,116 @@ function cat(order: number, slug: string, name: string, shortDescription: string
 }
 
 export const konzessionCategories: SeedCategory[] = [
-  cat(11, "k-rechnungswesen", "Rechnungswesen", "Aufgaben des Rechnungswesens, Buchführungsgrundsätze, Belege, Einnahmen-Ausgaben-Rechnung und Umsatzsteuer-Termine.", "Calculator", "amber", [
+  cat(1, "k-rechnungswesen", "Rechnungswesen", "Aufgaben des Rechnungswesens, Buchführungsgrundsätze, Belege, Einnahmen-Ausgaben-Rechnung und Umsatzsteuer-Termine.", "Calculator", "amber", [
     ["grundsaetze", "Buchführungsgrundsätze", "Keine Buchung ohne Beleg"],
     ["belege", "Belegarten", "Eingangs-/Ausgangsrechnung, Kassa-, Bankbeleg"],
     ["ea-rechnung", "Einnahmen-Ausgaben-Rechnung", "Zufluss-Abfluss-Prinzip"],
   ]),
-  cat(12, "k-buchhaltung-bilanz", "Doppelte Buchhaltung und Bilanz", "Soll und Haben, Aktiva und Passiva, Bilanz und Gewinn- und Verlustrechnung.", "Calculator", "orange", [
+  cat(2, "k-buchhaltung-bilanz", "Doppelte Buchhaltung und Bilanz", "Soll und Haben, Aktiva und Passiva, Bilanz und Gewinn- und Verlustrechnung.", "Calculator", "orange", [
     ["doppik", "Doppelte Buchhaltung", "Soll/Haben, Konten"],
     ["bilanz", "Bilanz", "Vermögen und Kapital"],
     ["guv", "Gewinn- und Verlustrechnung", "Erträge und Aufwände"],
   ]),
-  cat(13, "k-personalverrechnung", "Personalverrechnung", "Vom Brutto zum Netto, Sozialversicherung, Lohnsteuer, Sonderzahlungen und Lohnnebenkosten.", "Users", "rose", [
+  cat(3, "k-personalverrechnung", "Personalverrechnung", "Vom Brutto zum Netto, Sozialversicherung, Lohnsteuer, Sonderzahlungen und Lohnnebenkosten.", "Users", "rose", [
     ["brutto-netto", "Brutto – Netto", "Abzüge vom Bruttolohn"],
     ["sonderzahlungen", "Sonderzahlungen", "Urlaubs- und Weihnachtsgeld"],
     ["lohnnebenkosten", "Lohnnebenkosten", "Abgaben des Dienstgebers"],
   ]),
-  cat(14, "k-vollkostenrechnung", "Vollkostenrechnung", "Kostenarten-, Kostenstellen- und Kostenträgerrechnung, fixe und variable Kosten.", "Calculator", "teal", [
+  cat(5, "k-vollkostenrechnung", "Vollkostenrechnung", "Kostenarten-, Kostenstellen- und Kostenträgerrechnung, fixe und variable Kosten.", "Calculator", "teal", [
     ["kostenarten", "Kostenarten", "Fix/variabel, Einzel-/Gemeinkosten"],
     ["kostenstellen", "Kostenstellen & Kostenträger", "Wo und wofür Kosten entstehen"],
   ]),
-  cat(15, "k-deckungsbeitrag", "Deckungsbeitrag", "Deckungsbeitrag, Break-even-Point und Entscheidungen mit der Teilkostenrechnung.", "Calculator", "emerald", [
+  cat(6, "k-deckungsbeitrag", "Deckungsbeitrag", "Deckungsbeitrag, Break-even-Point und Entscheidungen mit der Teilkostenrechnung.", "Calculator", "emerald", [
     ["db", "Deckungsbeitrag", "Erlös minus variable Kosten"],
     ["break-even", "Break-even", "Gewinnschwelle"],
   ]),
-  cat(16, "k-finanzierung", "Finanzierung", "Eigen- und Fremdfinanzierung, Kredite, Leasing und Liquidität.", "Landmark", "sky", [
+  cat(7, "k-finanzierung", "Finanzierung", "Eigen- und Fremdfinanzierung, Kredite, Leasing und Liquidität.", "Landmark", "sky", [
     ["formen", "Finanzierungsformen", "Eigen-, Fremd-, Innenfinanzierung"],
     ["leasing", "Leasing & Kredit", "Fahrzeugfinanzierung"],
   ]),
-  cat(17, "k-betriebsordnung-tarif", "Betriebsordnung und Tarif", "Pflichten nach der Betriebsordnung für das Taxigewerbe in Wien, Taxameter und Tarif.", "Car", "blue", [
+  cat(9, "k-betriebsordnung-tarif", "Betriebsordnung und Tarif", "Pflichten nach der Betriebsordnung für das Taxigewerbe in Wien, Taxameter und Tarif.", "Car", "blue", [
     ["betriebsordnung", "Betriebsordnung", "Pflichten von Unternehmer und Lenker"],
     ["tarif", "Tarif & Taxameter", "Fahrpreis, Beleg"],
   ], "HARD"),
-  cat(18, "k-kollektivvertrag", "Angestellten- und Arbeiter-Kollektivvertrag", "Wer den Kollektivvertrag abschließt, für wen er gilt und was er regelt.", "Users", "violet", [
+  cat(10, "k-kollektivvertrag", "Angestellten- und Arbeiter-Kollektivvertrag", "Wer den Kollektivvertrag abschließt, für wen er gilt und was er regelt.", "Users", "violet", [
     ["grundlagen", "Kollektivvertrag – Grundlagen", "Parteien, Geltung, Günstigkeitsprinzip"],
     ["inhalte", "Inhalte", "Mindestlohn, Arbeitszeit, Sonderzahlungen"],
   ]),
-  cat(19, "k-gewerbeordnung", "Gewerbeordnung", "Gewerbearten, allgemeine Voraussetzungen, Gewerbeanmeldung und gewerberechtlicher Geschäftsführer.", "Building2", "indigo", [
+  cat(11, "k-gewerbeordnung", "Gewerbeordnung", "Gewerbearten, allgemeine Voraussetzungen, Gewerbeanmeldung und gewerberechtlicher Geschäftsführer.", "Building2", "indigo", [
     ["gewerbearten", "Gewerbearten", "Frei, reglementiert, konzessioniert"],
     ["voraussetzungen", "Voraussetzungen", "Allgemeine und besondere"],
     ["geschaeftsfuehrer", "Gewerberechtlicher Geschäftsführer", "Aufgaben und Haftung"],
   ]),
-  cat(20, "k-wirtschaftskammer", "Wirtschaftskammerrecht", "Aufbau der Wirtschaftskammer, Pflichtmitgliedschaft, Umlagen und Sozialpartnerschaft.", "Building2", "cyan", [
+  cat(12, "k-wirtschaftskammer", "Wirtschaftskammerrecht", "Aufbau der Wirtschaftskammer, Pflichtmitgliedschaft, Umlagen und Sozialpartnerschaft.", "Building2", "cyan", [
     ["aufbau", "Aufbau der WKO", "Landeskammern, Sparten, Fachgruppen"],
     ["mitgliedschaft", "Mitgliedschaft & Umlagen", "Pflichtmitgliedschaft, Grundumlage"],
   ], "EASY"),
-  cat(21, "k-gesellschaftsrecht", "Gesellschafts- und Handelsrecht", "Rechtsformen (Einzelunternehmen, OG, KG, GmbH), Haftung, Firmenbuch und Unternehmensgesetzbuch.", "Briefcase", "amber", [
+  cat(13, "k-gesellschaftsrecht", "Gesellschafts- und Handelsrecht", "Rechtsformen (Einzelunternehmen, OG, KG, GmbH), Haftung, Firmenbuch und Unternehmensgesetzbuch.", "Briefcase", "amber", [
     ["rechtsformen", "Rechtsformen", "Einzelunternehmen, OG, KG, GmbH"],
     ["firmenbuch", "Firmenbuch & UGB", "Eintragung, Prokura"],
   ]),
-  cat(22, "k-buergerliches-recht", "Bürgerliches Recht", "ABGB: Rechtsfähigkeit, Verträge, Gewährleistung, Schadenersatz und Verjährung.", "Scale", "orange", [
+  cat(14, "k-buergerliches-recht", "Bürgerliches Recht", "ABGB: Rechtsfähigkeit, Verträge, Gewährleistung, Schadenersatz und Verjährung.", "Scale", "orange", [
     ["vertraege", "Verträge", "Zustandekommen, Beförderungsvertrag"],
     ["gewaehrleistung", "Gewährleistung & Schadenersatz", "Fristen und Voraussetzungen"],
   ]),
-  cat(23, "k-marketing", "Marketing", "Marketing-Mix, Zielgruppen, Werbung und Kundenbindung im Taxigewerbe.", "HeartHandshake", "rose", [
+  cat(15, "k-marketing", "Marketing", "Marketing-Mix, Zielgruppen, Werbung und Kundenbindung im Taxigewerbe.", "HeartHandshake", "rose", [
     ["marketing-mix", "Marketing-Mix", "Produkt, Preis, Vertrieb, Kommunikation"],
   ], "EASY"),
-  cat(24, "k-umweltschutz", "Umweltschutz", "Umweltbewusstes Fahren, Abfallentsorgung und alternative Antriebe.", "ShieldCheck", "emerald", [
+  cat(16, "k-umweltschutz", "Umweltschutz", "Umweltbewusstes Fahren, Abfallentsorgung und alternative Antriebe.", "ShieldCheck", "emerald", [
     ["fahrweise", "Umweltbewusstes Fahren", "Spritsparen, Leerlauf"],
     ["abfall", "Abfall & Entsorgung", "Gefährliche Abfälle"],
   ], "EASY"),
-  cat(25, "k-kalkulation", "Kalkulation", "Vom Selbstkostenpreis zum Bruttopreis: Gewinnaufschlag, Umsatzsteuer und Preisberechnung.", "Calculator", "teal", [
+  cat(17, "k-kalkulation", "Kalkulation", "Vom Selbstkostenpreis zum Bruttopreis: Gewinnaufschlag, Umsatzsteuer und Preisberechnung.", "Calculator", "teal", [
     ["preis", "Preiskalkulation", "Selbstkosten, Gewinn, Umsatzsteuer"],
   ]),
-  cat(26, "k-versicherungsrecht", "Versicherungsrecht", "Kfz-Haftpflicht, Kasko, Insassenunfall und betriebliche Versicherungen.", "ShieldCheck", "sky", [
+  cat(18, "k-versicherungsrecht", "Versicherungsrecht", "Kfz-Haftpflicht, Kasko, Insassenunfall und betriebliche Versicherungen.", "ShieldCheck", "sky", [
     ["kfz", "Kfz-Versicherungen", "Haftpflicht, Kasko"],
     ["betrieb", "Betriebliche Versicherungen", "Betriebshaftpflicht, Unfall"],
   ]),
-  cat(27, "k-insolvenzrecht", "Insolvenzrecht", "Zahlungsunfähigkeit, Überschuldung, Konkurs- und Sanierungsverfahren.", "Scale", "violet", [
+  cat(19, "k-insolvenzrecht", "Insolvenzrecht", "Zahlungsunfähigkeit, Überschuldung, Konkurs- und Sanierungsverfahren.", "Scale", "violet", [
     ["verfahren", "Insolvenzverfahren", "Konkurs, Sanierung"],
     ["pflichten", "Pflichten & Fristen", "Antragspflicht, IEF"],
   ], "HARD"),
-  cat(28, "k-lenkprotokoll", "Lenkprotokoll", "Aufzeichnung von Dienst-, Lenk- und Ruhezeiten im Taxibetrieb.", "Car", "indigo", [
+  cat(20, "k-lenkprotokoll", "Lenkprotokoll", "Aufzeichnung von Dienst-, Lenk- und Ruhezeiten im Taxibetrieb.", "Car", "indigo", [
     ["aufzeichnung", "Aufzeichnungspflicht", "Inhalt, Mitführen, Aufbewahren"],
   ]),
-  cat(29, "k-gelegenheitsverkehrsgesetz", "Gelegenheitsverkehrsgesetz", "Konzessionspflicht, Voraussetzungen, Taxilenkerausweis und Tarife nach dem GelverkG.", "Landmark", "blue", [
+  cat(21, "k-gelegenheitsverkehrsgesetz", "Gelegenheitsverkehrsgesetz", "Konzessionspflicht, Voraussetzungen, Taxilenkerausweis und Tarife nach dem GelverkG.", "Landmark", "blue", [
     ["konzession", "Konzession", "Voraussetzungen und Behörde"],
     ["lenker", "Taxilenker", "Taxilenkerausweis"],
   ], "HARD"),
-  cat(30, "k-registrierkassa", "Registrierkassa", "Registrierkassen- und Belegerteilungspflicht, Manipulationsschutz und Belegprüfung.", "Calculator", "cyan", [
+  cat(22, "k-registrierkassa", "Registrierkassa", "Registrierkassen- und Belegerteilungspflicht, Manipulationsschutz und Belegprüfung.", "Calculator", "cyan", [
     ["pflicht", "Registrierkassenpflicht", "Umsatzgrenzen"],
     ["beleg", "Belegerteilung", "Beleg, Signatur, Startbeleg"],
   ]),
-  cat(31, "k-verkehrsgeographie", "Verkehrsgeographie", "Österreichs Bundesländer, Verkehrswege, Flughafen und Bahnhöfe rund um Wien.", "MapPinned", "emerald", [
+  cat(23, "k-verkehrsgeographie", "Verkehrsgeographie", "Österreichs Bundesländer, Verkehrswege, Flughafen und Bahnhöfe rund um Wien.", "MapPinned", "emerald", [
     ["oesterreich", "Österreich", "Bundesländer, Landeshauptstädte"],
     ["wien-verkehr", "Verkehrsknoten Wien", "Flughafen, Bahnhöfe, Autobahnen"],
   ], "EASY"),
-  cat(32, "k-eu-sozialrecht", "Europäisches Sozialrecht", "Koordinierung der Sozialversicherung in der EU, EKVK, A1-Bescheinigung und Freizügigkeit.", "Landmark", "indigo", [
+  cat(24, "k-eu-sozialrecht", "Europäisches Sozialrecht", "Koordinierung der Sozialversicherung in der EU, EKVK, A1-Bescheinigung und Freizügigkeit.", "Landmark", "indigo", [
     ["koordinierung", "Koordinierung", "Zuständiger Staat, Gleichbehandlung"],
     ["dokumente", "Dokumente", "EKVK, A1"],
   ]),
-  cat(33, "k-sonstige", "Sonstige Fragen", "Gemischte Fragen: Notrufnummern, Datenschutz und Allgemeines für Unternehmer.", "BookOpen", "amber", [
+  cat(25, "k-sonstige", "Sonstige Fragen", "Gemischte Fragen: Notrufnummern, Datenschutz und Allgemeines für Unternehmer.", "BookOpen", "amber", [
     ["allgemein", "Allgemeines", "Notruf, Datenschutz"],
   ], "EASY"),
 ];
 
 /** Kurzschreibweise für eine Übungsfrage. */
 function q(id: string, category: string, topic: string, difficulty: "EASY" | "MEDIUM" | "HARD", text: string, options: [Opt, Opt, Opt, Opt], explanation: string, detail?: string): SeedQuestion {
-  return { id: `kz-${id}`, category, topic, difficulty, text, options, explanation, detail, tags: ["konzession"] };
+  return { id: `kz-${id}`, category, topic, difficulty, text, options: shuffled(id, options), explanation, detail, tags: ["konzession"] };
+}
+
+/** Antwortreihenfolge deterministisch je Frage mischen (richtige Antwort nicht immer an Position A). */
+function shuffled(id: string, options: [Opt, Opt, Opt, Opt]): [Opt, Opt, Opt, Opt] {
+  let h = 2166136261;
+  for (const ch of id) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  const out = [...options];
+  for (let i = out.length - 1; i > 0; i--) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+    const j = h % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out as [Opt, Opt, Opt, Opt];
 }
 
 export const konzessionQuestions: SeedQuestion[] = [
@@ -681,3 +694,27 @@ export const konzessionQuestions: SeedQuestion[] = [
     ["110", false, "Das ist in Deutschland die Polizei."],
   ], "112 ist die einheitliche europäische Notrufnummer – auch ohne SIM-Karte bzw. mit gesperrtem Handy erreichbar."),
 ];
+
+/**
+ * Nur die 25 Kapitel des Skripts sind aktiv. Bestehende Kategorien, die einem Kapitel entsprechen,
+ * werden umbenannt und eingereiht; alle anderen werden deaktiviert (nicht gelöscht – Fortschritt bleibt erhalten).
+ */
+export const BOOK_CHAPTERS: Record<string, { name: string; order: number }> = {
+  steuerrecht: { name: "Steuerrecht", order: 4 },
+  arbeitsrecht: { name: "Arbeits- und Sozialrecht", order: 8 },
+};
+
+export function isBookCategory(slug: string): boolean {
+  return slug.startsWith("k-") || slug in BOOK_CHAPTERS;
+}
+
+/** Mündliche Startfragen: Zuordnung zu den Kapiteln. */
+export const ORAL_CHAPTER: Record<string, string> = {
+  verkehrsrecht: "k-sonstige",
+  stvo: "k-sonstige",
+  gewerberecht: "k-gelegenheitsverkehrsgesetz",
+  berufskunde: "k-betriebsordnung-tarif",
+  fahrzeugkunde: "k-sonstige",
+  kundenbetreuung: "k-sonstige",
+  steuerrecht: "k-registrierkassa",
+};

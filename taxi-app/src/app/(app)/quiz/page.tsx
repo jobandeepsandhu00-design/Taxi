@@ -61,25 +61,15 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
               </div>
               <fieldset>
                 <legend className="text-sm font-semibold text-navy">Kategorien <span className="font-normal text-muted-foreground">(keine Auswahl = alle, {total} Fragen)</span></legend>
-                {[
-                  { title: "Taxi-Grundlagen", items: categories.filter((c) => !c.slug.startsWith("k-")) },
-                  { title: "Konzessionsprüfung – Kapitel", items: categories.filter((c) => c.slug.startsWith("k-")) },
-                ]
-                  .filter((g) => g.items.length > 0)
-                  .map((g) => (
-                    <div key={g.title} className="mt-3">
-                      <p className="mb-1.5 text-xs font-bold tracking-wider text-muted-foreground uppercase">{g.title}</p>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {g.items.map((c) => (
-                          <label key={c.id} className="flex cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-sm transition has-[:checked]:border-primary has-[:checked]:bg-primary/10">
-                            <input type="checkbox" name="categoryIds" value={c.id} className="size-4 accent-blue-700" />
-                            <span className="flex-1 font-medium text-foreground/85">{c.name}</span>
-                            <span className="text-xs text-muted-foreground">{c.questionCount}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {categories.map((c) => (
+                    <label key={c.id} className="flex cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-sm transition has-[:checked]:border-primary has-[:checked]:bg-primary/10">
+                      <input type="checkbox" name="categoryIds" value={c.id} className="size-4 accent-blue-700" />
+                      <span className="flex-1 font-medium text-foreground/85">{c.name}</span>
+                      <span className="text-xs text-muted-foreground">{c.questionCount}</span>
+                    </label>
                   ))}
+                </div>
               </fieldset>
               <SubmitButton size="lg" className="w-full sm:w-auto"><Sparkles /> Quiz starten</SubmitButton>
             </form>

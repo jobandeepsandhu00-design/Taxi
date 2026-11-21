@@ -41,7 +41,7 @@ export async function startOralSessionAction(input: z.infer<typeof startSchema>)
   if (mode === "pruefung" && !access.canExam) return { ok: false, error: "Der Prüfungsmodus ist Teil von Premium." };
   if (mode === "ueben" && access.remaining <= 0) return { ok: false, error: ORAL_LIMIT_REACHED };
 
-  const all = await prisma.oralQuestion.findMany({ select: { id: true, categoryId: true } });
+  const all = await prisma.oralQuestion.findMany({ where: { category: { isActive: true } }, select: { id: true, categoryId: true } });
   if (all.length === 0) return { ok: false, error: "Es gibt noch keine mündlichen Fragen." };
 
   let ids: string[];

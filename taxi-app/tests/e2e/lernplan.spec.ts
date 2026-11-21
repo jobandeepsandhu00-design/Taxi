@@ -44,9 +44,9 @@ test("Lernplan: Home-Karte, Filter, Suche, Sperre, Vorschau, Lektion starten und
   await page.getByRole("radio", { name: "Falsch" }).click();
   await expect(page.getByText("0 Fragen gefunden")).toBeVisible();
   await page.getByRole("radio", { name: "Alle" }).click();
-  await page.getByLabel("Fragen durchsuchen").fill("Stephansdom");
+  await page.getByLabel("Fragen durchsuchen").fill("Prokura");
   await expect(page.getByText("1 Frage gefunden")).toBeVisible();
-  await page.getByRole("button", { name: /Stephansdom/ }).click();
+  await page.getByRole("button", { name: /Prokura/ }).click();
   const sheet = page.getByTestId("question-sheet");
   await expect(sheet).toContainText("Noch nicht beantwortet");
   await sheet.getByRole("button", { name: "Merken" }).click();
@@ -55,7 +55,9 @@ test("Lernplan: Home-Karte, Filter, Suche, Sperre, Vorschau, Lektion starten und
   await page.getByRole("button", { name: "Vorschau schließen" }).click();
   await page.getByRole("button", { name: "Suche löschen" }).click();
 
-  // Gesperrte Lektion → Hinweis
+  // Gesperrte Lektion → Hinweis (Kapitel „Steuerrecht“ hat mehrere Lektionen)
+  const steuer = page.locator("button[aria-expanded]", { hasText: "Steuerrecht" }).first();
+  if ((await steuer.getAttribute("aria-expanded")) !== "true") await steuer.click();
   const locked = page.getByRole("button", { name: /Lektion 2 – gesperrt/ }).first();
   await locked.click();
   await expect(page.getByRole("status")).toContainText("Schließe zuerst Lektion 1 ab");
@@ -76,10 +78,10 @@ test("Lernplan: Home-Karte, Filter, Suche, Sperre, Vorschau, Lektion starten und
   }
   await expect(page.getByTestId("lesson-result")).toBeVisible();
 
-  // Lernplan aktualisiert: Lektion 1 ist jetzt in Arbeit (oder gemeistert), Lektion 2 entsperrt
+  // Lernplan aktualisiert: Lektion 1 ist jetzt in Arbeit (oder gemeistert), nächster Schritt wird angeboten
   await page.goto("/lernplan");
   await settle(page);
   const first = page.getByTestId("lesson-row").first();
   await expect(first).toContainText(/In Arbeit|Gemeistert/);
-  await expect(page.getByRole("button", { name: /^Lektion 2 starten/ }).first()).toBeVisible();
+  await expect(page.getByTestId("next-step")).toContainText(/Nächster Schritt: Lektion \d+ starten/);
 });

@@ -88,7 +88,7 @@ test.describe.serial("Lernende/r", () => {
   test("Lernmodus: Lösung erst nach Absenden, Feedback, Erklärung, Fortsetzen", async ({ page }) => {
     await login(page, STUDENT.email, STUDENT.password);
     await gotoSettled(page, "/lernen");
-    await page.getByRole("link", { name: /Straßenverkehrsordnung/ }).click();
+    await page.getByRole("link", { name: /Rechnungswesen/ }).first().click();
     await expect(page.getByRole("heading", { name: "Einführung" })).toBeVisible();
     await page.getByRole("button", { name: "Lernen starten" }).click();
     await page.waitForURL("**/quiz/**");
@@ -124,7 +124,7 @@ test.describe.serial("Lernende/r", () => {
 
     // Sitzung erscheint auf dem Dashboard als fortsetzbar
     await gotoSettled(page, "/dashboard");
-    await expect(page.getByText("Lernmodus: Straßenverkehrsordnung (StVO)")).toBeVisible();
+    await expect(page.getByText("Lernmodus: Rechnungswesen")).toBeVisible();
   });
 
   test("Übungsquiz mit Endergebnis und Wiederholung", async ({ page }) => {
@@ -213,10 +213,10 @@ test.describe.serial("Lernende/r", () => {
   test("Fragensuche, Einzelfrage und Merkliste", async ({ page }) => {
     await login(page, STUDENT.email, STUDENT.password);
     await gotoSettled(page, "/fragen");
-    await page.getByLabel("Suchbegriff").fill("Rettungsgasse");
+    await page.getByLabel("Suchbegriff").fill("Prokura");
     await page.getByRole("button", { name: "Suchen" }).click();
     await expect(page.getByText("1 Frage gefunden")).toBeVisible();
-    await page.getByRole("link", { name: /Rettungsgasse/ }).click();
+    await page.getByRole("link", { name: /Prokura/ }).click();
     await page.getByRole("button", { name: "Zur Merkliste hinzufügen" }).click();
     await expect(page.getByRole("button", { name: "Von der Merkliste entfernen" })).toBeVisible();
     // Übersetzungshilfe öffnet sich als Bottom-Sheet
@@ -227,7 +227,7 @@ test.describe.serial("Lernende/r", () => {
     await expect(page.getByRole("dialog", { name: "Übersetzungshilfe" })).toHaveCount(0);
     await answerFirstOption(page);
     await gotoSettled(page, "/fragen?merkliste=1");
-    await expect(page.getByRole("link", { name: /Rettungsgasse/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Prokura/ })).toBeVisible();
   });
 
   test("Fortschritt und Profil", async ({ page }) => {
@@ -287,7 +287,7 @@ test.describe.serial("Lernende/r", () => {
   test("Offline-Paket herunterladen und üben", async ({ page }) => {
     await login(page, STUDENT.email, STUDENT.password);
     await gotoSettled(page, "/offline-lernen");
-    await page.getByRole("button", { name: /Straßenverkehrsordnung/ }).click();
+    await page.getByRole("button", { name: /Rechnungswesen/ }).first().click();
     await expect(page.getByRole("button", { name: "Üben" })).toBeVisible();
     await page.getByRole("button", { name: "Üben" }).click();
     await page.locator("button", { hasText: /^A/ }).first().click();
@@ -425,7 +425,7 @@ test.describe.serial("Administration", () => {
   test("Kategorien, Quellen und Benutzer verwalten", async ({ page }) => {
     await login(page, ADMIN.email, ADMIN.password);
     await gotoSettled(page, "/admin/kategorien");
-    await expect(page.getByText("Wiener Ortskenntnisse")).toBeVisible();
+    await expect(page.getByText("Rechnungswesen").first()).toBeVisible();
     await page.getByRole("button", { name: "Neue Kategorie" }).click();
     await page.getByLabel("Name *").fill(`Testkategorie ${uid}`);
     await page.getByLabel("Slug (URL) *").fill(`test-${uid}`);
@@ -434,7 +434,7 @@ test.describe.serial("Administration", () => {
     await page.getByRole("button", { name: "Kategorie speichern" }).click();
     await expect(page.getByText(`Testkategorie ${uid}`)).toBeVisible();
     page.on("dialog", (d) => d.accept());
-    await page.locator("div", { hasText: `Testkategorie ${uid}` }).getByRole("button", { name: "Kategorie löschen" }).last().click();
+    await page.getByText(`Testkategorie ${uid}`).locator("xpath=ancestor::div[contains(@class,'p-4')][1]").getByRole("button", { name: "Kategorie löschen" }).click();
     await expect(page.getByText(`Testkategorie ${uid}`)).toHaveCount(0);
 
     await gotoSettled(page, "/admin/quellen");

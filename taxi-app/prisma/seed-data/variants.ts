@@ -12,6 +12,12 @@ export interface SeedVariant {
 
 export const seedVariants: SeedVariant[] = [
   {
+    questionId: "kz-ka-02",
+    simple: { text: "Wie viel Umsatzsteuer musst du auf eine normale Taxifahrt in Österreich verrechnen?", options: [{ label: "A", text: "0 %" }, { label: "B", text: "20 %" }, { label: "C", text: "13 %" }, { label: "D", text: "10 %" }] },
+    glossary: [{ term: "Umsatzsteuersatz", definition: "Der Prozentsatz an Steuer, der auf den Preis aufgeschlagen und an das Finanzamt abgeführt wird." }, { term: "Personenbeförderung", definition: "Menschen gegen Bezahlung von einem Ort zu einem anderen bringen." }],
+    en: { question: "Which VAT rate (Umsatzsteuersatz) applies to domestic passenger transport (Personenbeförderung) by taxi?", options: [{ label: "A", text: "0 %" }, { label: "B", text: "20 %" }, { label: "C", text: "13 %" }, { label: "D", text: "10 %" }], explanation: "Passenger transport by taxi is subject to the reduced VAT rate (ermäßigter Steuersatz) of 10 %." },
+  },
+  {
     questionId: "demo-stvo-01",
     simple: { text: "Wie schnell darfst du im Ortsgebiet normalerweise höchstens fahren?", options: [{ label: "A", text: "30 km/h" }, { label: "B", text: "40 km/h" }, { label: "C", text: "50 km/h" }, { label: "D", text: "60 km/h" }] },
     glossary: [{ term: "Ortsgebiet", definition: "Das Gebiet zwischen den Ortstafeln – also innerhalb einer Stadt oder eines Ortes." }, { term: "Höchstgeschwindigkeit", definition: "Die größte Geschwindigkeit, mit der man fahren darf." }],

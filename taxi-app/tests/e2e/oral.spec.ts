@@ -154,8 +154,8 @@ test("Admin: mündliche Fragen mit KI-Vorschlag", async ({ page }) => {
   await settle(page);
   await expect(page.getByRole("heading", { name: "Mündliche Fragen" })).toBeVisible();
   await expect(page.getByText(/\d+ Fragen · \d+ ungeprüft/)).toBeVisible();
-  await page.getByLabel("Kategorie").selectOption({ label: "Straßenverkehrsordnung (StVO)" });
-  await page.getByLabel("Frage", { exact: true }).fill("Was gilt beim Vorrang am Schutzweg?");
+  await page.getByLabel("Kategorie").selectOption({ label: "Rechnungswesen" });
+  await page.getByLabel("Frage", { exact: true }).fill("Was sind die Grundsätze der Buchführung?");
   await page.getByRole("button", { name: /Musterantwort & Kernpunkte vorschlagen/ }).click();
   await expect(page.getByText(/KI-Entwurf eingefügt/)).toBeVisible();
   await expect(page.getByLabel("Musterantwort")).not.toHaveValue("");

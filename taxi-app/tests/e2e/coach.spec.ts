@@ -102,7 +102,7 @@ test.describe.serial("Taxi-Coach", () => {
     await page.getByRole("button", { name: "Hilfreiche Antwort", exact: true }).first().click();
     await expect(page.getByRole("button", { name: "Hilfreiche Antwort", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
 
-    await page.getByRole("button", { name: "Erklär mir Vorrangregeln" }).click();
+    await page.getByRole("button", { name: "Erklär mir den Deckungsbeitrag" }).click();
     const card = page.getByRole("link", { name: /Frage üben/ }).first();
     await expect(card).toBeVisible();
     await expect(page.getByText(/passende Fragen gefunden/)).toBeVisible();

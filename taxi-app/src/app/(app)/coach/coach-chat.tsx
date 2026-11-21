@@ -21,7 +21,7 @@ export interface ChatItem {
   error?: boolean;
 }
 
-const CHIPS = ["Was soll ich heute lernen?", "Erklär mir Vorrangregeln", "Wie stehe ich?", "Prüfe mich mündlich"];
+const CHIPS = ["Was soll ich heute lernen?", "Erklär mir den Deckungsbeitrag", "Wie stehe ich?", "Prüfe mich mündlich"];
 
 function Feedback({ item }: { item: ChatItem }) {
   const [value, setValue] = useState<1 | -1 | null>(item.feedback);
