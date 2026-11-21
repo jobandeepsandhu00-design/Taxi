@@ -13,7 +13,7 @@ export function CoachFab() {
   const show = COACH_FAB_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (!show) return null;
   return (
-    <motion.div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] z-30 lg:right-8 lg:bottom-8" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}>
+    <motion.div className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] z-30 lg:right-8 lg:bottom-8" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}>
       <Link
         href="/coach"
         onClick={() => haptic()}

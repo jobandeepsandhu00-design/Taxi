@@ -173,8 +173,8 @@ function MobileHeader({ user, onMenu }: { user: ShellUser; onMenu: () => void })
 function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Schnellnavigation" className="pb-safe fixed inset-x-0 bottom-0 z-30 px-3 lg:hidden">
-      <ul className="glass mx-auto mb-2 grid max-w-md grid-cols-5 rounded-2xl p-1.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]">
+    <nav aria-label="Schnellnavigation" className="glass fixed inset-x-0 bottom-0 z-30 rounded-none border-x-0 border-b-0 shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.35)] lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <ul className="mx-auto grid max-w-md grid-cols-5 px-1.5 pt-1.5 pb-1.5">
         {mobileNav.map((item) => {
           const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathInTab(pathname, item);
           return (
