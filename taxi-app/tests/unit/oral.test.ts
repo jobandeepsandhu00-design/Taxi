@@ -57,7 +57,9 @@ describe("oral grading rules", () => {
   });
 });
 
-import { konzessionCategories, konzessionQuestions } from "../../prisma/seed-data/konzession";
+import { konzessionCategories, konzessionQuestions as kq } from "../../prisma/seed-data/konzession";
+import { buchRwOral, buchRwQuestions } from "../../prisma/seed-data/buch-rechnungswesen";
+const konzessionQuestions = [...kq, ...buchRwQuestions];
 
 describe("Konzession-Kapitel", () => {
   it("jede Kategorie hat Fragen, jede Frage genau gültige Struktur", () => {
@@ -71,5 +73,20 @@ describe("Konzession-Kapitel", () => {
       expect(konzessionCategories.find((c) => c.slug === q.category)!.topics.some((t) => t.slug === q.topic), q.id).toBe(true);
       expect(q.options.filter((o) => o[1]).length, q.id).toBeGreaterThanOrEqual(1);
     }
+  });
+});
+
+describe("Skript Rechnungswesen", () => {
+  it("43 mündliche Fragen und mindestens 43 MC-Fragen", () => {
+    expect(buchRwOral).toHaveLength(43);
+    expect(buchRwQuestions.length).toBeGreaterThanOrEqual(43);
+    for (const o of buchRwOral) {
+      expect(o.keyPoints.some((k) => k.required), o.key).toBe(true);
+      expect(o.keyPoints.some((k) => k.id === o.followUps[0].trigger_point_id), o.key).toBe(true);
+    }
+    for (const o of buchRwOral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    // Richtige Antwort nicht immer an derselben Stelle
+    const firsts = buchRwQuestions.filter((q) => q.options[0][1]).length;
+    expect(firsts).toBeLessThan(buchRwQuestions.length * 0.6);
   });
 });

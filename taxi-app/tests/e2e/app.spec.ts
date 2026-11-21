@@ -97,7 +97,7 @@ test.describe.serial("Lernende/r", () => {
     const html = await page.content();
     expect(html).not.toContain("isCorrect");
     expect(html).not.toContain("correctOptionIds");
-    await expect(page.getByText("Erklärung")).toHaveCount(0);
+    await expect(page.getByText("Erklärung", { exact: true })).toHaveCount(0);
 
     // Fokus-Modus: keine App-Navigation, kein Avatar
     await expect(page.getByTestId("focus-mode")).toBeVisible();

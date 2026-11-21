@@ -125,7 +125,7 @@ function q(id: string, category: string, topic: string, difficulty: "EASY" | "ME
 }
 
 /** Antwortreihenfolge deterministisch je Frage mischen (richtige Antwort nicht immer an Position A). */
-function shuffled(id: string, options: [Opt, Opt, Opt, Opt]): [Opt, Opt, Opt, Opt] {
+export function shuffled(id: string, options: [Opt, Opt, Opt, Opt]): [Opt, Opt, Opt, Opt] {
   let h = 2166136261;
   for (const ch of id) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
   const out = [...options];
@@ -138,37 +138,7 @@ function shuffled(id: string, options: [Opt, Opt, Opt, Opt]): [Opt, Opt, Opt, Op
 }
 
 export const konzessionQuestions: SeedQuestion[] = [
-  // ───────────── 1. Rechnungswesen ─────────────
-  q("rw-01", "k-rechnungswesen", "grundsaetze", "EASY", "Welcher Grundsatz gilt in jeder ordnungsgemäßen Buchführung?", [
-    ["Keine Buchung ohne Beleg", true, "Jede Buchung muss durch einen Beleg nachgewiesen werden."],
-    ["Belege dürfen nachträglich geändert werden", false, "Belege sind Dokumente und dürfen nicht unkenntlich verändert werden."],
-    ["Buchungen nur einmal im Jahr", false, "Eintragungen sind zeitgerecht und laufend vorzunehmen."],
-    ["Bargeschäfte müssen nicht gebucht werden", false, "Auch Bareinnahmen und -ausgaben sind aufzuzeichnen."],
-  ], "Die Buchführung muss vollständig, richtig, zeitgerecht und geordnet sein. Grundlage jeder Buchung ist ein Beleg."),
-  q("rw-02", "k-rechnungswesen", "belege", "EASY", "Welcher der folgenden ist KEIN Beleg im Sinne der Buchhaltung?", [
-    ["Eingangsrechnung", false, "Eine Eingangsrechnung ist ein klassischer Fremdbeleg."],
-    ["Kassabeleg", false, "Kassabelege dokumentieren Bargeldbewegungen."],
-    ["Mündliche Zusage eines Kunden", true, "Ohne schriftliche Dokumentation gibt es keinen Beleg."],
-    ["Bankbeleg (Kontoauszug)", false, "Kontoauszüge sind Belege für Bankbewegungen."],
-  ], "Belegarten sind u. a. Eingangs- und Ausgangsrechnung, Eingangs- und Ausgangsgutschrift, Kassabeleg, Ersatzbeleg und Bankbeleg."),
-  q("rw-03", "k-rechnungswesen", "belege", "MEDIUM", "Wie lange müssen Bücher und Belege grundsätzlich aufbewahrt werden?", [
-    ["3 Jahre", false, "Das ist zu kurz."],
-    ["7 Jahre", true, "Die allgemeine Aufbewahrungsfrist nach der BAO beträgt 7 Jahre."],
-    ["10 Jahre für alle Unterlagen", false, "Längere Fristen gelten nur in Sonderfällen (z. B. Grundstücke)."],
-    ["Bis zum Jahresende", false, "Unterlagen müssen deutlich länger aufbewahrt werden."],
-  ], "Bücher, Aufzeichnungen und Belege sind grundsätzlich 7 Jahre aufzubewahren; für bestimmte Unterlagen gelten längere Fristen.", "§ 132 BAO"),
-  q("rw-04", "k-rechnungswesen", "ea-rechnung", "MEDIUM", "Wann ist die Umsatzsteuer-Zahllast (Monat als Voranmeldungszeitraum) fällig?", [
-    ["Am Letzten des laufenden Monats", false, "Die Fälligkeit liegt später."],
-    ["Am 15. des Folgemonats", false, "Das ist einen Monat zu früh."],
-    ["Am 15. des zweitfolgenden Kalendermonats", true, "Richtig – ein Monat plus 15 Tage nach Ablauf des Voranmeldungszeitraums."],
-    ["Erst mit der Jahreserklärung", false, "Vorauszahlungen sind laufend zu leisten."],
-  ], "Die Steuerschuld entsteht mit Ablauf des Kalendermonats der Leistung; die Vorauszahlung ist am 15. des zweitfolgenden Kalendermonats fällig.", "§ 21 UStG"),
-  q("rw-05", "k-rechnungswesen", "ea-rechnung", "MEDIUM", "Was ist typisch für die Einnahmen-Ausgaben-Rechnung?", [
-    ["Es zählt der Zeitpunkt der Zahlung (Zufluss/Abfluss)", true, "Einnahmen und Ausgaben werden erfasst, wenn das Geld fließt."],
-    ["Sie verlangt immer eine Bilanz", false, "Eine Bilanz ist bei der E/A-Rechnung nicht erforderlich."],
-    ["Sie ist nur für Kapitalgesellschaften erlaubt", false, "GmbHs sind buchführungspflichtig; die E/A-Rechnung ist für kleinere Unternehmer gedacht."],
-    ["Forderungen werden sofort als Einnahme erfasst", false, "Erst die Zahlung zählt."],
-  ], "Bei der Einnahmen-Ausgaben-Rechnung gilt das Zufluss-Abfluss-Prinzip. Gewinn = Betriebseinnahmen minus Betriebsausgaben."),
+  // Kapitel 1 (Rechnungswesen) kommt aus dem Skript: siehe buch-rechnungswesen.ts
 
   // ───────────── 2. Doppelte Buchhaltung und Bilanz ─────────────
   q("bb-01", "k-buchhaltung-bilanz", "bilanz", "EASY", "Was steht auf der Aktivseite einer Bilanz?", [
@@ -718,3 +688,6 @@ export const ORAL_CHAPTER: Record<string, string> = {
   kundenbetreuung: "k-sonstige",
   steuerrecht: "k-registrierkassa",
 };
+
+/** Frühere eigene Übungsfragen, die durch Skript-Fragen ersetzt wurden (werden archiviert). */
+export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05"];

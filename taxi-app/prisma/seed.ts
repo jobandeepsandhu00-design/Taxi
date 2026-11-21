@@ -11,7 +11,8 @@ import { sources } from "./seed-data/sources";
 import { seedVariants } from "./seed-data/variants";
 import { numberFacts, routes } from "./seed-data/learning-extras";
 import { oralQuestions } from "./seed-data/oral-questions";
-import { BOOK_CHAPTERS, isBookCategory, konzessionCategories, konzessionQuestions, ORAL_CHAPTER } from "./seed-data/konzession";
+import { BOOK_CHAPTERS, isBookCategory, konzessionCategories, konzessionQuestions, ORAL_CHAPTER, RETIRED_QUESTION_IDS } from "./seed-data/konzession";
+import { buchRwOral, buchRwQuestions } from "./seed-data/buch-rechnungswesen";
 
 const prisma = new PrismaClient();
 
@@ -101,7 +102,10 @@ async function main() {
   }
 
   // Demo-Fragen (deterministische IDs → idempotent)
-  for (const q of [...questions, ...konzessionQuestions]) {
+  await prisma.question.updateMany({ where: { id: { in: RETIRED_QUESTION_IDS } }, data: { status: "ARCHIVED" } });
+  // Skript-Fragen: Lektionen in Reihenfolge des Skripts (je 5 Fragen)
+  const bookLesson = new Map(buchRwQuestions.map((q, i) => [q.id, Math.floor(i / 5) + 1]));
+  for (const q of [...questions, ...konzessionQuestions, ...buchRwQuestions]) {
     const categoryId = categoryIds.get(q.category);
     if (!categoryId) throw new Error(`Unbekannte Kategorie ${q.category} in ${q.id}`);
     const correct = q.options.filter((o) => o[1]).length;
@@ -118,6 +122,7 @@ async function main() {
       origin: "DEMO" as const,
       sourceId: q.source ? sourceIds.get(q.source) ?? null : null,
       sourceDetail: q.detail ?? null,
+      ...(bookLesson.has(q.id) ? { lessonIndex: bookLesson.get(q.id) } : {}),
     };
     await prisma.question.upsert({ where: { id: q.id }, create: { id: q.id, ...data, createdById: admin.id }, update: data });
     for (const [i, [text, isCorrect, explanation]] of q.options.entries()) {
@@ -209,7 +214,7 @@ async function seedLearningExtras() {
     await prisma.route.upsert({ where: { slug: r.slug }, create: { ...r, verified: false }, update: {} });
   }
   // Mündliche Prüfungsfragen (ungeprüft)
-  for (const o of oralQuestions) {
+  for (const o of [...oralQuestions, ...buchRwOral]) {
     const slug = ORAL_CHAPTER[o.categorySlug] ?? o.categorySlug;
     const category = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
     if (!category) continue;
