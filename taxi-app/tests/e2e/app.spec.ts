@@ -50,6 +50,9 @@ async function answerFirstOption(page: Page) {
 
 // Feier-Dialoge (Level-Aufstieg/Abzeichen) können jederzeit erscheinen – automatisch schließen
 test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+    await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+  });
   await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (dialog) => {
     await dialog.getByRole("button").click();
   });
@@ -301,6 +304,9 @@ test.describe.serial("Lernende/r", () => {
     const host = await a.newPage();
     const guest = await b.newPage();
     for (const p of [host, guest]) {
+      await p.addLocatorHandler(p.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+        await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+      });
       await p.addLocatorHandler(p.locator('[aria-labelledby="celebration-title"]'), async (d) => {
         await d.getByRole("button").click();
       });

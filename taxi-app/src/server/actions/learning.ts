@@ -13,7 +13,7 @@ import { requireUser } from "@/lib/auth/session";
 import { pickRandomUnique, shuffle } from "@/lib/quiz-logic";
 import { quizSettingsSchema } from "@/lib/validation";
 import { addStudyTime, recordAnswer, touchStreak } from "@/server/progress";
-import { publishedWhere, type AnswerReveal } from "@/server/questions";
+import { getAnswerKey, publishedWhere, type AnswerReveal } from "@/server/questions";
 import type { ActionResult } from "./types";
 
 const idSchema = z.string().min(1).max(64);
@@ -218,6 +218,33 @@ export async function submitQuizAnswerAction(input: z.infer<typeof submitSchema>
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Antwort konnte nicht gespeichert werden." };
   }
+}
+
+/** Antworten-verdeckt-Modus: Skript-Antwort anzeigen (noch ohne Wertung). */
+export async function peekAnswerAction(attemptId: string, questionId: string): Promise<ActionResult<{ answer: string; explanation: string }>> {
+  const user = await requireUser();
+  const a = idSchema.safeParse(attemptId);
+  const qid = idSchema.safeParse(questionId);
+  if (!a.success || !qid.success) return { ok: false, error: "Ungültige Anfrage." };
+  const attempt = await prisma.quizAttempt.findFirst({ where: { id: a.data, userId: user.id, status: "IN_PROGRESS" }, select: { questionIds: true } });
+  if (!attempt || !attempt.questionIds.includes(qid.data)) return { ok: false, error: "Sitzung nicht gefunden." };
+  const q = await prisma.question.findUnique({ where: { id: qid.data }, select: { explanation: true, options: { where: { isCorrect: true }, orderBy: { order: "asc" }, select: { text: true } } } });
+  if (!q) return { ok: false, error: "Frage nicht gefunden." };
+  return { ok: true, data: { answer: q.options.map((o) => o.text).join("\n\n"), explanation: q.explanation } };
+}
+
+/** Antworten-verdeckt-Modus: Selbsteinschätzung „Gewusst“ / „Nicht gewusst“ wie eine Antwort werten. */
+export async function submitRecallAnswerAction(input: { attemptId: string; questionId: string; knew: boolean; timeSpentSec: number }): Promise<ActionResult<AnswerReveal>> {
+  await requireUser();
+  const parsed = z.object({ attemptId: idSchema, questionId: idSchema, knew: z.boolean(), timeSpentSec: z.number().int().min(0).max(36000) }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Ungültige Anfrage." };
+  const key = await getAnswerKey(parsed.data.questionId);
+  if (!key) return { ok: false, error: "Frage nicht gefunden." };
+  const correct = key.options.filter((o) => o.isCorrect).map((o) => o.id);
+  const wrong = key.options.find((o) => !o.isCorrect)?.id;
+  const selected = parsed.data.knew ? correct : wrong ? [wrong] : [];
+  if (selected.length === 0) return { ok: false, error: "Frage kann nicht gewertet werden." };
+  return submitQuizAnswerAction({ attemptId: parsed.data.attemptId, questionId: parsed.data.questionId, selectedOptionIds: selected, timeSpentSec: parsed.data.timeSpentSec });
 }
 
 export async function goToQuestionAction(attemptId: string, index: number): Promise<ActionResult> {

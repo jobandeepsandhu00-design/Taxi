@@ -23,6 +23,46 @@ async function guest(page: Page) {
 
 test.use({ viewport: { width: 390, height: 844 } });
 
+test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+    await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+  });
+  await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (d) => {
+    await d.getByRole("button").first().click();
+  });
+});
+
+test("Antworten verdeckt: nur Frage, Antwort zeigen, Gewusst/Nicht gewusst, Umschalten", async ({ page }) => {
+  await page.removeLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }));
+  await guest(page);
+  await page.getByTestId("lesson-cta").getByRole("button").click();
+  await page.waitForURL("**/quiz/**");
+  await settle(page);
+  const dialog = page.getByRole("alertdialog", { name: "Wie möchtest du üben?" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Nur Frage – Antworten verdeckt" }).click();
+  // keine Antwortmöglichkeiten sichtbar
+  await expect(page.getByTestId("recall-hidden")).toBeVisible();
+  await expect(page.getByRole("radio")).toHaveCount(0);
+  await page.getByTestId("focus-primary").click(); // Antwort zeigen
+  await expect(page.getByTestId("recall-answer")).toBeVisible();
+  await page.getByTestId("recall-known").click();
+  await expect(page.getByText("Gewusst!", { exact: true })).toBeVisible();
+  await page.getByTestId("focus-primary").click(); // Weiter
+  await page.getByTestId("focus-primary").click(); // Antwort zeigen
+  await page.getByTestId("recall-unknown").click();
+  await expect(page.getByText("Nicht gewusst", { exact: true })).toBeVisible();
+  await page.getByTestId("focus-primary").click();
+  // Neu laden: Wahl bleibt gespeichert, kein Dialog
+  await page.reload();
+  await settle(page);
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId("recall-hidden")).toBeVisible();
+  // jederzeit umschalten
+  await page.getByTestId("answer-mode-toggle").click();
+  await expect(page.getByRole("radio").first()).toBeVisible();
+});
+
 test("Fokus-Modus: Vollbild-Layout, Tasten, Wischen, Zurück-Taste, später weitermachen, Prüfung beenden", async ({ page }) => {
   await guest(page);
   await page.getByTestId("lesson-cta").getByRole("button").click();

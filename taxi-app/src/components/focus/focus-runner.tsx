@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Flag, HelpCircle, Info, Languages, Loader2, Scale, Send, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Eye, EyeOff, Flag, HelpCircle, Info, Languages, ListChecks, Loader2, Scale, Send, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WhyPanel } from "@/components/coach/why-panel";
 import { useCoach } from "@/components/coach/coach-provider";
@@ -23,7 +23,7 @@ import { spring } from "@/lib/motion";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { abandonExamAction, saveExamResponseAction, submitExamAction } from "@/server/actions/exam";
-import { abandonQuizSessionAction, finishQuizAction, goToQuestionAction, setQuizFlagsAction, submitQuizAnswerAction } from "@/server/actions/learning";
+import { abandonQuizSessionAction, finishQuizAction, goToQuestionAction, peekAnswerAction, setQuizFlagsAction, submitQuizAnswerAction, submitRecallAnswerAction } from "@/server/actions/learning";
 import { getSimpleAction } from "@/server/actions/variants";
 import type { AnswerReveal } from "@/server/questions";
 import { FocusDialog, FocusSegments, FocusSheet, FocusTimer, GridButton, IosFullscreenHint, QuestionGrid, type SegState } from "./focus-parts";
@@ -98,6 +98,31 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
   const [simple, setSimple] = useState<Record<string, { text: string; options: Record<string, string>; verified: boolean }>>({});
   const [showSimple, setShowSimple] = useState(false);
   const [simpleBusy, setSimpleBusy] = useState(false);
+  // Antwort-Modus (nur Lernmodus): „mc“ = mit Antwortmöglichkeiten, „recall“ = nur Frage, Antworten verdeckt
+  const modeKey = `tp-answer-mode:${mode.attemptId}`;
+  const [answerMode, setAnswerMode] = useState<"mc" | "recall" | null>(exam ? "mc" : null);
+  const [peeks, setPeeks] = useState<Record<string, { answer: string; explanation: string }>>({});
+  const [modeLoaded, setModeLoaded] = useState(false);
+  useEffect(() => {
+    if (exam) return;
+    try {
+      const saved = localStorage.getItem(modeKey);
+      if (saved === "mc" || saved === "recall") setAnswerMode(saved);
+    } catch {
+      /* ignorieren */
+    }
+    setModeLoaded(true);
+  }, [exam, modeKey]);
+  function chooseMode(m: "mc" | "recall") {
+    setAnswerMode(m);
+    try {
+      localStorage.setItem(modeKey, m);
+      localStorage.setItem("tp-answer-mode", m);
+    } catch {
+      /* ignorieren */
+    }
+  }
+  const recall = !exam && answerMode === "recall";
   const startedAt = useRef(Date.now());
   const leaving = useRef(false);
   const submitted = useRef(false);
@@ -275,6 +300,36 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
     }
   };
 
+  const peek = async () => {
+    if (peeks[q.id] || checking) return;
+    setChecking(true);
+    const res = await peekAnswerAction(mode.attemptId, q.id).catch(() => null);
+    setChecking(false);
+    if (!res || !res.ok) {
+      setError(res && !res.ok ? res.error : "Antwort konnte nicht geladen werden.");
+      return;
+    }
+    setPeeks((p) => ({ ...p, [q.id]: res.data }));
+  };
+
+  const rate = async (knew: boolean) => {
+    if (exam || reveal || checking) return;
+    setChecking(true);
+    const res = await submitRecallAnswerAction({ attemptId: mode.attemptId, questionId: q.id, knew, timeSpentSec: Math.round((Date.now() - startedAt.current) / 1000) }).catch(() => null);
+    setChecking(false);
+    if (!res || !res.ok) {
+      setError(res && !res.ok ? res.error : "Antwort konnte nicht gespeichert werden.");
+      return;
+    }
+    const r = res.data;
+    setReveals((x) => ({ ...x, [q.id]: r }));
+    setSelected((x) => ({ ...x, [q.id]: r.selectedOptionIds }));
+    setFresh((f) => new Set(f).add(q.id));
+    void queryClient.invalidateQueries({ queryKey: LEARN_PLAN_KEY });
+    playSound(knew ? "correct" : "wrong");
+    if (r.reward) setSessionXp((x) => x + r.reward!.xpGained);
+  };
+
   const toggleFlag = () => {
     vibrate(8);
     const on = !flags.has(q.id);
@@ -290,6 +345,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
   const firstOpenLearn = questions.findIndex((x) => !reveals[x.id]);
   const primary = (() => {
     if (exam) return isLast ? { label: "Abgeben", icon: Send, run: () => setReview(true) } : { label: "Weiter", icon: ChevronRight, run: () => goTo(index + 1) };
+    if (!reveal && recall) return peeks[q.id] ? { label: "Bewerten", icon: Check, run: () => void rate(true), disabled: true } : { label: "Antwort zeigen", icon: Eye, run: () => void peek() };
     if (!reveal) return { label: "Antwort prüfen", icon: Check, run: () => void check(), disabled: sel.length === 0 };
     if (!isLast) return { label: "Weiter", icon: ChevronRight, run: () => goTo(index + 1) };
     if (firstOpenLearn >= 0) return { label: "Weiter", icon: ChevronRight, run: () => goTo(firstOpenLearn) };
@@ -304,7 +360,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
       if (e.metaKey || e.ctrlKey || e.altKey || sheet || exitOpen || confirmSubmit || review) return;
       const k = e.key.toUpperCase();
       const idx = LETTERS.indexOf(k) >= 0 ? LETTERS.indexOf(k) : ["1", "2", "3", "4"].indexOf(k);
-      if (idx >= 0 && q.options[idx]) {
+      if (idx >= 0 && q.options[idx] && !recall) {
         e.preventDefault();
         toggleOption(q.options[idx].id);
       } else if (e.key === "ArrowRight") goTo(index + 1);
@@ -445,7 +501,12 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
                   </p>
                 )}
                 {q.multipleCorrect && <p className="mt-1 text-xs font-semibold text-muted-foreground">Mehrfachauswahl: mehrere Antworten können richtig sein.</p>}
-                {!exam && !reveal && (
+                {!exam && (
+                  <button type="button" onClick={() => chooseMode(recall ? "mc" : "recall")} className="mt-2 mr-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-semibold text-muted-foreground" data-testid="answer-mode-toggle">
+                    {recall ? <ListChecks className="size-3.5" /> : <EyeOff className="size-3.5" />} {recall ? "Antworten einblenden" : "Antworten verdecken"}
+                  </button>
+                )}
+                {!exam && !reveal && !recall && (
                   <button type="button" role="switch" aria-checked={unsure} onClick={() => setUnsure((u) => !u)} className={cn("mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold", unsure ? "border-warning bg-warning/12 text-warning" : "border-border text-muted-foreground")}>
                     {unsure ? "✓ " : ""}Unsicher 🤔
                   </button>
@@ -454,6 +515,9 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
 
               {/* nur dieser Bereich scrollt */}
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4" role={q.multipleCorrect ? "group" : "radiogroup"} aria-label="Antwortmöglichkeiten">
+                {recall ? (
+                  <RecallCard answer={peeks[q.id]?.answer ?? (reveal ? reveal.options.filter((o) => o.isCorrect).map((o) => q.options.find((x) => x.id === o.id)?.text ?? "").join("\n\n") : null)} />
+                ) : (
                 <div className="space-y-2.5">
                   {q.options.map((o, i) => {
                     const isSel = sel.includes(o.id);
@@ -496,6 +560,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
                     );
                   })}
                 </div>
+                )}
                 {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
               </div>
             </motion.section>
@@ -512,15 +577,29 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
         </AnimatePresence>
       </main>
 
+      {/* Antworten verdeckt: Selbsteinschätzung */}
+      {recall && !reveal && peeks[q.id] && !review && (
+        <div className="shrink-0 px-4 pb-2">
+          <div className="mx-auto grid max-w-3xl grid-cols-2 gap-2">
+            <Button variant="outline" size="lg" className="min-h-12 border-destructive/50 text-destructive" disabled={checking} onClick={() => void rate(false)} data-testid="recall-unknown">
+              <X /> Nicht gewusst
+            </Button>
+            <Button variant="success" size="lg" className="min-h-12" disabled={checking} onClick={() => void rate(true)} data-testid="recall-known">
+              <Check /> Gewusst
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Lernmodus: Rückmeldung */}
       <AnimatePresence>
         {!exam && reveal && !review && (
           <motion.div className="shrink-0 px-4 pb-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={spring}>
             <div className={cn("flex items-center gap-3 rounded-2xl px-3 py-2 text-white", reveal.isCorrect ? "bg-success" : "bg-destructive")} aria-live="polite">
               <span className="min-w-0 flex-1">
-                <span className="block font-display font-bold">{reveal.isCorrect ? "Richtig!" : "Leider falsch"}</span>
+                <span className="block font-display font-bold">{recall ? (reveal.isCorrect ? "Gewusst!" : "Nicht gewusst") : reveal.isCorrect ? "Richtig!" : "Leider falsch"}</span>
                 <span className="block truncate text-xs text-white/90">
-                  {reveal.isCorrect ? "Sehr gut." : `Richtig: ${reveal.options.filter((o) => o.isCorrect).map((o) => o.label).join(", ")}`}
+                  {reveal.isCorrect ? "Sehr gut." : recall ? "Kommt bald wieder dran." : `Richtig: ${reveal.options.filter((o) => o.isCorrect).map((o) => o.label).join(", ")}`}
                   {reveal.reward?.box && (
                     <span aria-label={`Karteikasten: ${reveal.reward.box.from === null ? "neu" : `Fach ${reveal.reward.box.from}`} nach Fach ${reveal.reward.box.to}`}>
                       {" "}· {reveal.reward.box.from === null ? "Neu" : `Fach ${reveal.reward.box.from}`} → Fach {reveal.reward.box.to}
@@ -584,6 +663,16 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
                 { label: "Abbrechen", variant: "ghost", onClick: () => setExitOpen(false) },
               ]
         }
+      />
+      <FocusDialog
+        open={!exam && modeLoaded && answerMode === null && !review}
+        onClose={() => chooseMode("mc")}
+        title="Wie möchtest du üben?"
+        text="Mit Antwortmöglichkeiten wählst du A–D. Bei „Nur Frage“ sind die Antworten verdeckt: Du überlegst selbst, tippst auf „Antwort zeigen“ und sagst dann, ob du es gewusst hast."
+        actions={[
+          { label: "Mit Antwortmöglichkeiten", onClick: () => chooseMode("mc") },
+          { label: "Nur Frage – Antworten verdeckt", variant: "outline", onClick: () => chooseMode("recall") },
+        ]}
       />
       <FocusDialog
         open={confirmSubmit}
@@ -652,6 +741,24 @@ function ExamReview({ answered, open, flagged, total, onJump, onBack, onSubmit }
           </Button>
         </div>
       </div>
+    </motion.div>
+  );
+}
+
+function RecallCard({ answer }: { answer: string | null }) {
+  if (!answer) {
+    return (
+      <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border p-6 text-center" data-testid="recall-hidden">
+        <EyeOff className="size-7 text-muted-foreground" />
+        <p className="font-semibold text-navy">Antworten verdeckt</p>
+        <p className="text-sm text-muted-foreground">Überlege dir die Antwort – dann tippe auf „Antwort zeigen“.</p>
+      </div>
+    );
+  }
+  return (
+    <motion.div className="rounded-2xl border-2 border-success/40 bg-success/8 p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={spring} data-testid="recall-answer">
+      <p className="mb-2 text-xs font-bold tracking-wider text-success uppercase">Antwort laut Skript</p>
+      <p className="text-base leading-relaxed whitespace-pre-line text-foreground">{answer}</p>
     </motion.div>
   );
 }

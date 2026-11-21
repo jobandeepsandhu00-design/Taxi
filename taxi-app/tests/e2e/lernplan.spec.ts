@@ -22,6 +22,9 @@ async function guest(page: Page) {
 }
 
 test("Lernplan: Home-Karte, Filter, Suche, Sperre, Vorschau, Lektion starten und Status-Update", async ({ page }) => {
+  await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+    await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+  });
   await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (d) => {
     await d.getByRole("button").click();
   });

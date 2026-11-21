@@ -24,6 +24,9 @@ async function guest(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+    await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+  });
   await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (dialog) => {
     await dialog.getByRole("button").click();
   });
@@ -33,6 +36,9 @@ test.describe.serial("Taxi-Coach", () => {
   let page: Page;
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
+    await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+      await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+    });
     await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (dialog) => {
       await dialog.getByRole("button").click();
     });

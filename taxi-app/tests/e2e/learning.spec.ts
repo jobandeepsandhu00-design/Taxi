@@ -29,6 +29,9 @@ test.describe.serial("Easy Learning", () => {
   let page: Page;
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
+    await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+      await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+    });
     await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (d) => {
       await d.getByRole("button").click();
     });

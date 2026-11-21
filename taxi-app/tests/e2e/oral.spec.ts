@@ -33,6 +33,9 @@ async function typeAnswer(page: Page, text: string) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.addLocatorHandler(page.getByRole("alertdialog", { name: "Wie möchtest du üben?" }), async (d) => {
+    await d.getByRole("button", { name: "Mit Antwortmöglichkeiten" }).click();
+  });
   await page.addLocatorHandler(page.locator('[aria-labelledby="celebration-title"]'), async (dialog) => {
     await dialog.getByRole("button").click();
   });
