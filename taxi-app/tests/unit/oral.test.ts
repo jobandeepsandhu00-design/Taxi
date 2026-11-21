@@ -60,7 +60,9 @@ describe("oral grading rules", () => {
 import { konzessionCategories, konzessionQuestions as kq } from "../../prisma/seed-data/konzession";
 import { buchRwOral, buchRwQuestions } from "../../prisma/seed-data/buch-rechnungswesen";
 import { buchBbChapter } from "../../prisma/seed-data/buch-buchhaltung";
-const konzessionQuestions = [...kq, ...buchRwQuestions, ...buchBbChapter.questions];
+import { buchPvChapter } from "../../prisma/seed-data/buch-personal";
+import { buchStChapter } from "../../prisma/seed-data/buch-steuerrecht";
+const konzessionQuestions = [...kq, ...buchRwQuestions, ...buchBbChapter.questions, ...buchPvChapter.questions];
 
 describe("Konzession-Kapitel", () => {
   it("jede Kategorie hat Fragen, jede Frage genau gültige Struktur", () => {
@@ -98,5 +100,17 @@ describe("Skript Doppelte Buchhaltung", () => {
     expect(buchBbChapter.oral).toHaveLength(20);
     for (const q of buchBbChapter.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
     for (const o of buchBbChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+  });
+});
+
+describe("Skript Personalverrechnung und Steuerrecht", () => {
+  it("22 + 36 Fragen, vollständige Antworten, mündlich bewertbar", () => {
+    expect(buchPvChapter.questions).toHaveLength(22);
+    expect(buchStChapter.questions).toHaveLength(36);
+    for (const ch of [buchPvChapter, buchStChapter]) {
+      for (const q of ch.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+      for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    }
+    expect(new Set(buchStChapter.questions.map((q) => q.topic))).toEqual(new Set(["umsatzsteuer", "buchhaltung", "registrierkasse"]));
   });
 });

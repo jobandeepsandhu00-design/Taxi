@@ -142,31 +142,7 @@ export const konzessionQuestions: SeedQuestion[] = [
 
   // Kapitel 2 (Doppelte Buchhaltung) kommt aus dem Skript: siehe buch-buchhaltung.ts
 
-  // ───────────── 3. Personalverrechnung ─────────────
-  q("pv-01", "k-personalverrechnung", "brutto-netto", "EASY", "Welche Abzüge führen vom Bruttolohn zum Nettolohn?", [
-    ["Sozialversicherung des Dienstnehmers und Lohnsteuer", true, "Diese werden vom Bruttolohn einbehalten."],
-    ["Kommunalsteuer", false, "Die Kommunalsteuer zahlt der Dienstgeber zusätzlich."],
-    ["Umsatzsteuer", false, "Die Umsatzsteuer betrifft Umsätze, nicht Löhne."],
-    ["Dienstgeberbeitrag zum FLAF", false, "Das ist eine Lohnnebenkostenabgabe des Dienstgebers."],
-  ], "Brutto minus Dienstnehmeranteil zur Sozialversicherung minus Lohnsteuer (ggf. weitere Abzüge) = Netto."),
-  q("pv-02", "k-personalverrechnung", "sonderzahlungen", "MEDIUM", "Was sind Sonderzahlungen?", [
-    ["Urlaubszuschuss und Weihnachtsremuneration (13. und 14. Bezug)", true, "Sie werden steuerlich begünstigt behandelt."],
-    ["Trinkgelder", false, "Trinkgelder sind keine Sonderzahlungen des Arbeitgebers."],
-    ["Überstundenzuschläge", false, "Diese gehören zum laufenden Bezug."],
-    ["Kilometergeld", false, "Kilometergeld ist ein Aufwandersatz."],
-  ], "Sonderzahlungen (13./14. Gehalt) sind meist im Kollektivvertrag geregelt und werden begünstigt versteuert."),
-  q("pv-03", "k-personalverrechnung", "lohnnebenkosten", "MEDIUM", "Welche Abgabe zahlt der Dienstgeber an die Gemeinde?", [
-    ["Kommunalsteuer", true, "Sie beträgt 3 % der Bruttolohnsumme."],
-    ["Lohnsteuer", false, "Die Lohnsteuer wird vom Dienstnehmer getragen."],
-    ["Einkommensteuer", false, "Diese betrifft das eigene Einkommen."],
-    ["Grundumlage", false, "Die Grundumlage geht an die Wirtschaftskammer."],
-  ], "Zu den Lohnnebenkosten zählen u. a. Dienstgeberanteil zur SV, Dienstgeberbeitrag (DB), Zuschlag (DZ) und die Kommunalsteuer (3 %).", "§ 9 KommStG"),
-  q("pv-04", "k-personalverrechnung", "brutto-netto", "EASY", "Wann muss ein neuer Dienstnehmer bei der ÖGK angemeldet werden?", [
-    ["Vor Arbeitsantritt", true, "Die Anmeldung muss vor Beginn der Beschäftigung erfolgen."],
-    ["Innerhalb eines Monats", false, "Das ist zu spät."],
-    ["Erst nach der Probezeit", false, "Auch in der Probezeit besteht Versicherungspflicht."],
-    ["Nur bei Vollzeit", false, "Auch Teilzeitkräfte sind anzumelden."],
-  ], "Dienstnehmer sind vor Arbeitsantritt bei der Österreichischen Gesundheitskasse anzumelden.", "§ 33 ASVG"),
+  // Kapitel 3 (Personalverrechnung) kommt aus dem Skript: siehe buch-personal.ts
 
   // ───────────── 5. Vollkostenrechnung ─────────────
   q("vk-01", "k-vollkostenrechnung", "kostenarten", "EASY", "Welche Kosten sind beim Taxi typischerweise FIXE Kosten?", [
@@ -666,4 +642,4 @@ export const ORAL_CHAPTER: Record<string, string> = {
 };
 
 /** Frühere eigene Übungsfragen, die durch Skript-Fragen ersetzt wurden (werden archiviert). */
-export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c", "kz-bb-01", "kz-bb-02", "kz-bb-03", "kz-bb-04"];
+export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c", "kz-bb-01", "kz-bb-02", "kz-bb-03", "kz-bb-04", "kz-pv-01", "kz-pv-02", "kz-pv-03", "kz-pv-04", "demo-steuer-01", "demo-steuer-02", "demo-steuer-03", "demo-steuer-04", "demo-steuer-05", "demo-steuer-06", "demo-steuer-07"];
