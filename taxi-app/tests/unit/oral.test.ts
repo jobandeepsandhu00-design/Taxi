@@ -155,3 +155,17 @@ describe("Skript Betriebsordnung und Tarif", () => {
     for (const o of buchBoChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
+
+import { buchKvChapter } from "../../prisma/seed-data/buch-kollektivvertrag";
+
+describe("Skript Kollektivvertrag", () => {
+  it("28 + 18 Abschnitte, 4 verschiedene Antworten, mündlich bewertbar", () => {
+    expect(buchKvChapter.questions).toHaveLength(46);
+    expect(new Set(buchKvChapter.questions.map((q) => q.id)).size).toBe(46);
+    for (const q of buchKvChapter.questions) {
+      expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+      expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
+    }
+    for (const o of buchKvChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+  });
+});
