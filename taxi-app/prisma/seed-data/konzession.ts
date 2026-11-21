@@ -144,83 +144,7 @@ export const konzessionQuestions: SeedQuestion[] = [
 
   // Kapitel 3 (Personalverrechnung) kommt aus dem Skript: siehe buch-personal.ts
 
-  // ───────────── 5. Vollkostenrechnung ─────────────
-  q("vk-01", "k-vollkostenrechnung", "kostenarten", "EASY", "Welche Kosten sind beim Taxi typischerweise FIXE Kosten?", [
-    ["Kfz-Versicherung", true, "Fällt unabhängig von den gefahrenen Kilometern an."],
-    ["Treibstoff", false, "Treibstoff steigt mit den gefahrenen Kilometern – variabel."],
-    ["Reifenabnutzung", false, "Abhängig von der Fahrleistung – variabel."],
-    ["Umsatzabhängige Provision der Funkzentrale", false, "Steigt mit dem Umsatz – variabel."],
-  ], "Fixe Kosten bleiben unabhängig von der Leistungsmenge gleich (Versicherung, Miete, Abschreibung), variable Kosten ändern sich mit ihr."),
-  q("vk-02", "k-vollkostenrechnung", "kostenstellen", "MEDIUM", "In welcher Reihenfolge läuft die Vollkostenrechnung ab?", [
-    ["Kostenarten → Kostenstellen → Kostenträger", true, "Welche Kosten? Wo? Wofür?"],
-    ["Kostenträger → Kostenarten → Kostenstellen", false, "Die Reihenfolge stimmt nicht."],
-    ["Bilanz → GuV → Kostenträger", false, "Das ist keine Kostenrechnung."],
-    ["Nur Kostenträgerrechnung", false, "Die Vollkostenrechnung hat drei Stufen."],
-  ], "Kostenartenrechnung (welche Kosten), Kostenstellenrechnung (wo entstanden), Kostenträgerrechnung (wofür – z. B. je Fahrt/Kilometer)."),
-  q("vk-03", "k-vollkostenrechnung", "kostenarten", "MEDIUM", "Was sind Gemeinkosten?", [
-    ["Kosten, die einem Produkt/einer Fahrt nicht direkt zugerechnet werden können", true, "Sie werden über Schlüssel verteilt."],
-    ["Kosten, die die Gemeinde verrechnet", false, "Das hat nichts mit der Gemeinde zu tun."],
-    ["Nur Personalkosten", false, "Gemeinkosten können viele Kostenarten umfassen."],
-    ["Kosten, die direkt einer Fahrt zuordenbar sind", false, "Das sind Einzelkosten."],
-  ], "Einzelkosten sind direkt zurechenbar, Gemeinkosten (z. B. Büromiete, Buchhaltung) werden mit Zuschlagssätzen verteilt."),
-  q("vk-04", "k-vollkostenrechnung", "kostenarten", "MEDIUM", "Wie wird die Wertminderung eines Taxis in der Kostenrechnung berücksichtigt?", [
-    ["Durch Abschreibung (AfA) über die Nutzungsdauer", true, "Die Anschaffungskosten werden auf die Nutzungsjahre verteilt."],
-    ["Gar nicht", false, "Die Wertminderung ist ein echter Kostenfaktor."],
-    ["Komplett im Anschaffungsjahr als Treibstoffkosten", false, "Das ist falsch zugeordnet."],
-    ["Nur beim Verkauf des Fahrzeugs", false, "Die Wertminderung wird laufend erfasst."],
-  ], "Abschreibungen verteilen die Anschaffungskosten des Fahrzeugs auf die Jahre der Nutzung."),
-
-  // ───────────── 6. Deckungsbeitrag ─────────────
-  q("db-01", "k-deckungsbeitrag", "db", "EASY", "Wie berechnet man den Deckungsbeitrag?", [
-    ["Erlös minus variable Kosten", true, "Der Rest dient zur Deckung der Fixkosten."],
-    ["Erlös minus Fixkosten", false, "Fixkosten werden erst danach abgezogen."],
-    ["Fixkosten plus variable Kosten", false, "Das sind die Gesamtkosten."],
-    ["Gewinn minus Umsatzsteuer", false, "Das ist keine Deckungsbeitragsrechnung."],
-  ], "Deckungsbeitrag = Erlös − variable Kosten. Die Summe aller Deckungsbeiträge muss die Fixkosten decken, damit Gewinn entsteht."),
-  q("db-02", "k-deckungsbeitrag", "break-even", "MEDIUM", "Eine Fahrt bringt durchschnittlich 30 € netto, die variablen Kosten betragen 12 €. Die Fixkosten liegen bei 36.000 € pro Jahr. Ab wie vielen Fahrten wird Gewinn erzielt?", [
-    ["Ab 1.200 Fahrten", false, "36.000 / 30 berücksichtigt die variablen Kosten nicht."],
-    ["Ab 2.000 Fahrten", true, "Deckungsbeitrag 18 € → 36.000 / 18 = 2.000 Fahrten (Break-even)."],
-    ["Ab 3.000 Fahrten", false, "36.000 / 12 ist falsch gerechnet."],
-    ["Ab 500 Fahrten", false, "Viel zu niedrig."],
-  ], "Break-even-Menge = Fixkosten / Deckungsbeitrag pro Stück = 36.000 € / 18 € = 2.000 Fahrten. Jede weitere Fahrt bringt 18 € Gewinn."),
-  q("db-03", "k-deckungsbeitrag", "break-even", "EASY", "Was bedeutet Break-even-Point?", [
-    ["Die Gewinnschwelle, an der Erlöse alle Kosten decken", true, "Gewinn = 0, darüber beginnt der Gewinn."],
-    ["Der höchste mögliche Umsatz", false, "Das ist die Kapazitätsgrenze."],
-    ["Der Tag der Steuerzahlung", false, "Hat nichts mit Steuern zu tun."],
-    ["Der Punkt, an dem das Taxi abgeschrieben ist", false, "Hat nichts mit Abschreibung zu tun."],
-  ], "Am Break-even-Point sind Erlöse und Gesamtkosten gleich hoch."),
-  q("db-04", "k-deckungsbeitrag", "db", "HARD", "Soll eine Zusatzfahrt angenommen werden, wenn der Preis über den variablen Kosten, aber unter den Vollkosten liegt (freie Kapazität vorausgesetzt)?", [
-    ["Ja, kurzfristig – sie bringt einen positiven Deckungsbeitrag", true, "Die Fixkosten fallen ohnehin an."],
-    ["Nein, nie", false, "Kurzfristig verbessert jeder positive Deckungsbeitrag das Ergebnis."],
-    ["Nur wenn der Preis unter den variablen Kosten liegt", false, "Dann wäre der Deckungsbeitrag negativ."],
-    ["Nur bei Barzahlung", false, "Die Zahlungsart ist für die Entscheidung irrelevant."],
-  ], "Kurzfristig gilt: Ein positiver Deckungsbeitrag trägt zur Fixkostendeckung bei. Langfristig müssen aber alle Kosten gedeckt sein."),
-
-  // ───────────── 7. Finanzierung ─────────────
-  q("fi-01", "k-finanzierung", "formen", "EASY", "Was ist Fremdfinanzierung?", [
-    ["Finanzierung mit geliehenem Kapital, z. B. Bankkredit", true, "Fremdkapital muss zurückgezahlt und verzinst werden."],
-    ["Finanzierung durch Einlagen des Unternehmers", false, "Das ist Eigenfinanzierung."],
-    ["Finanzierung aus einbehaltenen Gewinnen", false, "Das ist Innen-/Selbstfinanzierung."],
-    ["Finanzierung durch Förderungen ohne Rückzahlung", false, "Zuschüsse sind kein Fremdkapital."],
-  ], "Fremdfinanzierung: Kapital von Dritten (Bank, Lieferant, Leasinggeber). Eigenfinanzierung: Mittel des Eigentümers."),
-  q("fi-02", "k-finanzierung", "leasing", "MEDIUM", "Was ist charakteristisch für Leasing eines Taxis?", [
-    ["Man nutzt das Fahrzeug gegen laufende Raten, Eigentümer bleibt der Leasinggeber", true, "Das schont die Liquidität bei der Anschaffung."],
-    ["Man ist sofort Eigentümer", false, "Eigentümer ist während der Laufzeit der Leasinggeber."],
-    ["Es fallen keine Kosten an", false, "Leasingraten sind laufende Kosten."],
-    ["Leasing ist für Unternehmer verboten", false, "Leasing ist eine übliche Finanzierungsform."],
-  ], "Beim Leasing wird ein Wirtschaftsgut gegen Entgelt zur Nutzung überlassen; Eigentümer bleibt der Leasinggeber."),
-  q("fi-03", "k-finanzierung", "formen", "MEDIUM", "Wofür eignet sich ein Kontokorrentkredit?", [
-    ["Zur kurzfristigen Überbrückung von Liquiditätsengpässen", true, "Er ist flexibel, aber teuer."],
-    ["Zur langfristigen Finanzierung eines Fahrzeugs", false, "Dafür sind Investitionskredit oder Leasing besser."],
-    ["Zum Ansparen", false, "Ein Kredit dient nicht dem Sparen."],
-    ["Zur Zahlung der Konzessionsprüfung", false, "Kein typischer Zweck."],
-  ], "Grundsatz der Fristenkongruenz: Langfristige Investitionen langfristig finanzieren, kurzfristigen Bedarf kurzfristig."),
-  q("fi-04", "k-finanzierung", "formen", "EASY", "Was bedeutet Liquidität?", [
-    ["Die Fähigkeit, fällige Zahlungen fristgerecht zu leisten", true, "Fehlende Liquidität kann zur Insolvenz führen."],
-    ["Der Gewinn des Jahres", false, "Gewinn und Liquidität sind verschieden."],
-    ["Der Wert des Fahrzeugs", false, "Das ist Vermögen, nicht Liquidität."],
-    ["Die Höhe der Schulden", false, "Schulden allein sagen wenig über Zahlungsfähigkeit."],
-  ], "Liquidität = Zahlungsfähigkeit. Ein Liquiditätsplan zeigt, ob Einnahmen die Ausgaben rechtzeitig decken."),
+  // Kapitel 5–7 kommen aus dem Skript: siehe buch-kosten.ts
 
   // ───────────── 9. Betriebsordnung und Tarif ─────────────
   q("bo-01", "k-betriebsordnung-tarif", "tarif", "MEDIUM", "Wer legt die Taxitarife in einem Bundesland fest?", [
@@ -642,4 +566,4 @@ export const ORAL_CHAPTER: Record<string, string> = {
 };
 
 /** Frühere eigene Übungsfragen, die durch Skript-Fragen ersetzt wurden (werden archiviert). */
-export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c", "kz-bb-01", "kz-bb-02", "kz-bb-03", "kz-bb-04", "kz-pv-01", "kz-pv-02", "kz-pv-03", "kz-pv-04", "demo-steuer-01", "demo-steuer-02", "demo-steuer-03", "demo-steuer-04", "demo-steuer-05", "demo-steuer-06", "demo-steuer-07"];
+export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c", "kz-bb-01", "kz-bb-02", "kz-bb-03", "kz-bb-04", "kz-pv-01", "kz-pv-02", "kz-pv-03", "kz-pv-04", "demo-steuer-01", "demo-steuer-02", "demo-steuer-03", "demo-steuer-04", "demo-steuer-05", "demo-steuer-06", "demo-steuer-07", "kz-vk-01", "kz-vk-02", "kz-vk-03", "kz-vk-04", "kz-db-01", "kz-db-02", "kz-db-03", "kz-db-04", "kz-fi-01", "kz-fi-02", "kz-fi-03", "kz-fi-04"];

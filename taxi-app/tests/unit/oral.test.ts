@@ -62,7 +62,8 @@ import { buchRwOral, buchRwQuestions } from "../../prisma/seed-data/buch-rechnun
 import { buchBbChapter } from "../../prisma/seed-data/buch-buchhaltung";
 import { buchPvChapter } from "../../prisma/seed-data/buch-personal";
 import { buchStChapter } from "../../prisma/seed-data/buch-steuerrecht";
-const konzessionQuestions = [...kq, ...buchRwQuestions, ...buchBbChapter.questions, ...buchPvChapter.questions];
+import { buchDbChapter, buchFiChapter, buchVkChapter } from "../../prisma/seed-data/buch-kosten";
+const konzessionQuestions = [...kq, ...buchRwQuestions, ...buchBbChapter.questions, ...buchPvChapter.questions, ...buchVkChapter.questions, ...buchDbChapter.questions, ...buchFiChapter.questions];
 
 describe("Konzession-Kapitel", () => {
   it("jede Kategorie hat Fragen, jede Frage genau gültige Struktur", () => {
@@ -112,5 +113,17 @@ describe("Skript Personalverrechnung und Steuerrecht", () => {
       for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
     }
     expect(new Set(buchStChapter.questions.map((q) => q.topic))).toEqual(new Set(["umsatzsteuer", "buchhaltung", "registrierkasse"]));
+  });
+});
+
+describe("Skript Vollkosten, Deckungsbeitrag, Finanzierung", () => {
+  it("31 + 15 + 10 Fragen, vollständige Antworten, mündlich bewertbar", () => {
+    expect(buchVkChapter.questions).toHaveLength(31);
+    expect(buchDbChapter.questions).toHaveLength(15);
+    expect(buchFiChapter.questions).toHaveLength(10);
+    for (const ch of [buchVkChapter, buchDbChapter, buchFiChapter]) {
+      for (const q of ch.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+      for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    }
   });
 });

@@ -16,6 +16,7 @@ import { buchRwOral, buchRwQuestions } from "./seed-data/buch-rechnungswesen";
 import { buchBbChapter } from "./seed-data/buch-buchhaltung";
 import { buchPvChapter } from "./seed-data/buch-personal";
 import { buchStChapter } from "./seed-data/buch-steuerrecht";
+import { buchDbChapter, buchFiChapter, buchVkChapter } from "./seed-data/buch-kosten";
 
 const prisma = new PrismaClient();
 
@@ -107,7 +108,7 @@ async function main() {
   // Demo-Fragen (deterministische IDs → idempotent)
   await prisma.question.updateMany({ where: { id: { in: RETIRED_QUESTION_IDS } }, data: { status: "ARCHIVED" } });
   // Skript-Fragen: Lektionen in Reihenfolge des Skripts (je 5 Fragen)
-  const bookChapters = [buchRwQuestions, buchBbChapter.questions, buchPvChapter.questions, buchStChapter.questions];
+  const bookChapters = [buchRwQuestions, buchBbChapter.questions, buchPvChapter.questions, buchStChapter.questions, buchVkChapter.questions, buchDbChapter.questions, buchFiChapter.questions];
   const bookLesson = new Map(bookChapters.flatMap((list) => list.map((q, i) => [q.id, Math.floor(i / 5) + 1] as const)));
   const retired = new Set(RETIRED_QUESTION_IDS);
   for (const q of [...questions, ...konzessionQuestions, ...bookChapters.flat()].filter((x) => !retired.has(x.id))) {
@@ -219,7 +220,7 @@ async function seedLearningExtras() {
     await prisma.route.upsert({ where: { slug: r.slug }, create: { ...r, verified: false }, update: {} });
   }
   // Mündliche Prüfungsfragen (ungeprüft)
-  for (const o of [...oralQuestions, ...buchRwOral, ...buchBbChapter.oral, ...buchPvChapter.oral, ...buchStChapter.oral]) {
+  for (const o of [...oralQuestions, ...buchRwOral, ...buchBbChapter.oral, ...buchPvChapter.oral, ...buchStChapter.oral, ...buchVkChapter.oral, ...buchDbChapter.oral, ...buchFiChapter.oral]) {
     const slug = ORAL_CHAPTER[o.categorySlug] ?? o.categorySlug;
     const category = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
     if (!category) continue;
