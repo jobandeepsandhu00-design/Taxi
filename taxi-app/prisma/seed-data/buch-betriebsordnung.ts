@@ -1,0 +1,154 @@
+/**
+ * Kapitel 9 „Betriebsordnung und Tarif“ – Skript, Antworten im Originalwortlaut:
+ * Anmeldung von Fahrzeugen, Wiener Landesbetriebsordnung (1–53, Nr. 52 fehlt), Tarif (1–27),
+ * Neue Wiener Landesbetriebsordnung ab 1.1.2024 (Abschnitte als Fragen).
+ * Ablenker = Antworten anderer Fragen des Kapitels. Ungeprüft – vor Freigabe prüfen.
+ */
+import { buildBookChapter, type BookItem } from "./book-helpers";
+
+type Raw = [nr: number, q: string, a: string];
+const CAT = "k-betriebsordnung-tarif";
+
+function items(list: Raw[], topic: string): BookItem[] {
+  return list.map(([nr, q, a]) => ({ nr, q, a, topic, difficulty: a.length < 90 ? "EASY" : a.length < 350 ? "MEDIUM" : "HARD" }));
+}
+
+const anmeldung: Raw[] = [
+  [1, "Anmeldung von Fahrzeugen im Rahmen des Taxigewerbes – welche Schritte sind erforderlich?",
+    "Zur Anmeldung eines Fahrzeuges zur Verwendung im Rahmen des Taxigewerbes (Verwendungsbestimmung 25) basierend auf der Gewerbeberechtigung Personenbeförderung mit PKW-Taxi sind folgende Schritte erforderlich:\n" +
+    "1) Fachgruppenbestätigung von der gesetzlichen Interessensvertretung (Wirtschaftskammer Wien)\n" +
+    "Aufgrund der Wiener Landesbetriebsordnung für das Personenbeförderungsgewerbe mit PKW (LBO) dürfen Taxi-Fahrzeuge nur mehr dann angemeldet werden, wenn diese\n" +
+    "1) über eine vom Lenkerplatz einschaltbare funktionierende Anlage zur Abgabe von deutlichen wahrnehmbaren optischen akustischen Notzeichen ausgestattet sind,\n" +
+    "2) der (ab 2025 elektrische Energie aus Akkumulatoren) entsprechen,\n" +
+    "3) ein funktionierender Taxameter und eine Notalarmanlage eingebaut ist. Die Ausstellung der Fachgruppenbestätigung erfolgt durch die Fachgruppe für Beförderungsgewerbe mit PKW, Straße der Wiener Wirtschaft 1, 1020 Wien.\n" +
+    "Folgende Unterlagen sind hierfür per E-Mail an taxi@wkw.at zu übermitteln:\n" +
+    "4) Auszug aus dem Gewerbeinformationssystem Austria (GISA)\n" +
+    "5) Typenschein (alle Seiten) Ist im Typenschein nicht die Abgasnorm EURO 6 bestätigt, ist eine Bestätigung der Abgasnorm EURO 6 durch den Hersteller/Importeurs beizulegen\n" +
+    "6) Bestätigung über den Einbau eines Taxameters und einer Notalarmanlage durch eine berechtigte Einbauwerkstätte\n" +
+    "Nach Überprüfung der Voraussetzungen zur Zulassung des Fahrzeuges wird die Fachgruppenbestätigung per E-Mail retourniert.\n" +
+    "2) Feststellungsbescheid („Betriebsordnungsbescheid“) des Verkehrsamtes Wien\n" +
+    "Nach Erhalt der Fachgruppenbestätigung sind die Unterlagen\n" +
+    "1) Typenschein\n2) Gewerbeschein\n3) Einbaubestätigung Taxameter und Alarmanlage\n4) Fachgruppenbestätigung\n5) TÜV-Gutachten (sofern das Fahrzeug noch nie zugelassen war)\n" +
+    "an das Verkehrsamt Wien zwecks Feststellung der Übereinstimmung des Fahrzeuges mit der Wiener Landesbetriebsordnung für das Personenbeförderungsgewerbe mit Pkw (LBO) zu übermitteln. Bei jeder neuerlichen Zulassung ist ein auf den Zulassungswerber ausgestellter Betriebsordnungsbescheid vorzulegen.\n" +
+    "3) KFZ-Anmeldung bei der Zulassungsstelle\n" +
+    "Bei der Zulassungsstelle sind folgende Unterlagen mitzunehmen:\n" +
+    "1) Typenschein\n2) Gewerbeschein\n3) Fachgruppenbestätigung\n4) Feststellungsbescheid (Betriebsordnungsbescheid von Verkehrsamt)\n5) Versicherungsbestätigung"],
+];
+
+const lbo: Raw[] = [
+  [1, "Welche Personen dürfen im Fahrdienst tätig sein?", "Im Fahrdienst können nur vertrauenswürdige Personen tätig sein (Arbeiten)."],
+  [2, "Unter welchen Voraussetzungen ist es dem Lenker untersagt, ein Fahrzeug im Sinne der Betriebsordnung für den nichtlinienmäßigen Personenverkehr zu lenken?", "1. wenn der Lenker geistig und körperlich nicht in der Lage ist\n2. wenn Alkohol, Suchtgift, Drogen oder Rauschgift zu sich genommen wurde\n3. wenn Medikamente genommen wurden, die das Lenken eines Fahrzeuges untersagen\n4. wenn der Lenker oder jemand aus seiner häuslichen Gemeinschaft an einer ansteckenden Infektionskrankheit leidet (zB Covid 19)"],
+  [3, "Wem ist der Taxilenkerausweis auf Verlangen zur Überprüfung auszuhändigen?", "1. Straßenaufsichtsbehörde!!!!!\n2. Polizei"],
+  [4, "Wie verhalten Sie sich, wenn Sie den Taxilenkerausweis verloren haben?", "Sie sollten eine Verlustanzeige machen Magistrat, diese Anzeige ist ab Meldungstag 4 Wochen gültig"],
+  [5, "Wer hat den Taxilenkerausweis auszustellen?", "Die Behörde, wo der Lenker beschäftigt wird. in Wien Verkehrsamt"],
+  [6, "In welchen örtlichen Bereich darf der Taxilenker seine Tätigkeit ausüben? Gibt es Ausnahmen?", "der Taxilenker darf nur in dem örtlichen Bereich seine Tätigkeit ausüben, wo sein Taxilenkerausweis gültig ist."],
+  [7, "Welche Angaben enthält der Taxilenkerausweis?", "Der Ausweis hat 2 Seiten:\nSeite 1 enthält:\n1. Nachname\n2. Vorname\n3. Akademischer Titel\n4. Lichtbild\n5. Unterschrift in gescannter Form\n6. Ausweisnummer\n7. Ausstellende Behörde\n8. Ausstellungsdatum\n9. Datum, bis zu dem der Ausweis gültig ist\n10. Bereich, für den der Ausweis gelten soll\nSeite 2 enthält:\n1. Geburtsdatum\n2. Geburtsort\nDer Taxischein muss ab 1.1.2021 alle 5. Jahre erneuert werden. Vertrauenswürdigkeit sind künftig zentrale Anforderungen für Lenker im Personenbeförderungsgewerbe mit Pkw. Ein einwandfreier Leumund muss in den letzten 5 Jahren vor Ausstellung des Taxischeins vorliegen.\n3. Der Bereich für den die Ortskenntnisse sowie Kenntnisse der Wiener LBD-Tarif und kollektivvertragliche Bestimmungen nachgewiesen werden"],
+  [8, "Unter welchen Bedingungen gilt der Taxilenkerausweis?", "Taxilenkerausweis gilt nur mit einem erforderlichen und gültigen Führerschein."],
+  [9, "Was müssen Sie mit einem ungültigen Taxilenkerausweis tun?", "Ein ungültiger Taxilenkerausweis muss bei der Behörde Verkehrsamt abgeliefert werden."],
+  [10, "Unter welchen Bedingungen kann ein Taxilenkerausweis von der Behörde entzogen werden?", "1. Verlust der Zuverlässigkeit\n2. aus gesundheitlichen Gründen\n3. wenn die Vertrauenswürdigkeit des Taxilenkers nicht mehr gegeben ist"],
+  [11, "Wie verhalten Sie sich, wenn Ihnen der Taxilenkerausweis gestohlen wurde?", "Bei der Polizei eine Diebstahlanzeige machen und diese Anzeige ist ab dem Meldungstag 4 Wochen!!!!! gültig."],
+  [12, "Welches Mindestalter müssen Sie für die Ausstellung des Taxilenkerausweises haben?", "Das 20. Lebensjahr muss vollendet sein."],
+  [13, "Sie haben einen Probeführerschein. Stellt Ihnen die Behörde einen Taxilenkerausweis aus?", "Nein!!!!!"],
+  [14, "Wann sind Sie in einem durch Alkohol beeinträchtigten Zustand?", "Wer sich in einem durch Alkohol oder Suchtgift beeinträchtigten Zustand befindet, darf ein Fahrzeug weder lenken noch in Betrieb nehmen. Taxifahrer 0,1 Promille"],
+  [15, "Wer ist zuständig für die Erteilung einer Konzession für das Taxi-Gewerbe?", "Magistratische Bezirksabteilung 1. und 8. Bezirk Magistrat bei der MA63"],
+  [16, "Wer ist zuständig für die Erteilung einer Konzession für das Mietwagengewerbe mit Omnibussen?", "Magistrat Ma 63"],
+  [17, "Wer ist zuständig für die Verordnung der Landesbetriebsordnungen für das Taxi-Gewerbe?", "Der Landeshauptmann"],
+  [18, "Welche zusätzlichen Nachweise müssen Sie bei der Behörde bringen, um eine Konzession für das Taxi-Gewerbe zu erhalten?", "1. Befähigungsnachweis\n2. gewerberechtlicher Geschäftsführer\n3. Zuverlässigkeit\n4. Strafregisterauszug\n5. Abstellplatz\n6. Finanzielle Leistungsfähigkeit."],
+  [19, "Wo müssen die Abstellplätze für Ihre KFZ sein?", "an einem nicht öffentlichen Platz"],
+  [20, "Was bedeutet „Zuverlässigkeit“ bzw. wann ist die Zuverlässigkeit eines Personenbeförderungsunternehmers nicht mehr gegeben?", "Der Konzessionswerber bzw. Taxiunternehmer darf eine gerichtliche Verurteilung von 3 Monaten oder 180 Tagessätzen nicht überschreiten."],
+  [21, "Was bedeutet finanzielle Leistungsfähigkeit?", "Die finanziellen Mittel, die man aufbringen muss, um eine Konzession zu erhalten. 7.500€ Österreichweit und 18.500€ in Wien."],
+  [22, "Was heißt verbindlicher Tarif?", "Der Tarif darf weder unter noch überboten werden."],
+  [23, "Was versteht man unter dem Begriff Öffentlicher Personennahverkehr?", "die Beförderung mit öffentlichen Verkehrsmitteln U-Bahn, Straßenbahn, Zug, Schnellbahn"],
+  [24, "Welche Einrichtungen im Fahrzeug müssen sich in einem einwandfreien Zustand befinden?", "1. Sicherheitsgurt\n2. Gepäckträger-Kofferraum\n3. Sitze\n4. Verglasung kein Sprung in der Scheibe oder sonstige Beschädigung"],
+  [25, "Welche Pflichten haben Taxilenker bezüglich der Sauberkeit der Taxis?", "1. Innenreinigung\n2. Außenreinigung\n3. im Innenraum dürfen keine Flecken sein\n4. Keine Risse oder Beschädigungen an der Tapezierung"],
+  [26, "Wer ist für den technisch einwandfreien Zustand des Taxis verantwortlich?", "Arbeitgeber"],
+  [27, "Müssen Assistenzhunde einen Maulkorb tragen?", "Nein"],
+  [28, "Was hat der Taxiunternehmer dem Taxilenker nachweislich zur Verfügung zu stellen? Welche Unterlagen müssen Sie gemäß der Wiener Landesbetriebsordnung mitführen?", "1. Navigationsgeräte\n2. Kartenlesergerät\n3. Bundes und Wienerlandesbetriebsordnung\n4. Taxitarif\n5. GISA Gewerbeinformationssystem Austria"],
+  [29, "Wem sind die Unterlagen, die Sie gemäß der Wiener Landesbetriebsordnung mitführen müssen, auf Verlangen vorzulegen?", "auf Verlangen dem Fahrgast sind diese Unterlagen vorzulegen"],
+  [30, "Was ist den Fahrgästen bei Taxifahrten untersagt?", "1. den Taxilenker während der Fahrt zu behindern\n2. die Türen des KFZ während der Fahrt selbst zu öffnen\n3. das KFZ zu beschmutzen oder zu beschädigen"],
+  [31, "Was verstehen Sie unter Beförderungspflicht?", "Unter Beförderungspflicht versteht man, dass jeder Fahrgast innerhalb von Wien befördert werden muss."],
+  [32, "Welche Personen können Sie von der Beförderung ausschließen?", "1. Personen mit ansteckenden Krankheiten\n2. Personen mit gefährlichen Gegenständen z.B. Messer oder Schusswaffen\n3. Personen, die den Lenker beschimpfen oder das Taxi beschmutzen oder beschädigen\n4. Wenn die Fahrgäste im Taxi rauchen wollen"],
+  [33, "Wo finden Sie die maßgeblichen Bestimmungen für die Inbetriebnahme eines Taxi-Fahrzeuges?", "Die Bestimmungen für die Inbetriebnahme eines Taxifahrzeuges findet man in der Bundes und Wienerlandesbetriebsordnung"],
+  [34, "Wie viel Platz muss betreffend das Gepäck im Taxi vorhanden sein?", "Es muss ausreichend Platz vorhanden sein, um Reisegepäck, Koffer oder Reisetasche mitnehmen zu können. 400 Liter."],
+  [35, "Wie muss ein Taxi gekennzeichnet sein?", "Schild mit Aufschrift „TAXI“ gut sichtbar und beleuchtbar, schwarzer Hintergrund oder Untergrund auf gelbe Aufschrift"],
+  [36, "Wie erkennt man ein Ersatztaxi?", "Muss von außen mit der Aufschrift ERSATZTAXI gekennzeichnet sein, gelbe Schrift auf schwarzem Hintergrund."],
+  [37, "Was haben Sie beim Lenken eines Ersatztaxis zu beachten?", "Kennzeichen vom zugelassenen Taxi im Kofferraum mitführen, auf Verlangen der Straßenaufsichtsorgane vorweisen. z.B. W1616TX - W1919LT"],
+  [38, "Welche Verpflichtung hat der Taxilenker beim Ein- und Aussteigen der Fahrgäste?", "Der Taxilenker hat die Verpflichtung bei Bedarf Fahrgästen beim Ein- und Aussteigen behilflich zu sein!"],
+  [39, "Wann darf die Taxileuchte nicht beleuchtet sein?", "1. bei der Beförderung von Fahrgästen\n2. wenn man im Außendienst ist\n3. bei bestellten Fahrten, über Funk oder Taxistandplatztelefon"],
+  [40, "Was verstehen Sie unter der freien Standplatzwahl?", "Man kann jeden Taxistandplatz anfahren."],
+  [41, "Dürfen Sie Fahrgäste ablehnen?", "Nein, nur wenn Ausschließungsgründe vorliegen"],
+  [42, "Dürfen Sie Fahrgäste wegen einer kurzen Fahrt ablehnen?", "Nein, nur wenn Ausschließungsgründe vorliegen (auch bei kurzer Fahrt)"],
+  [43, "Wann müssen Sie die Beleuchtung des Taxischildes nicht abschalten?", "Auf Taxistandplatz bei schlechter Sicht oder bei Dunkelheit, die Beleuchtung des Taxischild nicht abschalten."],
+  [44, "Wie haben sich Taxis auf den Standplätzen aufzustellen?", "1. nach der Reihe platzsparend aufstellen\n2. ohne Behinderung und ohne Gefährdung aus der Reihe herausfahren"],
+  [45, "Wer darf das Standplatztelefon bedienen?", "Der 1. berechtigte Taxilenker oder der nächste berechtigte Taxilenker"],
+  [46, "Dürfen Sie mit dem Taxi bei Großveranstaltungen in einer Halteverbotszone stehen?", "Nein"],
+  [47, "Welche Pflichten hat der Taxilenker bei Verunreinigungen des Taxi-KFZ – soweit die Gefahr einer Beschmutzung der Fahrgäste oder deren Bekleidung besteht – zu erfüllen?", "Die Kosten für die Verunreinigung muss der Taxilenker übernehmen."],
+  [48, "Wenn ein Fahrgast das Taxi beschmutzt, wie verhalten Sie sich?", "Ich bleibe freundlich, verlange jedoch ein angemessenes Reinigungsentgelt."],
+  [49, "Dürfen Sie als Taxilenker Ihren eigenen Hund im Taxi mitbefördern?", "Nein (eigener Hund)"],
+  [50, "Wie ist ein „Nichtraucher Taxi“ gekennzeichnet?", "Nichtraucher Taxi muss von außen deutlich erkennbar sein."],
+  [51, "Warum müssen Taxis mit einem vom Lenkerplatz aus einschaltbaren Notzeichenanlage ausgestattet sein?", "um bei einer Notsituation Alarm geben zu können optische und akustische Alarmanlage"],
+  [53, "Die Wiener Landesbetriebsordnung – was ist das?", "diese ist nur für das Bundesland Wien gültig und ist eine Verordnung des Landeshauptmannes von Wien Verordnung und Regelungen"],
+];
+
+const tarif: Raw[] = [
+  [1, "Wie hoch ist die Grundtaxe am Tag?", "3,80€ (10% inkludiert. MwSt.)"],
+  [2, "Wie hoch ist die Grundtaxe in der Nacht?", "4,30€ (10% inkludiert. MwSt.)"],
+  [3, "Wie hoch ist die Zeittaxe für 1 Stunde Wartezeit?", "1. Tag: pro Minute 0,58 € (1 Stunde 34,80 €)\n2. Nacht-Sonntag-Feiertag: pro Minute 0,67€ (1 Stunde 40,20€)"],
+  [4, "Wie hoch ist die Streckentaxe am Tag pro Kilometer für die ersten 5 Kilometer und für die nachfolgenden Kilometer ab dem 5. Kilometer? Wie hoch ist Streckentaxe pro Kilometer für die ersten 5 Kilometer und für die nachfolgenden Kilometer ab dem 5 Kilometer in der Nacht bzw. an Sonn- und Feiertag?", "Tagtarif (werktags von 06.00 bis 23.00 Uhr)\nWegstreckentarif bis inkl. 5 km pro km: 0,95€ km alle 210,53m 0,20€\nWegstreckentarif ab 5 km pro km: 0,58€ km alle 344,83m 0,20€\nanteilsmäßig gefahrene km sind ebenso anteilsmäßig zu verrechnen Fortschaltbetrag 0,20€\nzusätzlich Zeittarif pro Minute: 0,58€ alle 20,70 Sekunden 0,20€\nNachttarif (Werktags von 23.00-06.00 Uhr) Sonn- und Feiertagtarif von 00-24.00Uhr\nWegstreckentarif bis inkl. 5 km pro km: 1,09€ km alle 183,49m 0,20€\nWegstreckentarif ab 5 km pro km: 0,67€ km alle 298,51m 0,20€\nanteilmäßig gefahrene km sind ebenso anteilsmäßig zu verrechnen Fortschaltbetrag 0,20€\nzusätzlich Zeittarif pro Minute: 0,67€ alle 17,99 Sekunden 0,20€"],
+  [5, "Wie hoch ist ein Zuschlag? Wie viele Zuschläge verrechnen Sie mittels Kommunikationsdiensten bestellte Fahrten?", "1. Für die Bestellung im Wege eines Kommunikationsdienstes 2,00 €\n2. für die Beförderung von mehr als 4 Personen 2,00 €"],
+  [6, "Bei Versagen des Fahrpreisanzeigers während der Fahrt. Wie verhalten Sie sich und wie wird der Fahrpreis berechnet?", "1. man muss den Fahrgast darüber informieren\n2. den Fahrgast nicht zum Aussteigen zwingen\n3. wenn der Fahrgast aussteigen will, kann er sofort aussteigen, natürlich nach der Bezahlung der Fahrtkosten nach der Bekanntgabe des Defektes werden die Kosten nach Taxitarif verrechnet. Versagt nach Antritt der Fahrt der Taxameter, Möchte der Fahrgast die Fahrt fortsetzen, ist die gesamte Fahrpreis auf Grundlage des geltenden Tarifs und der fahrpreisrelevanten Daten berechnen. Wobei die für die Berechnung des Fahrpreises zu verwendenden Fahrpreis Relevanten Daten aus dem Routenplaner des Bundesministeriums für BMK der auf der Internet-Seite des Für Klimaschutz Umwelt, Energie, Mobilität, Innovation und Technologie zu Verfügung steht zu beziehen sind.\n4. Ich kann keine neuen Kunden annehmen"],
+  [7, "Was sind bestellte Fahrten?", "1. Mittels Kommunikationsdiensten Bolt oder Uber\n2. Taxistandplatztelefon\n3. Funk"],
+  [8, "Sie fahren mit einem Fahrgast auf eine Wiener Zieladresse. Die Streckenführung führt aber eine kurze Strecke über Niederösterreich. Welchen Fahrpreis verrechnen Sie?", "Was auf dem Taxameter bleibt! Oder was Endbetrag zeigt"],
+  [9, "Sie erhalten einen Fahrtauftrag nach Korneuburg. Wie berechnen Sie den Fahrpreis?", "Streckentaxi ab Stadtgrenze doppelt oder Freie Vereinbarung-Pauschale"],
+  [10, "Sie erhalten einen Fahrtauftrag nach Korneuburg. Wann vereinbaren Sie den Fahrpreis?", "bevor ich losfahre"],
+  [11, "Sie erhalten einen Fahrauftrag zu einem Zielort außerhalb des Tarifgebietes. Müssen Sie diesen Fahrtauftrag annehmen?", "NEIN, weil außerhalb des Tarifgebietes gibt es keine Beförderungspflicht"],
+  [12, "Wann schalten Sie den Taxameter ein, wenn Sie einen Fahrtauftrag vom Standplatztelefon übernehmen?", "es gibt eine Wartezeit, 2 Minuten nach der vereinbarten Zeit"],
+  [13, "Wo verliert der Wiener Taxitarif seine Gültigkeit?", "außerhalb des Ortsgebietes"],
+  [14, "Welcher Betrag darf für eine mittels Kommunikationsdienst bestellte Fahrt verrechnet werden, wenn das Taxi ordnungsgemäß erscheint, aber der Fahrgast die Fahrt aus eigenem Verschulden nicht antritt?", "Grundtaxe + Kommunikationsdienstzuschlag + Wartezeit"],
+  [15, "Was wissen Sie über „Botenfahrt“?", "freie Vereinbarung, wird vom Landeshauptmann festgelegt"],
+  [16, "Wie werden Botenfahrten verrechnet?", "laut Taxameter (Taxameter+10% MwSt.) oder freie Vereinbarung Pauschale-Zonentarif"],
+  [17, "Unterliegen Botenfahrten dem amtlichen Wiener Taxitarif?", "Nein (Botenfahrten)"],
+  [18, "Welchen Steuersatz enthält eine sogenannte Botenfahrt?", "20% MwSt"],
+  [19, "Welche Taxen verändern sich gegenüber Tag und Nacht?", "Grundtaxe\nTag: 3.80€\nNacht, Sonntag und Feiertag 4.30€\nStreckentaxe\nbis 5.000m\nab 5.000m\nZeittaxe\nTag - 0,58€\nNacht-Sonntag und Feiertag - 0,67€"],
+  [20, "Der Fahrgast hat Gepäcksstücke und ersucht Sie diese in den Hausflur zu tragen. Dürfen Sie einen Zuschlag verrechnen?", "Nein (kein Zuschlag für das Tragen)"],
+  [21, "Sie führen eine Taxifahrt in einem Großraumtaxi laut Taxameter durch. Im Taxi befördern Sie 5,6,7 oder 8 Fahrgäste. Dürfen sie zusätzlich zum Fahrpreis einen Zuschlag verrechnen?", "Ja (Zuschlag für mehr als 4 Personen)"],
+  [22, "Wie hoch ist lt. Wiener Taxitarif der Zuschlag bei der Beförderung von mehr als 4 Personen im Großraumtaxis?", "2€"],
+  [23, "Was wissen Sie über Pauschale und Freie Vereinbarung?", "1. Krankenkassa\n2. Botenfahrt\n3. AST-Anrufsammeltaxi"],
+  [24, "Eine Fahrt außerhalb Wiens zum Flughafen", "kann im Rahmen einer freien Vereinbarung mit 18 € verrechnet werden."],
+  [25, "Eichamt Meldung", "1. Max. 3 Jahre\n2. Neuer Tarif\n3. Reparatur oder wenn der Taxameter defekt sind"],
+  [26, "Was verstehen Sie unter der Einzelvergabe von Sitzplätzen? Erklären Sie die Preisberechnung?", "mehrere Personen haben verschiedene Fahrziele, Fahrpreis wird anteilig verrechnet"],
+  [27, "Ist der Wiener Taxitarif ein Maximal-, Minimal- oder ein Verbindlicher Tarif? Begründen Sie Ihre Antwort?", "Der Wiener Taxitarif ist ein verbindlicher Tarif. Er wurde vom Wiener Landeshauptmann verordnet."],
+];
+
+const neueLbo: Raw[] = [
+  [1, "Neue Wiener Landesbetriebsordnung (ab 1. Jänner 2024) – welche Bestimmungen sind in der LBO geregelt (Inhaltsverzeichnis)?", "Beförderungsgewerbe mit Personenkraftwagen, Fachgruppe. Was bedeutet das für Ihr Unternehmen. Folgende Bestimmungen sind in der LBO geregelt:\n1. Beschaffenheit und Ausrüstung des Fahrzeuges\n2. Taxameter\n3. Kennzeichnung der Fahrzeuge\n4. Ersatzfahrzeuge\n5. Besondere Bestimmungen für Schülertransporte\n6. Beförderungspflicht\n7. Rauchverbot\n8. Pflichten der im Fahrdienst tätigen Personen beim Fahrbetrieb\n9. Information in einfacher Sprache\n10. Beförderungsbedingungen\n11. Standplätze\n12. Öffentliche Verkehrsflächen\n13. Akquirieren von Fahrgästen"],
+  [2, "Neue LBO: Beschaffenheit und Ausrüstung des Fahrzeuges (inkl. Taxameter)?", "1. Außenlänge: mind. 4,20m\n2. Außenbreite: mind. 1,56m\n3. Mindestens 4 Türen, eine Schiebetüre ersetzt 2 Türen\n4. Eingebaute Alarmanlage\n5. Funktionierende Klimaanlage und Heizung\n6. Elektrische Energie aus Akkumulatoren\n7. Fahrzeuge die ab 01.01.2025 erstmalig zugelassen werden, dürfen ausschließlich mit reinem Elektroantrieb, dessen elektrische Energie aus Akkumulatoren oder einer Wasserstoff-Brennstoffzelle, welche sich im Inneren des Fahrzeuges befinden, stammt, betrieben werden. Davon ausgenommen sind rollstuhlgerechte Fahrzeuge. Bisher zugelassene Taxifahrzeuge mit Verbrennungsmotoren können weiterverwendet werden, solange sie zugelassen sind.\n8. keine wesentlichen äußeren oder inneren Beschädigungen\n9. Sauberkeit\n10. Sicht- und lesbar anzubringen sind: der Name und der Standort des oder der Gewerbetreibenden sowie das behördliche Kennzeichen des Fahrzeuges in Form eines Schildes oder Aufklebers am Armaturenbrett angehängt werden. Ausweis für Lenker am Armaturenbrett, wobei der Teil des Ausweises, der die Angaben über Geburtsdatum, Geburtsort und Wohnadresse enthält. Sofern der Ausweis gemäß der BO 1994 kein Lichtbild enthält, ist zusätzlich an geeigneter Stelle ein Lichtbild des Ausweisinhabers, Passbild im Hochformat anzubringen, das die Identität des Inhabers zweifelsfrei erkennen lässt\n11. Tarifsätze des verordneten Tarifes.\n12. Auszug aus dem Gewerbeinformationssystem (GISA) des Unternehmens\n13. Ausdruck der LBO und des Tarifs\n14. Den Ausdruck des Tarifs muss in Fahrzeugen, die ausschließlich für Pauschalfahrten genutzt werden, nicht mitgeführt werden.\n15. Funktionierendes digitales Navigationssystem mit aktuellen Kartenmaterial z.B.: Navigations-App auf Smartphone, fest eingebautes Navigationssystem im Fahrzeug oder zusätzliches Navigationssystem.\n16. Funktionierendes Gerät zur bargeldlosen Bezahlung des Fahrpreises Bezahlung muss zumindest mit Bankomatkarte möglich sein. Dieses ist bei Fahrten mitzuführen, bei denen der Fahrpreis gleich nach Beendigung der Fahrt bezahlt werden muss.\n17. Taxameter darf ausschließlich auf den verordneten Wiener Taxitarif programmiert sein.\n18. muss ununterbrochen eingeschaltet, beleuchtet und für den Fahrgast ungehindert ablesbar sein.\n19. Wenn defekt dürfen keine Fahrten nach Wiener Taxitarif angenommen werden.\n20. In Fahrzeuge, die ausschließlich für Pauschalfahrten genutzt werden, braucht kein Taxameter eingebaut werden.\n21. In Fahrzeugen, die ausschließlich für Pauschalfahrten genutzt werden, ist eine eidesstattliche Erklärung mitzuführen, die besagt, dass das Fahrzeug ausschließlich für Pauschalfahrten genutzt wird. Die eidesstattliche Erklärung muss jedenfalls die Fahrzeug-Identifizierungsnummer beinhalten, und ein Abdruck muss zusätzlich am Standort des Unternehmens aufliegen."],
+  [3, "Neue LBO: Kennzeichnung der Fahrzeuge?", "1. Schild (Taxischild) am Dach mit der Aufschrift TAXI sowohl auf der Vorder- als auch auf der Hinterseite.\n2. Farbe der Aufschrift ist gelb auf schwarzem Hintergrund.\n3. Buchstabenhöhe: mind. 60 mm\n4. Buchstabenbalkendichte: mind. 17 mm\n5. Taxischild ist zu beleuchten.\n6. Wenn bestellt, besetzt oder außer Dienst ist die Beleuchtung ausgeschaltet.\n7. Fahrzeuge, die ausschließlich für Pauschalfahrten genutzt werden und die mit keinem Taxameter ausgestattet sind, dürfen nicht mit einem Taxischild gekennzeichnet werden.\n8. Taxischild kann auf Verlangen der Fahrgäste bei Fahrten aus besonderen Anlässen, wie Taufen, Hochzeiten oder Trauerfeiern abgenommen werden. Andere oder zusätzliche Kennzeichnungen am Taxischild oder Fahrzeugdach sind verboten.\n9. Sonstige Aufschriften auf Fahrzeugen, die Image schädigen oder gegen die guten Sitten sind, sind auch verboten."],
+  [4, "Neue LBO: Ersatzfahrzeuge?", "1. Dürfen nur vorübergehend max. 4 Wochen genutzt werden.\n2. Sind von außen klar erkennbar mit der Aufschrift „Ersatztaxi oder, Ersatzfahrzeug“ zu kennzeichnen.\n3. Müssen alle Vorgaben dieser LBO für Fahrzeuge betreffend Beschaffenheit, Ausrüstung und Kennzeichnung erfüllen.\n4. Kennzeichentafeln des eigentlichen Fahrzeuges müssen mitgeführt und auf Verlangen den Organen der Straßenaufsicht vorgewiesen werden."],
+  [5, "Neue LBO: Besondere Bestimmungen für Schülertransporte?", "1. Fahrzeuge müssen hinten und vorne mit einer Schülertransporttafel gekennzeichnet werden.\n2. Bei anderen Fahrten müssen diese Tafeln abgedeckt oder abgenommen werden. Beim Ein- und Aussteigen der Schüler muss die Warnblinkanlage eingeschaltet werden."],
+  [6, "Neue LBO: Beförderungspflicht?", "1. Fahrten, die an einem Taxistandplatz beginnen.\n2. Fahrten, die ein Fahrgast nach Anhalten eines Fahrzeuges, das sich auf der Fahrt zu einem Taxistandplatz befindet, antritt oder antreten möchte.\n3. Fahrten, die über eine Funkzentrale oder über ein digitales System vermittelt werden.\n4. Die Beförderungspflicht besteht nicht, wenn ein Ausschließungsgrund von der Beförderung vorliegt.\n5. Lenker müssen den zeitmäßig schnellsten Weg zum Fahrziel zu wählen, sofern der Fahrgast nicht anderes bestimmt. Auf Verlangen des Fahrgastes hat der Lenker oder die Lenkerin das digitale System zur Navigation zu verwenden."],
+  [7, "Neue LBO: Rauchverbot und Pflichten der im Fahrdienst tätigen Personen – welche Auskunft muss der Lenker geben?", "Rauchverbot:\n1. In Fahrzeugen, mit denen das Personenbeförderungsgewerbe mit Pkw-Taxi ausgeübt wird, darf nicht geraucht werden.\n2. Pflichten der im Fahrdienst tätigen Personen beim Fahrbetrieb. Der Lenker muss auf Verlangen des Fahrgastes.\nAuskunft geben:\n1. Fahrtroute\n2. Geschätzte Fahrtzeit\n3. Geltender Tarif und Ausnahmen davon\n4. Einrichtung des Taxameters und in welchen Fällen er einzuschalten ist voraussichtlicher Fahrpreis\n5. Bei Pauschalfahrten muss Fahrgast vor Beginn der Fahrt über den frei zu vereinbarenden Pauschalpreis informiert werden\n6. Gleiches gilt bei Botenfahrten\n7. Der Lenker oder die Lenkerin müssen direkt nach Beendigung der Fahrt eine Rechnung mit folgendem Inhalt ausstellen.\n8. Wegstrecke in km\n9. Fahrpreis\n10. Datum\n11. Behördliches Kennzeichen des Fahrzeuges\n12. Name und Standort des Unternehmens inkl. Telefonnummer oder E-Mail-Adresse\n13. Kennnummer zur Identifizierung des Lenkers\n14. Der Fahrgast kann auf die Rechnung verzichten.\n15. Der Lenker oder die Lenkerin hat genügend Wechselgeld mitzuführen, um auf einen 50€ Schein herausgeben zu können.\n16. Der Lenker oder die Lenkerin ist gegenüber den Fahrgästen hilfsbereit, höflich, rücksichtsvoll und ist beim Aus- und Einladen und bei Bedarf beim Ein- und Aussteigen behilflich.\n17. Der Lenker oder die Lenkerin hält alle Sitzplätze, den Fußraum und den Kofferraum zur sofortigen Benützung frei.\n18. Der Lenker oder die Lenkerin achtet auf Sauberkeit und gepflegtes Erscheinungsbild des Fahrzeuges.\n19. Der Lenker kontrolliert zu Dienstschluss ob Gegenstände von Fahrgästen im Fahrzeug vergessen wurden. Kann er den rechtmäßigen Besitzer nicht feststellen, hat er die Fundstücke dem Fundbüro abzugeben und bei vermittelten Fahrten den Vermittler darüber zu informieren.\n20. Der Lenker hat eine angemessene, saubere und gepflegte Kleidung zu tragen\n21. Information in einfacher Sprache\n22. Der Text ist im Innenraum des Fahrzeuges sowohl in ausgedruckter Form als auch mittels QR-Codes, welcher von jedem Sitzplatz aus gut sichtbar ist, zur Verfügung zu stellen."],
+  [8, "Neue LBO: Beförderungsbedingungen?", "1. Der Fahrgast benutzt das Fahrzeug schonend und legt kein Verhalten an den Tag, dass Sicherheit und Ordnung des Fahrbetriebes beeinträchtigt werden.\n2. Der Lenker kann den Fahrgast ablehnen bzw. während der Fahrt zum Aussteigen auffordern.\n3. Der Fahrgast das Fahrzeug verschmutzt oder beschädigt.\n4. Der Fahrgast sich so verhält, dass Sicherheit und Ordnung des Fahrbetriebes beeinträchtigt werden.\n5. Der Fahrgast das Rauchverbot nicht einhält.\n6. Der Lenker Sicherheitsbedenken betreffend die Tageszeit, des Fahrziels oder der Fahrtstrecke.\n7. Der Hund des Fahrgastes das Fahrzeug verschmutzt und/oder keinen Maulkorb trägt. Davon ausgenommen sind Assistenzhunde."],
+  [9, "Neue LBO: Standplätze?", "1. Dürfen nur von Fahrzeugen genutzt werden.\n2. Ein mit dem Wiener Taxitarif geeichtes Taxameter haben.\n3. Eine Taxileuchte haben.\n4. Die ankommenden Fahrzeuge schließen am letzten am Standplatz stehenden Fahrzeug an.\n5. Wenn ein Fahrzeug den Standplatz verlässt, schließen die anderen Fahrzeuge auf.\n6. Die Lenker der am Standplatz abgestellten Fahrzeuge haben sich fahrbereit zu halten oder sich leicht erreichbar in der Nähe der Fahrzeuge aufzuhalten.\n7. Die Fahrgäste können sich ein beliebiges Fahrzeug am Standplatz aussuchen."],
+  [10, "Neue LBO: Öffentliche Verkehrsflächen?", "1. Halten und Parken außerhalb der Taxistandplätzen ist dann erlaubt.\n2. Das Fahrzeug deutlich als bestellt, besetzt oder außer Dienst gekennzeichnet ist.\n3. Der das Taxischild abgenommen wurde.\n4. Wenn der Fahrpreisanzeiger eingeschaltet ist.\n5. Auffahren außerhalb der Taxistandplätzen ist dann erlaubt.\n6. Bei einem Sport- oder Kulturevent mind. 1.000 Besucher erwartet werden.\n7. Das Fahrzeug mit einem Taxischild und einem mit dem Wiener Taxitarif geeichten Taxameter ausgestattet ist."],
+  [11, "Neue LBO: Akquirieren von Fahrgästen?", "1. Umherfahren, um Fahrgäste zu gewinnen, ist verboten.\n2. Das Anwerben von Fahrgästen an Straßenbahn- und Bushaltestellen ist verboten, ausgenommen Schienen- und Busersatzverkehr."],
+];
+
+// Gemeinsamer Ablenker-Pool: alle Abschnitte zusammen, damit kurze Antworten genug ähnliche Gegenstücke haben
+const anmItems = items(anmeldung, "betriebsordnung").map((it) => ({
+  ...it,
+  wrong: [
+    "1) KFZ-Anmeldung bei der Zulassungsstelle\n2) Danach Fachgruppenbestätigung beim Finanzamt\n3) Kein Betriebsordnungsbescheid nötig – Typenschein und Versicherungsbestätigung genügen",
+    "1) Antrag beim Bezirksgericht\n2) Eintragung ins Firmenbuch\n3) Meldung an die ÖGK – das Fahrzeug darf sofort als Taxi verwendet werden",
+    "1) Nur ein Pickerl-Gutachten (§ 57a)\n2) Anmeldung über FinanzOnline\n3) Taxameter wird erst nach einem Jahr eingebaut",
+  ] as [string, string, string],
+}));
+const anm = buildBookChapter({ category: CAT, prefix: "anm", chapterName: "Anmeldung von Fahrzeugen", items: anmItems });
+const bo = buildBookChapter({ category: CAT, prefix: "bob", chapterName: "Wiener Landesbetriebsordnung", items: items(lbo, "betriebsordnung") });
+const ta = buildBookChapter({ category: CAT, prefix: "tab", chapterName: "Tarif", items: items(tarif, "tarif") });
+const nl = buildBookChapter({ category: CAT, prefix: "nlbo", chapterName: "Neue Wiener Landesbetriebsordnung", items: items(neueLbo, "betriebsordnung") });
+
+export const buchBoChapter = {
+  questions: [...anm.questions, ...bo.questions, ...ta.questions, ...nl.questions],
+  oral: [...anm.oral, ...bo.oral, ...ta.oral, ...nl.oral],
+};

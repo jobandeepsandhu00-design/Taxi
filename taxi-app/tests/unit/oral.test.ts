@@ -141,3 +141,17 @@ describe("Skript Arbeits- und Sozialrecht", () => {
     for (const o of buchArChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
+
+import { buchBoChapter } from "../../prisma/seed-data/buch-betriebsordnung";
+
+describe("Skript Betriebsordnung und Tarif", () => {
+  it("1 + 52 + 27 + 11 Fragen, eindeutige IDs, 4 verschiedene Antworten, mündlich bewertbar", () => {
+    expect(buchBoChapter.questions).toHaveLength(91);
+    expect(new Set(buchBoChapter.questions.map((q) => q.id)).size).toBe(91);
+    for (const q of buchBoChapter.questions) {
+      expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+      expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
+    }
+    for (const o of buchBoChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+  });
+});

@@ -92,8 +92,11 @@ function words(s: string): string[] {
 /** Testmodus-Bewertung ohne KI: Kernpunkt gilt als genannt, wenn ein markantes Wort (Stamm) vorkommt. */
 export function fakeCoverage(points: KeyPoint[], transcript: string): string[] {
   const said = words(transcript);
+  const norm = (x: string) => x.toLowerCase().replace(/\s+/g, "");
   return points
     .filter((p) =>
+      // Sehr kurze Punkte ohne längere Wörter (z. B. „2€“): direkter Textvergleich
+      (words(p.text).length === 0 && norm(transcript).includes(norm(p.text))) ||
       words(p.text).some((w) => {
         const stem = w.slice(0, Math.max(4, Math.min(6, w.length - 1)));
         return said.some((s) => s.startsWith(stem) || (s.length >= 5 && w.startsWith(s.slice(0, 5))));
