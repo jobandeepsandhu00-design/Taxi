@@ -30,7 +30,7 @@ export const konzessionCategories: SeedCategory[] = [
     ["belege", "Belegarten", "Eingangs-/Ausgangsrechnung, Kassa-, Bankbeleg"],
     ["ea-rechnung", "Einnahmen-Ausgaben-Rechnung", "Zufluss-Abfluss-Prinzip"],
   ]),
-  cat(2, "k-buchhaltung-bilanz", "Doppelte Buchhaltung und Bilanz", "Soll und Haben, Aktiva und Passiva, Bilanz und Gewinn- und Verlustrechnung.", "Calculator", "orange", [
+  cat(2, "k-buchhaltung-bilanz", "Doppelte Buchhaltung / Buchführung (Bilanz)", "Soll und Haben, Aktiva und Passiva, Bilanz und Gewinn- und Verlustrechnung.", "Calculator", "orange", [
     ["doppik", "Doppelte Buchhaltung", "Soll/Haben, Konten"],
     ["bilanz", "Bilanz", "Vermögen und Kapital"],
     ["guv", "Gewinn- und Verlustrechnung", "Erträge und Aufwände"],
@@ -140,31 +140,7 @@ export function shuffled(id: string, options: [Opt, Opt, Opt, Opt]): [Opt, Opt, 
 export const konzessionQuestions: SeedQuestion[] = [
   // Kapitel 1 (Rechnungswesen) kommt aus dem Skript: siehe buch-rechnungswesen.ts
 
-  // ───────────── 2. Doppelte Buchhaltung und Bilanz ─────────────
-  q("bb-01", "k-buchhaltung-bilanz", "bilanz", "EASY", "Was steht auf der Aktivseite einer Bilanz?", [
-    ["Das Vermögen (Anlage- und Umlaufvermögen)", true, "Aktiva zeigen, wofür das Kapital verwendet wurde."],
-    ["Eigenkapital und Schulden", false, "Das ist die Passivseite."],
-    ["Nur der Gewinn", false, "Der Gewinn ergibt sich aus der GuV und erhöht das Eigenkapital."],
-    ["Die Umsatzerlöse", false, "Erlöse stehen in der Gewinn- und Verlustrechnung."],
-  ], "Aktiva = Mittelverwendung (Vermögen), Passiva = Mittelherkunft (Eigen- und Fremdkapital). Beide Seiten sind gleich groß."),
-  q("bb-02", "k-buchhaltung-bilanz", "doppik", "EASY", "Warum heißt die doppelte Buchhaltung „doppelt“?", [
-    ["Jeder Geschäftsfall wird im Soll und im Haben gebucht", true, "Jede Buchung berührt mindestens zwei Konten."],
-    ["Weil zwei Buchhalter nötig sind", false, "Das hat mit der Bezeichnung nichts zu tun."],
-    ["Weil jede Buchung zweimal im Jahr erfolgt", false, "Buchungen erfolgen laufend und einmal."],
-    ["Weil Belege doppelt kopiert werden", false, "Kopien sind kein Merkmal der Doppik."],
-  ], "In der Doppik wird jeder Geschäftsfall auf mindestens zwei Konten (Soll und Haben) erfasst; der Erfolg wird doppelt ermittelt – durch Bilanz und GuV."),
-  q("bb-03", "k-buchhaltung-bilanz", "bilanz", "MEDIUM", "Woraus setzt sich die Passivseite der Bilanz zusammen?", [
-    ["Anlagevermögen und Umlaufvermögen", false, "Das ist die Aktivseite."],
-    ["Eigenkapital und Fremdkapital", true, "Die Passivseite zeigt die Herkunft der Mittel."],
-    ["Erträge und Aufwände", false, "Diese stehen in der GuV."],
-    ["Kassa und Bank", false, "Das sind Teile des Umlaufvermögens."],
-  ], "Passiva: Eigenkapital (Mittel der Eigentümer) und Fremdkapital (Verbindlichkeiten, Rückstellungen)."),
-  q("bb-04", "k-buchhaltung-bilanz", "guv", "MEDIUM", "Was zeigt die Gewinn- und Verlustrechnung?", [
-    ["Den Vermögensstand zu einem Stichtag", false, "Das zeigt die Bilanz."],
-    ["Erträge und Aufwände eines Zeitraums und damit den Erfolg", true, "Die GuV ist eine Zeitraumrechnung."],
-    ["Nur die Bankbewegungen", false, "Bankbewegungen sind nicht automatisch Aufwand/Ertrag."],
-    ["Die Privatentnahmen", false, "Entnahmen sind kein Aufwand."],
-  ], "Die GuV stellt alle Erträge und Aufwände eines Geschäftsjahres gegenüber; der Saldo ist Gewinn oder Verlust."),
+  // Kapitel 2 (Doppelte Buchhaltung) kommt aus dem Skript: siehe buch-buchhaltung.ts
 
   // ───────────── 3. Personalverrechnung ─────────────
   q("pv-01", "k-personalverrechnung", "brutto-netto", "EASY", "Welche Abzüge führen vom Bruttolohn zum Nettolohn?", [
@@ -690,4 +666,4 @@ export const ORAL_CHAPTER: Record<string, string> = {
 };
 
 /** Frühere eigene Übungsfragen, die durch Skript-Fragen ersetzt wurden (werden archiviert). */
-export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c"];
+export const RETIRED_QUESTION_IDS = ["kz-rw-01", "kz-rw-02", "kz-rw-03", "kz-rw-04", "kz-rw-05", "rwb-01b", "rwb-02b", "rwb-07b", "rwb-18b", "rwb-26b", "rwb-27b", "rwb-43b", "rwb-43c", "kz-bb-01", "kz-bb-02", "kz-bb-03", "kz-bb-04"];

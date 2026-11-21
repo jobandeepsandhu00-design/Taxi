@@ -59,7 +59,8 @@ describe("oral grading rules", () => {
 
 import { konzessionCategories, konzessionQuestions as kq } from "../../prisma/seed-data/konzession";
 import { buchRwOral, buchRwQuestions } from "../../prisma/seed-data/buch-rechnungswesen";
-const konzessionQuestions = [...kq, ...buchRwQuestions];
+import { buchBbChapter } from "../../prisma/seed-data/buch-buchhaltung";
+const konzessionQuestions = [...kq, ...buchRwQuestions, ...buchBbChapter.questions];
 
 describe("Konzession-Kapitel", () => {
   it("jede Kategorie hat Fragen, jede Frage genau gültige Struktur", () => {
@@ -88,5 +89,14 @@ describe("Skript Rechnungswesen", () => {
     // Richtige Antwort nicht immer an derselben Stelle
     const firsts = buchRwQuestions.filter((q) => q.options[0][1]).length;
     expect(firsts).toBeLessThan(buchRwQuestions.length * 0.6);
+  });
+});
+
+describe("Skript Doppelte Buchhaltung", () => {
+  it("20 Fragen, vollständige Antwort als richtige Auswahl, mündlich bewertbar", () => {
+    expect(buchBbChapter.questions).toHaveLength(20);
+    expect(buchBbChapter.oral).toHaveLength(20);
+    for (const q of buchBbChapter.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+    for (const o of buchBbChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
