@@ -213,10 +213,10 @@ test.describe.serial("Lernende/r", () => {
   test("Fragensuche, Einzelfrage und Merkliste", async ({ page }) => {
     await login(page, STUDENT.email, STUDENT.password);
     await gotoSettled(page, "/fragen");
-    await page.getByLabel("Suchbegriff").fill("Prokura");
+    await page.getByLabel("Suchbegriff").fill("Telebanking");
     await page.getByRole("button", { name: "Suchen" }).click();
     await expect(page.getByText("1 Frage gefunden")).toBeVisible();
-    await page.getByRole("link", { name: /Prokura/ }).click();
+    await page.getByRole("link", { name: /Telebanking/ }).click();
     await page.getByRole("button", { name: "Zur Merkliste hinzufügen" }).click();
     await expect(page.getByRole("button", { name: "Von der Merkliste entfernen" })).toBeVisible();
     // Übersetzungshilfe öffnet sich als Bottom-Sheet
@@ -227,7 +227,7 @@ test.describe.serial("Lernende/r", () => {
     await expect(page.getByRole("dialog", { name: "Übersetzungshilfe" })).toHaveCount(0);
     await answerFirstOption(page);
     await gotoSettled(page, "/fragen?merkliste=1");
-    await expect(page.getByRole("link", { name: /Prokura/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Telebanking/ })).toBeVisible();
   });
 
   test("Fortschritt und Profil", async ({ page }) => {

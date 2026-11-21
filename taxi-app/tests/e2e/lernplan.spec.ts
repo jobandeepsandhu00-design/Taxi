@@ -44,9 +44,9 @@ test("Lernplan: Home-Karte, Filter, Suche, Sperre, Vorschau, Lektion starten und
   await page.getByRole("radio", { name: "Falsch" }).click();
   await expect(page.getByText("0 Fragen gefunden")).toBeVisible();
   await page.getByRole("radio", { name: "Alle" }).click();
-  await page.getByLabel("Fragen durchsuchen").fill("Prokura");
+  await page.getByLabel("Fragen durchsuchen").fill("Telebanking");
   await expect(page.getByText("1 Frage gefunden")).toBeVisible();
-  await page.getByRole("button", { name: /Prokura/ }).click();
+  await page.getByRole("button", { name: /Telebanking/ }).click();
   const sheet = page.getByTestId("question-sheet");
   await expect(sheet).toContainText("Noch nicht beantwortet");
   await sheet.getByRole("button", { name: "Merken" }).click();

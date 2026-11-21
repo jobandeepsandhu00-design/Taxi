@@ -169,3 +169,21 @@ describe("Skript Kollektivvertrag", () => {
     for (const o of buchKvChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
+
+import { buchGoChapter, buchGrChapter, buchWkChapter } from "../../prisma/seed-data/buch-gewerbe";
+
+describe("Skript Gewerbeordnung, Wirtschaftskammer, Gesellschaftsrecht", () => {
+  it("52 + 18 + 43 Fragen, eindeutig, 4 verschiedene Antworten, mündlich bewertbar", () => {
+    expect(buchGoChapter.questions).toHaveLength(52);
+    expect(buchWkChapter.questions).toHaveLength(18);
+    expect(buchGrChapter.questions).toHaveLength(43);
+    for (const ch of [buchGoChapter, buchWkChapter, buchGrChapter]) {
+      expect(new Set(ch.questions.map((q) => q.id)).size).toBe(ch.questions.length);
+      for (const q of ch.questions) {
+        expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
+        expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
+      }
+      for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    }
+  });
+});
