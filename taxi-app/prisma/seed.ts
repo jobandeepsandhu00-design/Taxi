@@ -11,6 +11,7 @@ import { sources } from "./seed-data/sources";
 import { seedVariants } from "./seed-data/variants";
 import { numberFacts, routes } from "./seed-data/learning-extras";
 import { oralQuestions } from "./seed-data/oral-questions";
+import { konzessionCategories, konzessionQuestions } from "./seed-data/konzession";
 
 const prisma = new PrismaClient();
 
@@ -70,7 +71,7 @@ async function main() {
   // Kategorien & Themen
   const categoryIds = new Map<string, string>();
   const topicIds = new Map<string, string>();
-  for (const c of categories) {
+  for (const c of [...categories, ...konzessionCategories]) {
     const data = {
       name: c.name,
       shortDescription: c.shortDescription,
@@ -98,7 +99,7 @@ async function main() {
   }
 
   // Demo-Fragen (deterministische IDs → idempotent)
-  for (const q of questions) {
+  for (const q of [...questions, ...konzessionQuestions]) {
     const categoryId = categoryIds.get(q.category);
     if (!categoryId) throw new Error(`Unbekannte Kategorie ${q.category} in ${q.id}`);
     const correct = q.options.filter((o) => o[1]).length;

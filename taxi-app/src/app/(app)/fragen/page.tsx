@@ -76,9 +76,16 @@ export default async function QuestionSearchPage({ searchParams }: { searchParam
         </div>
         <Select name="kategorie" defaultValue={sp.kategorie ?? ""} aria-label="Kategorie">
           <option value="">Alle Kategorien</option>
-          {categories.map((c) => (
-            <option key={c.slug} value={c.slug}>{c.name}</option>
-          ))}
+          <optgroup label="Taxi-Grundlagen">
+            {categories.filter((c) => !c.slug.startsWith("k-")).map((c) => (
+              <option key={c.slug} value={c.slug}>{c.name}</option>
+            ))}
+          </optgroup>
+          <optgroup label="Konzessionsprüfung – Kapitel">
+            {categories.filter((c) => c.slug.startsWith("k-")).map((c) => (
+              <option key={c.slug} value={c.slug}>{c.name}</option>
+            ))}
+          </optgroup>
         </Select>
         <Select name="schwierigkeit" defaultValue={difficulty ?? ""} aria-label="Schwierigkeit">
           <option value="">Alle Schwierigkeiten</option>

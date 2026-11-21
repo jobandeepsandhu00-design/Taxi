@@ -56,3 +56,20 @@ describe("oral grading rules", () => {
     expect(sessionPercent([], 0)).toBe(0);
   });
 });
+
+import { konzessionCategories, konzessionQuestions } from "../../prisma/seed-data/konzession";
+
+describe("Konzession-Kapitel", () => {
+  it("jede Kategorie hat Fragen, jede Frage genau gültige Struktur", () => {
+    const slugs = new Set(konzessionCategories.map((c) => c.slug));
+    expect(slugs.size).toBe(konzessionCategories.length);
+    const ids = new Set(konzessionQuestions.map((q) => q.id));
+    expect(ids.size).toBe(konzessionQuestions.length);
+    for (const c of konzessionCategories) expect(konzessionQuestions.filter((q) => q.category === c.slug).length, c.slug).toBeGreaterThanOrEqual(3);
+    for (const q of konzessionQuestions) {
+      expect(slugs.has(q.category), q.id).toBe(true);
+      expect(konzessionCategories.find((c) => c.slug === q.category)!.topics.some((t) => t.slug === q.topic), q.id).toBe(true);
+      expect(q.options.filter((o) => o[1]).length, q.id).toBeGreaterThanOrEqual(1);
+    }
+  });
+});
