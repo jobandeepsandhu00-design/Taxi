@@ -74,10 +74,14 @@ export async function startPracticeQuizAction(formData: FormData) {
     categoryIds: formData.getAll("categoryIds").map(String),
     difficulty: formData.get("difficulty") ?? "ALL",
   });
+  // Lernbuch: ohne eigene Auswahl nur freigeschaltete Kapitel (außer „alle Kapitel“ ist angehakt)
+  const { unlockedCategoryIds } = await import("@/server/lernbuch");
+  const unlocked = parsed.categoryIds.length || formData.get("allChapters") === "on" ? null : await unlockedCategoryIds(user.id);
+  const categoryFilter = parsed.categoryIds.length ? parsed.categoryIds : unlocked;
   const pool = await prisma.question.findMany({
     where: {
       ...publishedWhere,
-      ...(parsed.categoryIds.length ? { categoryId: { in: parsed.categoryIds } } : {}),
+      ...(categoryFilter ? { categoryId: { in: categoryFilter } } : {}),
       ...(parsed.difficulty !== "ALL" ? { difficulty: parsed.difficulty } : {}),
     },
     select: { id: true },
@@ -271,6 +275,12 @@ export async function finishQuizAction(attemptId: string): Promise<ActionResult>
     if (lessonId) {
       const score = await prisma.userAnswer.count({ where: { quizAttemptId: attempt.id, isCorrect: true } });
       await prisma.lesson.updateMany({ where: { id: lessonId, userId: user.id }, data: { score, completedAt: finishedAt } });
+    }
+    // Lernbuch: Kapitel-Check auswerten
+    const checkCategory = (attempt.settings as { chapterCheck?: string } | null)?.chapterCheck;
+    if (checkCategory) {
+      const { recordChapterCheck } = await import("@/server/lernbuch");
+      await recordChapterCheck(user.id, attempt.id, checkCategory, attempt.questionIds.length);
     }
     // Daily Challenge: Ergebnis einmal pro Tag für die Rangliste speichern
     const challengeDay = (attempt.settings as { dailyChallenge?: string } | null)?.dailyChallenge;

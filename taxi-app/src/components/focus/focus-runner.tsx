@@ -29,7 +29,7 @@ import type { AnswerReveal } from "@/server/questions";
 import { FocusDialog, FocusSegments, FocusSheet, FocusTimer, GridButton, IosFullscreenHint, QuestionGrid, type SegState } from "./focus-parts";
 
 type ExamMode = { kind: "exam"; attemptId: string; expiresAt: string; serverNow: string; initialResponses: Record<string, { selected: string[]; marked: boolean }> };
-type LearnMode = { kind: "learn"; attemptId: string; modeLabel: string; initialReveals: Record<string, AnswerReveal>; initialFlags: string[]; lesson: LessonInfo | null; isDailyChallenge: boolean };
+type LearnMode = { kind: "learn"; attemptId: string; modeLabel: string; initialReveals: Record<string, AnswerReveal>; initialFlags: string[]; lesson: LessonInfo | null; isDailyChallenge: boolean; forceChoices?: boolean };
 
 interface Props {
   title: string;
@@ -100,11 +100,12 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
   const [simpleBusy, setSimpleBusy] = useState(false);
   // Antwort-Modus (nur Lernmodus): „mc“ = mit Antwortmöglichkeiten, „recall“ = nur Frage, Antworten verdeckt
   const modeKey = `tp-answer-mode:${mode.attemptId}`;
-  const [answerMode, setAnswerMode] = useState<"mc" | "recall" | null>(exam ? "mc" : null);
+  const forceMc = exam || (mode.kind === "learn" && Boolean(mode.forceChoices));
+  const [answerMode, setAnswerMode] = useState<"mc" | "recall" | null>(forceMc ? "mc" : null);
   const [peeks, setPeeks] = useState<Record<string, { answer: string; explanation: string }>>({});
   const [modeLoaded, setModeLoaded] = useState(false);
   useEffect(() => {
-    if (exam) return;
+    if (forceMc) return;
     try {
       const saved = localStorage.getItem(modeKey);
       if (saved === "mc" || saved === "recall") setAnswerMode(saved);
@@ -112,7 +113,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
       /* ignorieren */
     }
     setModeLoaded(true);
-  }, [exam, modeKey]);
+  }, [forceMc, modeKey]);
   function chooseMode(m: "mc" | "recall") {
     setAnswerMode(m);
     try {
@@ -501,7 +502,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
                   </p>
                 )}
                 {q.multipleCorrect && <p className="mt-1 text-xs font-semibold text-muted-foreground">Mehrfachauswahl: mehrere Antworten können richtig sein.</p>}
-                {!exam && (
+                {!forceMc && (
                   <button type="button" onClick={() => chooseMode(recall ? "mc" : "recall")} className="mt-2 mr-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-semibold text-muted-foreground" data-testid="answer-mode-toggle">
                     {recall ? <ListChecks className="size-3.5" /> : <EyeOff className="size-3.5" />} {recall ? "Antworten einblenden" : "Antworten verdecken"}
                   </button>

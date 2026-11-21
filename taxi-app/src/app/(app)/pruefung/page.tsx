@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 import { startExamAction } from "@/server/actions/exam";
 import { expireOverdueExams } from "@/server/exam";
+import { unlockedCategoryIds } from "@/server/lernbuch";
 
 export const metadata: Metadata = { title: "Prüfungsmodus" };
 
@@ -34,6 +35,7 @@ export default async function ExamOverviewPage({ searchParams }: { searchParams:
     }),
     prisma.examAttempt.findMany({ where: { userId: user.id, status: "IN_PROGRESS" }, select: { id: true, examConfigId: true } }),
   ]);
+  const unlocked = await unlockedCategoryIds(user.id);
   const openByConfig = new Map(open.map((o) => [o.examConfigId, o.id]));
   const passedCount = history.filter((h) => h.passed).length;
 
@@ -87,6 +89,11 @@ export default async function ExamOverviewPage({ searchParams }: { searchParams:
                 {c.officialReference && <p className="text-xs text-muted-foreground">Grundlage: {c.officialReference}</p>}
                 <form action={startExamAction} className="mt-auto">
                   <input type="hidden" name="examConfigId" value={c.id} />
+                  {unlocked && !openByConfig.has(c.id) && (
+                    <label className="mb-2 flex items-center gap-2 text-xs text-muted-foreground" data-testid="exam-all-chapters">
+                      <input type="checkbox" name="allChapters" className="size-4 accent-blue-700" /> Alle Kapitel statt nur der {unlocked.length} freigeschalteten
+                    </label>
+                  )}
                   <SubmitButton size="lg" variant={openByConfig.has(c.id) ? "secondary" : "navy"} className="w-full" pendingText="Prüfung wird vorbereitet…">
                     <ClipboardCheck /> {openByConfig.has(c.id) ? "Laufende Prüfung fortsetzen" : "Prüfung starten"}
                   </SubmitButton>

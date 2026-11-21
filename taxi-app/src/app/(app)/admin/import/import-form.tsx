@@ -22,6 +22,17 @@ export function ImportForm() {
       return;
     }
     setFileName(file.name);
+    if (/\.xlsx$/i.test(file.name)) {
+      // Excel: erstes Blatt im Browser in CSV umwandeln
+      try {
+        const [{ readSheet }, Papa] = await Promise.all([import("read-excel-file/browser"), import("papaparse")]);
+        const rows = await readSheet(file);
+        setContent(Papa.default.unparse(rows.map((r) => r.map((c) => (c == null ? "" : c instanceof Date ? c.toISOString().slice(0, 10) : String(c))))));
+      } catch {
+        setError("Die Excel-Datei konnte nicht gelesen werden.");
+      }
+      return;
+    }
     setContent(await file.text());
   }
 
@@ -40,13 +51,13 @@ export function ImportForm() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>CSV-Import</CardTitle></CardHeader>
+      <CardHeader><CardTitle>CSV-/Excel-Import</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-8 text-center hover:border-primary">
           <FileUp className="size-8 text-link" />
-          <span className="font-semibold text-navy">{fileName || "CSV-Datei auswählen"}</span>
+          <span className="font-semibold text-navy">{fileName || "CSV- oder Excel-Datei (.xlsx) auswählen"}</span>
           <span className="text-xs text-muted-foreground">Zuerst wird eine Prüfung (Probelauf) durchgeführt – erst danach wird importiert.</span>
-          <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+          <input type="file" accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
         </label>
         {error && <Alert variant="error">{error}</Alert>}
         <div className="flex flex-wrap gap-2">

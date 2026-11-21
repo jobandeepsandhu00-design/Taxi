@@ -53,7 +53,7 @@ export function nextLeitner(box: number | null, isCorrect: boolean, unsure = fal
   return { box: nb, days: LEITNER_DAYS[nb] };
 }
 
-export type AchievementKey = "erste-100" | "serie-7" | "stvo-meister" | "ortskunde-kaiser" | "nachteule" | "erste-pruefung";
+export type AchievementKey = "erste-100" | "serie-7" | "stvo-meister" | "ortskunde-kaiser" | "nachteule" | "erste-pruefung" | "buecherwurm" | "halbzeit" | "alles-gelesen" | "check-meister";
 
 export const ACHIEVEMENTS: { key: AchievementKey; title: string; desc: string; emoji: string }[] = [
   { key: "erste-100", title: "Erste 100 Fragen", desc: "100 Fragen beantwortet", emoji: "💯" },
@@ -62,6 +62,10 @@ export const ACHIEVEMENTS: { key: AchievementKey; title: string; desc: string; e
   { key: "ortskunde-kaiser", title: "Ortskunde-Kaiser", desc: "90 % der Wiener Ortskunde gemeistert", emoji: "👑" },
   { key: "nachteule", title: "Nachteule", desc: "Nach 22 Uhr gelernt", emoji: "🦉" },
   { key: "erste-pruefung", title: "Bestanden!", desc: "Erste Prüfungssimulation bestanden", emoji: "🏆" },
+  { key: "buecherwurm", title: "Bücherwurm", desc: "Erstes Kapitel im Lernbuch gelesen", emoji: "📖" },
+  { key: "halbzeit", title: "Halbzeit", desc: "Die Hälfte aller Fragen gelesen", emoji: "🌓" },
+  { key: "alles-gelesen", title: "Alles gelesen", desc: "Alle Fragen im Lernbuch gelesen", emoji: "📚" },
+  { key: "check-meister", title: "Check-Meister", desc: "Alle Kapitel-Checks bestanden", emoji: "🏅" },
 ];
 
 /** Kategorie-Slug → Abzeichen für „Kategorie gemeistert" */

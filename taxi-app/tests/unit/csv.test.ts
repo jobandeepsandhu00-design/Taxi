@@ -25,6 +25,7 @@ const row = (overrides: Partial<CsvRow> = {}) => {
     fundstelle: "§ 19 StVO",
     tags: "vorrang|kreuzung",
     bild_url: "",
+    merkhilfe: "",
   };
   return CSV_HEADERS.map((h) => {
     const v = (overrides[h] ?? base[h]) as string;
@@ -111,6 +112,7 @@ describe("serializeQuestionsCsv", () => {
         fundstelle: "",
         tags: "",
         bild_url: "",
+        merkhilfe: "",
       },
     ]);
     expect(csv.startsWith("﻿")).toBe(true);

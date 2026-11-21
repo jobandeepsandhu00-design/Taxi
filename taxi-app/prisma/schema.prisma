@@ -127,6 +127,9 @@ model User {
   oralSessions      OralSession[]
   oralAttempts      OralAttempt[]
   oralProgress      OralProgress[]
+  readProgress      ReadProgress[]
+  chapterProgress   ChapterProgress[]
+  lernbuchSettings  LernbuchSettings?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   lastLoginAt       DateTime?
@@ -173,6 +176,8 @@ model Category {
   questions        Question[]
   progress         UserProgress[]
   oralQuestions    OralQuestion[]
+  chapterProgress  ChapterProgress[]
+  chapterSummary   ChapterSummary?
 
   @@index([regionId, isActive, order])
 }
@@ -224,6 +229,9 @@ model Question {
   sourceDetail    String?             @db.VarChar(255)
   /// Lektion innerhalb der Kategorie (je 5 Fragen); automatisch vergeben, im Admin-Bereich änderbar
   lessonIndex     Int?
+  /// Merkhilfe (Lernbuch)
+  mnemonic        String?        @db.Text
+  readProgress    ReadProgress[]
   createdById     String?
   createdBy       User?               @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt       DateTime            @default(now())
@@ -826,4 +834,66 @@ model OralProgress {
 
   @@unique([userId, oralQuestionId])
   @@index([userId, dueAt])
+}
+
+/// Lernbuch: Lesestatus pro Frage
+model ReadProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId    String
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// "gelesen" | "verstanden" | "nochmal"
+  status        String   @db.VarChar(12)
+  timesRead     Int      @default(1)
+  /// Tage (YYYY-MM-DD), an denen „verstanden“ gewählt wurde
+  understoodDays String[] @default([])
+  starred       Boolean  @default(false)
+  nextRepeatAt  DateTime?
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([userId, status])
+  @@index([userId, nextRepeatAt])
+}
+
+/// Lernbuch: Fortschritt pro Kapitel (= Kategorie)
+model ChapterProgress {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  lastPosition    Int       @default(0)
+  checkScore      Int?
+  checkPassed     Boolean   @default(false)
+  unlockedForQuiz Boolean   @default(false)
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, categoryId])
+}
+
+/// Lernbuch: KI-Spickzettel pro Kapitel
+model ChapterSummary {
+  categoryId  String   @id
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  contentDe   String   @db.Text
+  keyNumbers  Json     @default("[]")
+  traps       Json     @default("[]")
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LernbuchSettings {
+  userId           String  @id
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// null = aus, sonst Sekunden
+  autoAdvanceSec   Int?
+  showWrongAnswers Boolean @default(false)
+  /// "s" | "m" | "l" | "xl"
+  textSize         String  @default("m") @db.VarChar(2)
+  audioSpeed       Float   @default(1)
+  quizOnlyUnlocked Boolean @default(true)
 }

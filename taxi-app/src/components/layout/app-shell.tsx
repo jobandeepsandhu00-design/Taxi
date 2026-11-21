@@ -11,7 +11,9 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { haptic, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
-import { adminNav, mainNav, mobileNav } from "./nav-items";
+import { CoachFab } from "./coach-fab";
+import { UebenTabs } from "./ueben-tabs";
+import { adminNav, mainNav, mobileNav, pathInTab } from "./nav-items";
 
 interface ShellUser {
   name: string;
@@ -169,12 +171,12 @@ function MobileHeader({ user, onMenu }: { user: ShellUser; onMenu: () => void })
 
 /** Untere Tab-Leiste mit gleitender Pille (layoutId) und hüpfendem Icon. */
 function BottomNav() {
-  const isActive = useIsActive();
+  const pathname = usePathname();
   return (
     <nav aria-label="Schnellnavigation" className="pb-safe fixed inset-x-0 bottom-0 z-30 px-3 lg:hidden">
-      <ul className="glass mx-auto mb-2 grid max-w-md grid-cols-6 rounded-2xl p-1.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]">
+      <ul className="glass mx-auto mb-2 grid max-w-md grid-cols-5 rounded-2xl p-1.5 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]">
         {mobileNav.map((item) => {
-          const active = isActive(item.href);
+          const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathInTab(pathname, item);
           return (
             <li key={item.href}>
               <Link
@@ -248,11 +250,15 @@ export function AppShell({ user, children, disclaimer }: { user: ShellUser; chil
       </AnimatePresence>
 
       <div className="lg:pl-72">
-        <main className="mx-auto w-full max-w-6xl px-4 pt-3 pb-32 sm:px-6 lg:px-8 lg:pt-8 lg:pb-12">{children}</main>
+        <main className="mx-auto w-full max-w-6xl px-4 pt-3 pb-32 sm:px-6 lg:px-8 lg:pt-8 lg:pb-12">
+          <UebenTabs />
+          {children}
+        </main>
         <footer className="mx-auto hidden max-w-6xl px-8 pb-8 text-xs leading-relaxed text-muted-foreground lg:block">{disclaimer}</footer>
       </div>
 
       <BottomNav />
+      <CoachFab />
       <InstallPrompt />
     </div>
   );

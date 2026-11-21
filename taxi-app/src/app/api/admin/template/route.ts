@@ -27,6 +27,7 @@ export async function GET() {
       fundstelle: "§ 20 Abs. 2 StVO",
       tags: "geschwindigkeit|ortsgebiet",
       bild_url: "",
+      merkhilfe: "",
     },
   ]);
   return new Response(csv, {

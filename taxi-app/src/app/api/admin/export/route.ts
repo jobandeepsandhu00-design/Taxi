@@ -46,6 +46,7 @@ export async function GET(request: Request) {
       fundstelle: q.sourceDetail ?? "",
       tags: q.tags.join("|"),
       bild_url: q.imageUrl ?? "",
+      merkhilfe: q.mnemonic ?? "",
     };
   });
   const date = new Date().toISOString().slice(0, 10);

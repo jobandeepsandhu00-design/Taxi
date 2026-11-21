@@ -36,6 +36,7 @@ export const CSV_HEADERS = [
   "fundstelle",
   "tags",
   "bild_url",
+  "merkhilfe",
 ] as const;
 
 export type CsvRow = Record<(typeof CSV_HEADERS)[number], string>;
@@ -56,6 +57,7 @@ export interface ParsedCsvQuestion {
   sourceDetail?: string;
   tags: string[];
   imageUrl?: string;
+  mnemonic?: string;
 }
 
 export interface CsvParseResult {
@@ -177,6 +179,7 @@ export function parseQuestionCsv(content: string): CsvParseResult {
         .map((t) => t.trim())
         .filter(Boolean),
       imageUrl,
+      mnemonic: clean(row.merkhilfe) || undefined,
     });
   });
   return result;

@@ -6,16 +6,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CSV_HEADERS } from "@/lib/csv";
 import { prisma } from "@/lib/db";
 import { ImportForm } from "./import-form";
+import { MnemonicFill } from "./mnemonic-fill";
 
 export const metadata: Metadata = { title: "Import / Export" };
 
 export default async function ImportPage() {
-  const categories = await prisma.category.findMany({ orderBy: { order: "asc" }, select: { slug: true, name: true } });
+  const [categories, missing] = await Promise.all([
+    prisma.category.findMany({ orderBy: { order: "asc" }, select: { id: true, slug: true, name: true, isActive: true } }),
+    prisma.question.groupBy({ by: ["categoryId"], where: { status: "PUBLISHED", mnemonic: null }, _count: { _all: true } }),
+  ]);
+  const mnemonicCats = categories.filter((c) => c.isActive).map((c) => ({ id: c.id, name: c.name, missing: missing.find((m) => m.categoryId === c.id)?._count._all ?? 0 }));
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Administration" title="Import & Export" description="Fragen per CSV-Datei massenhaft importieren oder den gesamten Katalog exportieren." />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2"><ImportForm /></div>
+        <div className="space-y-6 lg:col-span-2">
+          <ImportForm />
+          <MnemonicFill categories={mnemonicCats} />
+        </div>
         <div className="space-y-6">
           <Card>
             <CardHeader><CardTitle>Export</CardTitle></CardHeader>

@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
   const { questionId, selectedOptionIds } = parsed.data;
 
   // Nur nach dem Beantworten (die Erklärung verrät die Lösung)
-  const answered = await prisma.userAnswer.findFirst({ where: { userId: user.id, questionId }, select: { id: true } });
+  // (im Lernbuch ist die Antwort bereits sichtbar → gelesene Karten zählen auch)
+  const answered =
+    (await prisma.userAnswer.findFirst({ where: { userId: user.id, questionId }, select: { id: true } })) ??
+    (await prisma.readProgress.findFirst({ where: { userId: user.id, questionId }, select: { id: true } }));
   const key = await getAnswerKey(questionId);
   if (!key || !answered) return NextResponse.json({ error: "Frage nicht gefunden." }, { status: 404 });
   const chosenWrong = key.options.filter((o) => selectedOptionIds.includes(o.id) && !o.isCorrect);

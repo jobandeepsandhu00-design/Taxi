@@ -7,6 +7,8 @@ import { AchievementStrip, CategoryList, QuickActions, StreakFlame, XpCard, Zero
 import { DailyRings, ReadinessRing } from "@/components/home/rings";
 import { CoachBubble, DailyPlanCard, PrognosisCard } from "@/components/home/coach-cards";
 import { LessonCta } from "@/components/home/lesson-cta";
+import { LernbuchWidget } from "@/components/lernbuch/lernbuch-widget";
+import { getLernbuchOverview } from "@/server/lernbuch";
 import { LearnPlanCard } from "@/components/learn-plan/learn-plan-card";
 import { getLearnPlan } from "@/server/learn-plan";
 import { buildCoachContext } from "@/server/coach/context";
@@ -29,7 +31,8 @@ export const metadata: Metadata = { title: "Start" };
 
 const actions = [
   { href: "/challenge", label: "Daily Challenge", desc: "5 Fragen · Rangliste", icon: "Trophy" },
-  { href: "/lernen", label: "Lernen starten", desc: "Nach Kategorien", icon: "BookOpen" },
+  { href: "/lernbuch", label: "Lernbuch", desc: "Erst lesen, dann üben", icon: "BookOpen" },
+  { href: "/lernen", label: "Lektionen", desc: "Nach Kategorien", icon: "BookOpen" },
   { href: "/quiz", label: "Quiz starten", desc: "Zufällige Fragen", icon: "Sparkles" },
   { href: "/pruefung", label: "Prüfungsmodus", desc: "Echte Simulation", icon: "ClipboardCheck" },
   { href: "/muendlich", label: "Mündliche Prüfung", desc: "Laut antworten, Toni bewertet", icon: "Mic" },
@@ -64,7 +67,7 @@ export default async function DashboardPage() {
     prisma.userAchievement.findMany({ where: { userId: user.id }, select: { key: true } }),
   ]);
   const coachCtx = await buildCoachContext(user.id);
-  const [plan, learnPlan] = await Promise.all([getDailyPlanState(user.id, coachCtx), getLearnPlan(user.id)]);
+  const [plan, learnPlan, lernbuch] = await Promise.all([getDailyPlanState(user.id, coachCtx), getLearnPlan(user.id), getLernbuchOverview(user.id)]);
   const daysToExam = user.targetExamDate ? diffDays(dayKey(), dateToDayKey(user.targetExamDate)) : null;
   const firstName = user.isGuest ? "Gast" : user.name.split(" ")[0];
   const goalQuestions = dailyGoalQuestions(user.dailyGoalMinutes);
@@ -111,6 +114,8 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      <LernbuchWidget o={lernbuch} />
 
       <LessonCta due={due} />
 

@@ -394,6 +394,7 @@ export async function importQuestionsCsvAction(csv: string, dryRun: boolean): Pr
           difficulty: q.difficulty,
           multipleCorrect: q.multipleCorrect,
           imageUrl: q.imageUrl ?? null,
+          ...(q.mnemonic !== undefined ? { mnemonic: q.mnemonic } : {}),
           tags: q.tags,
           status: q.status,
           origin: q.origin,

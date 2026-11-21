@@ -95,7 +95,9 @@ export async function getTranslationAction(questionId: string, lang: string): Pr
       return { ok: false, error: coachErrorMessage(err) };
     }
   }
-  const answered = await prisma.userAnswer.findFirst({ where: { userId: user.id, questionId: id }, select: { id: true } });
+  const answered =
+    (await prisma.userAnswer.findFirst({ where: { userId: user.id, questionId: id }, select: { id: true } })) ??
+    (await prisma.readProgress.findFirst({ where: { userId: user.id, questionId: id }, select: { id: true } }));
   return { ok: true, data: { variantId: v.id, verified: v.verified, lang, question: v.content.question, options: v.content.options, explanation: answered ? (v.content.explanation ?? null) : null } };
 }
 

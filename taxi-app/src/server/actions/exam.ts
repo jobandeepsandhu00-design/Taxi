@@ -29,7 +29,17 @@ export async function startExamAction(formData: FormData) {
     select: { id: true, categoryId: true },
   });
   const distribution = (config.categoryDistribution ?? null) as Record<string, number> | null;
-  const ids = selectExamQuestions(pool, config.questionCount, distribution);
+  // Lernbuch: nur freigeschaltete Kapitel – sofern genug Fragen dafür da sind (Override: „alle Kapitel“)
+  let examPool = pool;
+  if (formData.get("allChapters") !== "on") {
+    const { unlockedCategoryIds } = await import("@/server/lernbuch");
+    const unlocked = await unlockedCategoryIds(user.id);
+    if (unlocked) {
+      const filtered = pool.filter((q) => unlocked.includes(q.categoryId));
+      if (filtered.length >= config.questionCount) examPool = filtered;
+    }
+  }
+  const ids = selectExamQuestions(examPool, config.questionCount, distribution);
   if (ids.length === 0) redirect("/pruefung?fehler=keine-fragen");
 
   const now = new Date();

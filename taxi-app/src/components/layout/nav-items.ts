@@ -21,12 +21,16 @@ import {
   Languages,
   Hash,
   Route as RouteIcon,
+  Library,
+  Dumbbell,
 } from "lucide-react";
 
 export const mainNav = [
   { href: "/dashboard", label: "Übersicht", icon: Home },
+  { href: "/lernbuch", label: "Lernbuch", icon: Library },
+  { href: "/ueben", label: "Üben", icon: Dumbbell },
   { href: "/coach", label: "Dein Taxi-Coach", icon: MessageCircleHeart },
-  { href: "/lernen", label: "Lernen", icon: BookOpen },
+  { href: "/lernen", label: "Lektionen", icon: BookOpen },
   { href: "/quiz", label: "Quiz", icon: Sparkles },
   { href: "/pruefung", label: "Prüfungsmodus", icon: ClipboardCheck },
   { href: "/muendlich", label: "Mündliche Prüfung", icon: Mic },
@@ -44,19 +48,26 @@ export const mainNav = [
   { href: "/fragen?merkliste=1", label: "Merkliste", icon: BookmarkCheck },
 ];
 
-export const mobileNav = [
+export const mobileNav: { href: string; label: string; icon: typeof Home; also?: string[] }[] = [
   { href: "/dashboard", label: "Start", icon: Home },
-  { href: "/lernen", label: "Lernen", icon: BookOpen },
-  { href: "/coach", label: "Coach", icon: MessageCircleHeart },
-  { href: "/pruefung", label: "Prüfung", icon: ClipboardCheck },
-  { href: "/fehler", label: "Fehler", icon: RotateCcw },
+  { href: "/lernbuch", label: "Lernbuch", icon: Library },
+  { href: "/ueben", label: "Üben", icon: Dumbbell, also: ["/lernen", "/fehler", "/lernkarten", "/quiz"] },
+  { href: "/pruefung", label: "Prüfung", icon: ClipboardCheck, also: ["/muendlich"] },
   { href: "/fortschritt", label: "Fortschritt", icon: BarChart3 },
 ];
 
+/** Gehört der Pfad zum Tab? (inkl. Unterseiten und zugeordneter Bereiche) */
+export function pathInTab(pathname: string, tab: (typeof mobileNav)[number]): boolean {
+  return [tab.href, ...(tab.also ?? [])].some((h) => pathname === h || pathname.startsWith(`${h}/`));
+}
+
 /** Index des Tabs, zu dem ein Pfad gehört (für die Richtung der Seitenübergänge). */
 export function tabIndexFor(pathname: string): number {
-  return mobileNav.findIndex((t) => pathname === t.href || pathname.startsWith(`${t.href}/`));
+  return mobileNav.findIndex((t) => pathInTab(pathname, t));
 }
+
+/** Seiten mit schwebendem Coach-Knopf (Toni). */
+export const COACH_FAB_PATHS = ["/dashboard", "/lernbuch", "/ueben", "/lernen", "/fehler", "/lernkarten"];
 
 export const adminNav = [
   { href: "/admin", label: "Admin-Übersicht", icon: Shield },

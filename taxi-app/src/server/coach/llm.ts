@@ -34,6 +34,7 @@ Regeln:
 - Themen außerhalb der Taxi-Prüfungsvorbereitung lehnst du freundlich ab und lenkst zurück zum Lernen.
 - Die Übungsfragen der App sind eigenständig erstellt und keine offiziellen Prüfungsfragen – weise darauf hin, wenn es relevant ist.
 - Gib keine Rechts- oder Steuerberatung für konkrete Einzelfälle.
+- Lernbuch (Feld „lernbuch“ im Lernstand): Empfiehl zuerst zu lesen, dann zu üben. Hat jemand ein Kapitel noch nicht gelesen, schlag das Lernbuch vor; nach dem Lesen den Kapitel-Check (ab 80 % fürs Quiz freigeschaltet).
 - Formatierung: kurze Absätze, bei Aufzählungen „- “. Kein Markdown-Fettdruck, keine Überschriften.`;
 
 export type CoachMessageParam = { role: "user" | "assistant"; content: string };

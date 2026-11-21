@@ -11,13 +11,15 @@ import { getSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/utils";
 import { startPracticeQuizAction } from "@/server/actions/learning";
 import { getCategoryOverview } from "@/server/stats";
+import { unlockedCategoryIds } from "@/server/lernbuch";
+import { Lock } from "lucide-react";
 
 export const metadata: Metadata = { title: "Übungsquiz" };
 
 export default async function QuizPage({ searchParams }: { searchParams: Promise<{ leer?: string }> }) {
   const user = await requireUser();
   const { leer } = await searchParams;
-  const [categories, settings, history] = await Promise.all([
+  const [categories, settings, history, unlocked] = await Promise.all([
     getCategoryOverview(user.id),
     getSettings(),
     prisma.quizAttempt.findMany({
@@ -25,6 +27,7 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
       orderBy: { finishedAt: "desc" },
       take: 8,
     }),
+    unlockedCategoryIds(user.id),
   ]);
   const total = categories.reduce((s, c) => s + c.questionCount, 0);
   const sizes = Array.from(new Set([10, 20, 30, 50, settings.defaultQuizSize])).sort((a, b) => a - b);
@@ -59,6 +62,14 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
                   </Select>
                 </div>
               </div>
+              {unlocked && (
+                <div className="rounded-xl bg-primary/10 p-3 text-sm" data-testid="quiz-unlock-hint">
+                  <p className="font-semibold text-navy">Ohne Auswahl kommen nur Fragen aus deinen {unlocked.length} freigeschalteten Kapiteln (bestandener Kapitel-Check im Lernbuch).</p>
+                  <label className="mt-2 flex items-center gap-2">
+                    <input type="checkbox" name="allChapters" className="size-4 accent-blue-700" /> Trotzdem alle Kapitel verwenden
+                  </label>
+                </div>
+              )}
               <fieldset>
                 <legend className="text-sm font-semibold text-navy">Kategorien <span className="font-normal text-muted-foreground">(keine Auswahl = alle, {total} Fragen)</span></legend>
                 <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -66,6 +77,7 @@ export default async function QuizPage({ searchParams }: { searchParams: Promise
                     <label key={c.id} className="flex cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-sm transition has-[:checked]:border-primary has-[:checked]:bg-primary/10">
                       <input type="checkbox" name="categoryIds" value={c.id} className="size-4 accent-blue-700" />
                       <span className="flex-1 font-medium text-foreground/85">{c.name}</span>
+                      {unlocked && !unlocked.includes(c.id) && <Lock className="size-3.5 text-muted-foreground" aria-label="Noch nicht freigeschaltet" />}
                       <span className="text-xs text-muted-foreground">{c.questionCount}</span>
                     </label>
                   ))}

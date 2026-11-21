@@ -23,6 +23,8 @@ export interface CoachContext {
   leitner: { box1: number; box2: number; box3: number; box4: number; box5: number; dueToday: number };
   openMistakes: number;
   prognosis: Prognosis;
+  /** Lernbuch: gelesen/gesamt, bestandene Kapitel-Checks, aktuelles Kapitel, fällige „Nochmal“-Karten */
+  lernbuch?: { read: number; total: number; checksPassed: number; chaptersDone: number; currentChapter: string | null; dueAgain: number; notYetRead: string[] };
 }
 
 type CatRow = { category_id: string; answered: number; correct: number; avg_time_sec: number | null };
@@ -115,7 +117,27 @@ export async function buildCoachContext(userId: string): Promise<CoachContext> {
     leitner: { box1: box(1), box2: box(2), box3: box(3), box4: box(4), box5: box(5), dueToday: due },
     openMistakes: stats.openMistakes,
     prognosis,
+    lernbuch: await lernbuchSummary(userId),
   };
+}
+
+async function lernbuchSummary(userId: string): Promise<CoachContext["lernbuch"]> {
+  try {
+    const { getLernbuchOverview } = await import("@/server/lernbuch");
+    const o = await getLernbuchOverview(userId);
+    const chapters = o.topics.flatMap((t) => t.chapters);
+    return {
+      read: o.read,
+      total: o.total,
+      checksPassed: o.checksPassed,
+      chaptersDone: o.chaptersDone,
+      currentChapter: o.current?.title ?? null,
+      dueAgain: o.dueAgain,
+      notYetRead: chapters.filter((c) => c.state === "neu").map((c) => c.title).slice(0, 8),
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 /** Kompakte JSON-Darstellung für den Prompt. */

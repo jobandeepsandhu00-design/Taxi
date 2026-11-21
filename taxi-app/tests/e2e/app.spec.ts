@@ -75,7 +75,7 @@ test.describe.serial("Lernende/r", () => {
     await completeOnboarding(page);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Test");
     await expect(page.getByText("Prüfungsreife")).toBeVisible();
-    for (const label of ["Lernen starten", "Quiz starten", "Prüfungsmodus", "Falsche Antworten", "Lernkarten", "Mein Fortschritt"]) {
+    for (const label of ["Lernbuch", "Lektionen", "Quiz starten", "Prüfungsmodus", "Falsche Antworten", "Lernkarten", "Mein Fortschritt"]) {
       await expect(page.getByRole("main").getByRole("link", { name: new RegExp(label) }).first()).toBeVisible();
     }
   });

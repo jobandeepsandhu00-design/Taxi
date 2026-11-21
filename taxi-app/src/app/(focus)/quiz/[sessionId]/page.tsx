@@ -60,7 +60,8 @@ export default async function FocusQuizPage({ params }: { params: Promise<{ sess
     const key = await getAnswerKey(a.questionId);
     if (key) reveals[a.questionId] = buildReveal(key, a.selectedOptionIds, a.isCorrect);
   }
-  const s = (attempt.settings ?? {}) as { lesson?: string; dailyChallenge?: string; flags?: string[] };
+  const s = (attempt.settings ?? {}) as { lesson?: string; dailyChallenge?: string; flags?: string[]; chapterCheck?: string };
+  if (s.chapterCheck && attempt.status === "COMPLETED") redirect(`/lernbuch/check/${attempt.id}`);
   let lesson: { kind: string; categoryId: string | null; lessonIndex: number | null; hasNext: boolean } | null = null;
   if (s.lesson) {
     const l = await prisma.lesson.findFirst({ where: { id: s.lesson, userId: user.id } });
@@ -92,7 +93,7 @@ export default async function FocusQuizPage({ params }: { params: Promise<{ sess
         questions={questions}
         initialIndex={Math.max(0, initialIndex)}
         bookmarkedIds={bookmarks.map((b) => b.questionId)}
-        mode={{ kind: "learn", attemptId: attempt.id, modeLabel: label, initialReveals: reveals, initialFlags: s.flags ?? [], lesson, isDailyChallenge: Boolean(s.dailyChallenge) }}
+        mode={{ kind: "learn", attemptId: attempt.id, modeLabel: label, initialReveals: reveals, initialFlags: s.flags ?? [], lesson, isDailyChallenge: Boolean(s.dailyChallenge), forceChoices: Boolean(s.chapterCheck) }}
       />
     </>
   );
