@@ -131,9 +131,9 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
       <nav
         aria-label="Hauptnavigation"
         className={cn("fixed inset-x-0 bottom-0 z-30 rounded-t-[20px] border-t border-[#eeeeee] bg-white transition-transform duration-200 lg:hidden dark:border-white/10 dark:bg-[#111111]", keyboard && "translate-y-full")}
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)", boxShadow: "0 -4px 20px rgba(0,0,0,.06)" }}
+        style={{ paddingBottom: "max(2px, calc(env(safe-area-inset-bottom, 0px) - 20px))", boxShadow: "0 -4px 20px rgba(0,0,0,.06)" }}
       >
-        <ul className="mx-auto grid h-16 max-w-md grid-cols-5 items-center px-1">
+        <ul className="mx-auto grid h-[60px] max-w-md grid-cols-5 items-center px-1">
           {mobileNav.slice(0, 2).map(tab)}
           <li className="relative flex justify-center">
             <motion.button

@@ -471,3 +471,9 @@
     display: none;
   }
 }
+
+/* Abstand zur unteren Leiste (mobil): Leiste 60 px + kleiner Rest der Safe-Area */
+@media (max-width: 1023.98px) {
+  .tp-main { padding-bottom: calc(76px + max(2px, env(safe-area-inset-bottom, 0px) - 20px)); }
+  .tp-coach-fab { bottom: calc(76px + max(2px, env(safe-area-inset-bottom, 0px) - 20px)); }
+}
