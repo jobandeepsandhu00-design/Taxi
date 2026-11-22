@@ -147,8 +147,7 @@ BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
     EXECUTE 'REVOKE ALL ON "question_audio", "audio_jobs", "tts_lexicon", "audio_config", "audio_drill_settings", "audio_drill_sessions" FROM anon, authenticated';
   END IF;
-  -- Öffentlicher Storage-Bucket „audio“ (nur lesen; geschrieben wird mit dem Service-Schlüssel)
-  IF to_regclass('storage.buckets') IS NOT NULL THEN
-    INSERT INTO storage.buckets (id, name, public) VALUES ('audio', 'audio', true) ON CONFLICT (id) DO UPDATE SET public = true;
-  END IF;
 END $$;
+
+-- Hinweis: Der öffentliche Storage-Bucket „audio“ wird in Supabase separat angelegt
+-- (die Migrationsrolle hat keine Rechte am Schema „storage“).
