@@ -7,7 +7,6 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { QuizLauncher } from "@/components/quiz-launcher/quiz-launcher";
-import { haptic, spring } from "@/lib/motion";
 import { configToQuery, type QuizConfig } from "@/lib/quiz-config";
 import { cn } from "@/lib/utils";
 import { mobileNav, pathInTab, QUIZ_PATHS } from "./nav-items";
@@ -15,14 +14,22 @@ import { mobileNav, pathInTab, QUIZ_PATHS } from "./nav-items";
 const SIGN = "M168 132 H344 L392 326 H120 Z";
 const CHECK = "M194 236 L238 280 L320 194";
 
-/** TaxiFit-Zeichen: Dachschild mit Häkchen (schwarz, Häkchen in Pillenfarbe) */
+/** TaxiFit-Zeichen (Dachschild + Häkchen) in Weiß */
 function RoofSignIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="100 110 312 240" className={className} aria-hidden>
-      <path d={SIGN} fill="currentColor" stroke="currentColor" strokeWidth={28} strokeLinejoin="round" />
-      <path d={CHECK} fill="none" stroke="var(--dock-pill)" strokeWidth={40} strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="100 110 312 240" className={className} aria-hidden style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,.25))" }}>
+      <path d={SIGN} fill="#ffffff" stroke="#ffffff" strokeWidth={28} strokeLinejoin="round" />
+      <path d={CHECK} fill="none" stroke="#2563eb" strokeWidth={40} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
+}
+
+function vibrate(ms = 8) {
+  try {
+    navigator.vibrate?.(ms);
+  } catch {
+    /* nicht unterstützt */
+  }
 }
 
 function usePageVisible() {
@@ -36,53 +43,45 @@ function usePageVisible() {
   return visible;
 }
 
-/** Beim schnellen Herunterscrollen wird das Dock etwas kompakter; beim Hochscrollen/Anhalten wieder normal. */
-function useCompactOnScroll() {
-  const [compact, setCompact] = useState(false);
+/** Bildschirmtastatur offen? (Leiste ausblenden, damit sie nicht hochspringt) */
+function useKeyboardOpen() {
+  const [open, setOpen] = useState(false);
   useEffect(() => {
-    let lastY = window.scrollY;
-    let lastT = performance.now();
-    let idle: number | undefined;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const t = performance.now();
-      const v = (y - lastY) / Math.max(1, t - lastT); // px/ms
-      if (v > 0.6 && y > 80) setCompact(true);
-      else if (v < -0.2) setCompact(false);
-      lastY = y;
-      lastT = t;
-      window.clearTimeout(idle);
-      idle = window.setTimeout(() => setCompact(false), 220);
+    const vv = window.visualViewport;
+    const check = () => {
+      const el = document.activeElement as HTMLElement | null;
+      const typing = Boolean(el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable) && !(el as HTMLInputElement).type?.match(/checkbox|radio|range|button|submit/));
+      const shrunk = vv ? window.innerHeight - vv.height > 150 : false;
+      setOpen(typing && (shrunk || window.matchMedia("(pointer: coarse)").matches));
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    vv?.addEventListener("resize", check);
+    window.addEventListener("focusin", check);
+    window.addEventListener("focusout", () => window.setTimeout(check, 50));
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(idle);
+      vv?.removeEventListener("resize", check);
+      window.removeEventListener("focusin", check);
     };
   }, []);
-  return compact;
+  return open;
 }
 
-/** Launcher-Zustand für andere Komponenten (z. B. Toni ausblenden) */
 function announceLauncher(open: boolean) {
   window.dispatchEvent(new CustomEvent("tp-launcher", { detail: { open } }));
 }
 
 /**
- * Schwebendes dunkles Dock: Start · Lernbuch · [Quiz] · Fortschritt · Profil.
- * Seitliche Tabs nur als Icon (gelber Punkt = aktiv), mittig die leuchtende Quiz-Pille → Quiz-Launcher.
+ * Untere Leiste, bündig am Bildschirmrand: Home · Lernen · [Quiz] · Fortschritt · Profil.
+ * Alle Tabs mit Icon + Beschriftung; mittig die Quiz-Pille mit animiertem Blau↔Gelb-Verlauf.
  */
 export function BottomNav({ due, last }: { due: number; last: QuizConfig | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const reduce = useReducedMotion();
   const visible = usePageVisible();
-  const compact = useCompactOnScroll();
+  const keyboard = useKeyboardOpen();
   const [open, setOpen] = useState(false);
-  const [tooltip, setTooltip] = useState<string | null>(null);
   const pillRef = useRef<HTMLButtonElement>(null);
   const press = useRef<{ timer: number | null; long: boolean }>({ timer: null, long: false });
-  const tipTimer = useRef<number | null>(null);
   const quizActive = QUIZ_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   useEffect(() => setOpen(false), [pathname]);
@@ -93,7 +92,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
     if (!last) return;
     press.current.timer = window.setTimeout(() => {
       press.current.long = true;
-      haptic(30);
+      vibrate(30);
       router.push(`/quiz/start?${configToQuery(last)}`);
     }, 550);
   };
@@ -106,70 +105,37 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
     const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathInTab(pathname, item);
     return (
       <li key={item.href} className="relative flex justify-center">
-        <Link
-          href={item.href}
-          aria-label={item.label}
-          aria-current={active ? "page" : undefined}
-          onClick={() => haptic()}
-          onPointerDown={() => {
-            tipTimer.current = window.setTimeout(() => setTooltip(item.label), 450);
-          }}
-          onPointerUp={() => {
-            if (tipTimer.current) window.clearTimeout(tipTimer.current);
-            window.setTimeout(() => setTooltip(null), 900);
-          }}
-          onPointerLeave={() => tipTimer.current && window.clearTimeout(tipTimer.current)}
-          onContextMenu={(e) => e.preventDefault()}
-          className="relative flex size-14 flex-col items-center justify-center rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--dock-pill)]"
-        >
-          <motion.span key={active ? "on" : "off"} initial={false} animate={active && !reduce ? { scale: [1, 1.15, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: "easeOut" }}>
-            <item.icon className="size-6 transition-colors" style={{ color: active ? "var(--dock-active)" : "var(--dock-icon)", opacity: compact && !active ? 0.9 : 1 }} strokeWidth={active ? 2.3 : 2} />
-          </motion.span>
-          {active && <motion.span layoutId="dock-dot" className="absolute bottom-1.5 size-1 rounded-full bg-[var(--dock-pill)]" transition={spring} />}
-        </Link>
-        <AnimatePresence>
-          {tooltip === item.label && (
-            <motion.span role="tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pointer-events-none absolute -top-9 rounded-lg bg-[var(--dock-active)] px-2 py-1 text-xs font-semibold whitespace-nowrap text-[var(--dock)] shadow">
-              {item.label}
+        {active && <motion.span layoutId="tab-indicator" className="absolute top-0 h-[3px] w-5 rounded-b-full bg-[#ffc400]" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+        <motion.div whileTap={reduce ? undefined : { scale: 0.92 }} className="w-full">
+          <Link
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            onClick={() => vibrate(8)}
+            className={cn(
+              "flex min-h-12 w-full flex-col items-center justify-center gap-1 rounded-xl pt-2 pb-1 outline-none focus-visible:ring-2 focus-visible:ring-[#ffc400]",
+              active ? "text-[#111111] dark:text-white" : "text-[#8a8f98]",
+            )}
+          >
+            <motion.span animate={{ scale: active ? 1.1 : 1 }} transition={{ type: "spring", stiffness: 400, damping: 22 }}>
+              <item.icon className="size-[22px]" strokeWidth={active ? 2.3 : 2} />
             </motion.span>
-          )}
-        </AnimatePresence>
+            <span className="font-[family-name:var(--font-inter)] text-[11px] leading-none font-medium">{item.label}</span>
+          </Link>
+        </motion.div>
       </li>
     );
   };
 
-  const breathe = !reduce && visible && !open;
-  const halo = due > 0 ? "0 0 29px color-mix(in oklab, var(--dock-pill) 54%, transparent)" : "0 0 24px color-mix(in oklab, var(--dock-pill) 45%, transparent)";
-
   return (
     <>
-      <motion.nav
+      <nav
         aria-label="Hauptnavigation"
-        className="fixed z-30 flex items-center lg:hidden"
-        style={{
-          left: 16,
-          right: 16,
-          bottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
-          borderRadius: 32,
-          background: "var(--dock)",
-          border: "1px solid var(--dock-border)",
-          boxShadow: "0 12px 32px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.06)",
-        }}
-        animate={{ height: compact ? 56 : 64 }}
-        transition={{ type: "spring", stiffness: 320, damping: 30 }}
+        className={cn("fixed inset-x-0 bottom-0 z-30 rounded-t-[20px] border-t border-[#eeeeee] bg-white transition-transform duration-200 lg:hidden dark:border-white/10 dark:bg-[#111111]", keyboard && "translate-y-full")}
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)", boxShadow: "0 -4px 20px rgba(0,0,0,.06)" }}
       >
-        <ul className="mx-auto grid w-full max-w-md grid-cols-[1fr_1fr_auto_1fr_1fr] items-center px-1">
+        <ul className="mx-auto grid h-16 max-w-md grid-cols-5 items-center px-1">
           {mobileNav.slice(0, 2).map(tab)}
-          <li className="relative flex justify-center px-1">
-            {breathe && (
-              <motion.span
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-1 right-1 rounded-[23px] border-2"
-                style={{ borderColor: "var(--dock-pill)", willChange: "transform, opacity" }}
-                animate={{ scale: [1, 1.12], opacity: [0.45, 0] }}
-                transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
-              />
-            )}
+          <li className="relative flex justify-center">
             <motion.button
               ref={pillRef}
               type="button"
@@ -183,35 +149,37 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
               onContextMenu={(e) => e.preventDefault()}
               onClick={() => {
                 if (press.current.long) return;
-                haptic();
+                vibrate(10);
                 setOpen((o) => !o);
               }}
               whileTap={{ scale: 0.94 }}
-              className={cn("relative flex h-[46px] w-[104px] items-center justify-center gap-1.5 rounded-[23px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dock-pill)]", quizActive && "outline-2 outline-offset-2 outline-[color-mix(in_oklab,var(--dock-pill)_60%,transparent)]")}
-              style={{ color: "var(--dock-pill-fg)" }}
+              className={cn(
+                "relative flex h-11 w-24 items-center justify-center gap-1.5 rounded-[22px] text-white outline-none focus-visible:ring-2 focus-visible:ring-[#ffc400] focus-visible:ring-offset-2",
+                quizActive && "ring-2 ring-[#ffc400]/60 ring-offset-1",
+              )}
             >
-              {!open && <motion.span layoutId="quiz-launcher" className="absolute inset-0" style={{ borderRadius: 23, background: "var(--dock-pill)", boxShadow: halo }} transition={{ type: "spring", stiffness: 260, damping: 26 }} />}
-              {open && <span className="absolute inset-0 rounded-[23px]" style={{ background: "var(--dock-pill)" }} />}
-              <span className="relative flex items-center gap-1.5">
+              {/* Verlauf + Lichtstreif in eigener, beschnittener Ebene (das Badge bleibt außerhalb sichtbar) */}
+              <span aria-hidden className={cn("quiz-pill absolute inset-0 overflow-hidden rounded-[22px]", (!visible || open) && "quiz-pill-paused")} />
+              <span className="relative flex items-center gap-1.5" style={{ textShadow: "0 1px 2px rgba(0,0,0,.25)" }}>
                 <AnimatePresence mode="wait" initial={false}>
                   {open ? (
                     <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
-                      <X className="size-5" strokeWidth={2.6} />
+                      <X className="size-[18px]" strokeWidth={2.8} />
                     </motion.span>
                   ) : (
                     <motion.span key="sign" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -45, opacity: 0 }} transition={{ duration: 0.18 }}>
-                      <RoofSignIcon className="size-6" />
+                      <RoofSignIcon className="size-[22px]" />
                     </motion.span>
                   )}
                 </AnimatePresence>
                 <AnimatePresence mode="wait" initial={false}>
-                  <motion.span key={open ? "close" : "quiz"} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="font-[family-name:var(--font-grotesk)] text-[15px] font-semibold">
+                  <motion.span key={open ? "close" : "quiz"} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className={cn("font-bold", open ? "text-[13px]" : "text-[15px]")}>
                     {open ? "Schließen" : "Quiz"}
                   </motion.span>
                 </AnimatePresence>
               </span>
               {due > 0 && !open && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[11px] font-extrabold text-white ring-2 ring-[var(--dock)]" data-testid="quiz-fab-badge" aria-label={`${due} fällig`}>
+                <span className="absolute -top-1.5 -right-1.5 z-10 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[11px] font-extrabold text-white ring-2 ring-white dark:ring-[#111111]" data-testid="quiz-fab-badge" aria-label={`${due} fällig`}>
                   <NumberFlow value={Math.min(due, 99)} />
                   {due > 99 ? "+" : ""}
                 </span>
@@ -220,7 +188,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
           </li>
           {mobileNav.slice(2).map(tab)}
         </ul>
-      </motion.nav>
+      </nav>
       <QuizLauncher open={open} onClose={() => setOpen(false)} returnFocus={pillRef} last={last} />
     </>
   );

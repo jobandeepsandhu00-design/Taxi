@@ -213,7 +213,7 @@ export function AppShell({ user, children, disclaimer, quiz }: { user: ShellUser
       </AnimatePresence>
 
       <div className="lg:pl-72">
-        <main className="mx-auto w-full max-w-6xl px-4 pt-3 pb-[calc(96px+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-8 lg:pb-12">
+        <main className="mx-auto w-full max-w-6xl px-4 pt-3 pb-[calc(80px+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-8 lg:pb-12">
           <UebenTabs />
           {children}
         </main>

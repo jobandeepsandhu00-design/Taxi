@@ -50,8 +50,8 @@ export const mainNav = [
 ];
 
 export const mobileNav: { href: string; label: string; icon: typeof Home; also?: string[] }[] = [
-  { href: "/dashboard", label: "Start", icon: Home },
-  { href: "/lernbuch", label: "Lernbuch", icon: Library },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/lernbuch", label: "Lernen", icon: BookOpen },
   { href: "/fortschritt", label: "Fortschritt", icon: BarChart3, also: ["/fehler", "/lernplan"] },
   { href: "/profil", label: "Profil", icon: User },
 ];

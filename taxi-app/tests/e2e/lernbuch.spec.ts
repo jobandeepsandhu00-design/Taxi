@@ -34,11 +34,11 @@ test("Lernbuch: Navigation, Story-Modus lesen, Kapitel-Check, Ergebnis", async (
   // Dashboard-Widget + neue Tab-Leiste
   await expect(page.getByTestId("home-lernbuch")).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
-  for (const label of ["Start", "Lernbuch", "Fortschritt", "Profil"]) await expect(nav.getByRole("link", { name: label })).toBeVisible();
+  for (const label of ["Home", "Lernen", "Fortschritt", "Profil"]) await expect(nav.getByRole("link", { name: label })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Quiz starten" })).toBeVisible();
   await expect(page.getByTestId("coach-fab")).toBeVisible();
 
-  await nav.getByRole("link", { name: "Lernbuch" }).click();
+  await nav.getByRole("link", { name: "Lernen" }).click();
   await page.waitForURL("**/lernbuch");
   await settle(page);
   // 25 Kapitel in Buch-Reihenfolge
