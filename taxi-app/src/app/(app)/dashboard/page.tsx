@@ -67,11 +67,9 @@ export default async function DashboardPage() {
     prisma.userAchievement.findMany({ where: { userId: user.id }, select: { key: true } }),
   ]);
   const coachCtx = await buildCoachContext(user.id);
-  const [examBest, oralSessions] = await Promise.all([
-    prisma.examAttempt.aggregate({ where: { userId: user.id, status: { in: ["SUBMITTED", "EXPIRED"] } }, _max: { scorePercent: true } }),
+  const [oralSessions] = await Promise.all([
     prisma.audioDrillSession.findMany({ where: { userId: user.id, finishedAt: { not: null } }, orderBy: { finishedAt: "desc" }, take: 30, select: { results: true, questionIds: true } }),
   ]);
-  const bestWritten = examBest._max.scorePercent !== null ? Math.round(examBest._max.scorePercent) : null;
   const oralScores = oralSessions.filter((o) => o.questionIds.length >= 3).map((o) => Math.round((Object.values((o.results as Record<string, string>) ?? {}).filter((x) => x === "known").length / o.questionIds.length) * 100));
   const bestOral = oralScores.length ? Math.max(...oralScores) : null;
   const [plan, learnPlan, lernbuch] = await Promise.all([getDailyPlanState(user.id, coachCtx), getLearnPlan(user.id), getLernbuchOverview(user.id)]);
@@ -124,7 +122,7 @@ export default async function DashboardPage() {
 
       <LernbuchWidget o={lernbuch} />
 
-      <ExamCard bestWritten={bestWritten} bestOral={bestOral} />
+      <ExamCard categories={categories.filter((c) => c.questionCount > 0).length} learnProgress={categories.length ? Math.round(categories.reduce((x, c) => x + c.progress, 0) / categories.length) : 0} bestOral={bestOral} />
 
       <LearnPlanCard initial={learnPlan} />
 

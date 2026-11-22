@@ -65,6 +65,25 @@ function useKeyboardOpen() {
   return open;
 }
 
+/** Beim Herunterscrollen ausblenden, beim Hochscrollen (oder ganz oben) wieder einblenden. */
+function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (y < 60) setHidden(false);
+      else if (dy > 6) setHidden(true);
+      else if (dy < -6) setHidden(false);
+      if (Math.abs(dy) > 6) lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
+}
+
 function announceLauncher(open: boolean) {
   window.dispatchEvent(new CustomEvent("tp-launcher", { detail: { open } }));
 }
@@ -79,6 +98,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
   const reduce = useReducedMotion();
   const visible = usePageVisible();
   const keyboard = useKeyboardOpen();
+  const scrolledAway = useHideOnScroll();
   const [open, setOpen] = useState(false);
   const pillRef = useRef<HTMLButtonElement>(null);
   const press = useRef<{ timer: number | null; long: boolean }>({ timer: null, long: false });
@@ -130,7 +150,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
     <>
       <nav
         aria-label="Hauptnavigation"
-        className={cn("fixed inset-x-0 bottom-0 z-30 rounded-t-[20px] border-t border-[#eeeeee] bg-white transition-transform duration-200 lg:hidden dark:border-white/10 dark:bg-[#111111]", keyboard && "translate-y-full")}
+        className={cn("fixed inset-x-0 bottom-0 z-30 rounded-t-[20px] border-t border-[#eeeeee] bg-white transition-transform duration-300 ease-out lg:hidden dark:border-white/10 dark:bg-[#111111]", (keyboard || (scrolledAway && !open)) && "translate-y-[calc(100%+8px)]")}
         style={{ paddingBottom: "max(2px, calc(env(safe-area-inset-bottom, 0px) - 20px))", boxShadow: "0 -4px 20px rgba(0,0,0,.06)" }}
       >
         <ul className="mx-auto grid h-[60px] max-w-md grid-cols-5 items-center px-1">
