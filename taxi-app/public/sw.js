@@ -2,7 +2,8 @@
  * Strategie: statische Assets cache-first, Seiten network-first mit Offline-Fallback.
  * API-/Server-Action-Anfragen (POST) werden nie gecacht – Lernfortschritt wird immer in der Datenbank gespeichert.
  */
-const VERSION = "v-taxifit-1";
+const VERSION = "v-taxifit-2";
+const AUDIO_CACHE = "tp-audio-v1";
 const STATIC_CACHE = `tp-static-${VERSION}`;
 const PAGE_CACHE = `tp-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -16,7 +17,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => ![STATIC_CACHE, PAGE_CACHE].includes(k)).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => ![STATIC_CACHE, PAGE_CACHE, AUDIO_CACHE].includes(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -25,6 +26,11 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+  // Vorproduzierte Audios (Supabase Storage oder lokal): aus dem Offline-Cache, sonst Netz
+  if (url.pathname.includes("/storage/v1/object/public/audio/") || url.pathname.startsWith("/api/audio/file/")) {
+    event.respondWith(caches.open(AUDIO_CACHE).then((c) => c.match(request.url)).then((hit) => hit || fetch(request)));
+    return;
+  }
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/media/")) return;
 

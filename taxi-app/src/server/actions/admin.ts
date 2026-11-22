@@ -15,6 +15,7 @@ import {
   topicSchema,
   type QuestionInput,
 } from "@/lib/validation";
+import { kickAudioAfterChange } from "@/server/audio/kick";
 import { refreshKnowledge } from "@/server/coach/knowledge";
 import type { ActionResult } from "./types";
 
@@ -104,6 +105,7 @@ export async function saveQuestionAction(id: string | null, input: QuestionInput
   }
   revalidatePath("/admin/fragen");
   void refreshKnowledge();
+  void kickAudioAfterChange();
   return { ok: true, data: { id: saved.id }, message: "Frage gespeichert." };
 }
 
@@ -117,6 +119,7 @@ export async function setQuestionStatusAction(id: string, status: "DRAFT" | "PUB
   await prisma.question.update({ where: { id }, data: { status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).parse(status) } });
   revalidatePath("/admin/fragen");
   void refreshKnowledge();
+  void kickAudioAfterChange();
   return { ok: true, data: undefined };
 }
 
@@ -128,6 +131,7 @@ export async function bulkSetStatusAction(ids: string[], status: "DRAFT" | "PUBL
   const res = await prisma.question.updateMany({ where, data: { status } });
   revalidatePath("/admin/fragen");
   void refreshKnowledge();
+  void kickAudioAfterChange();
   return { ok: true, data: { count: res.count } };
 }
 
@@ -136,6 +140,7 @@ export async function deleteQuestionAction(id: string): Promise<ActionResult> {
   await prisma.question.delete({ where: { id: idSchema.parse(id) } });
   revalidatePath("/admin/fragen");
   void refreshKnowledge();
+  void kickAudioAfterChange();
   return { ok: true, data: undefined };
 }
 
@@ -425,6 +430,7 @@ export async function importQuestionsCsvAction(csv: string, dryRun: boolean): Pr
   );
   revalidatePath("/admin/fragen");
   void refreshKnowledge();
+  void kickAudioAfterChange();
   return { ok: true, data: summary };
 }
 

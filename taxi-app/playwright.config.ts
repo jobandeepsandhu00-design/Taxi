@@ -14,7 +14,7 @@ export default defineConfig({
     launchOptions: {
       ...(process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {}),
       // Mündliche Prüfung: simuliertes Mikrofon ohne Berechtigungsdialog
-      args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+      args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream", "--autoplay-policy=no-user-gesture-required"],
     },
   },
   webServer: {
@@ -23,6 +23,7 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 120_000,
     // KI-Coach im Testmodus: deterministische Antworten ohne API-Aufrufe
-    env: { ...process.env, COACH_FAKE: "1" } as Record<string, string>,
+    // Audio: Test-Anbieter (kurzer Ton statt Stimme), Dateien lokal unter .data/audio
+    env: { ...process.env, COACH_FAKE: "1", TTS_PROVIDER: "fake" } as Record<string, string>,
   },
 });

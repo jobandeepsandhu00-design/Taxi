@@ -485,7 +485,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
                           {simpleBusy ? <Loader2 className="size-3.5 animate-spin" /> : "B1"}
                         </button>
                       )}
-                      <SpeakButton text={`${q.text} ${q.options.map((o) => `Antwort ${o.label}: ${o.text}.`).join(" ")}`} auto={false} />
+                      <SpeakButton text={`${q.text} ${q.options.map((o) => `Antwort ${o.label}: ${o.text}.`).join(" ")}`} questionId={q.id} optionsText={q.options.map((o) => `Antwort ${o.label}: ${o.text}.`).join(" ")} auto={false} />
                       <button type="button" onClick={() => setTranslateOpen(true)} aria-label="Übersetzungshilfe öffnen" className="flex size-10 items-center justify-center rounded-xl border border-border text-muted-foreground">
                         <Languages className="size-[18px]" />
                       </button>

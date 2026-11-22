@@ -44,7 +44,8 @@ test.beforeEach(async ({ page }) => {
 test("Üben (Gast): Datenschutz, getippte Antwort, Feedback, Tageslimit, Bericht", async ({ page }) => {
   await guest(page);
   await page.getByTestId("home-oral").click();
-  await page.waitForURL("**/muendlich");
+  await page.waitForURL("**/muendlich/auto");
+  await page.goto("/muendlich");
   await settle(page);
   await expect(page.getByText("Deine Aufnahme wird nur zur Auswertung verwendet und nach 30 Tagen gelöscht.")).toBeVisible();
   await expect(page.getByText("3 von 3 Fragen heute frei")).toBeVisible();

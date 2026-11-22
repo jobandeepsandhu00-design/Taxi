@@ -32,7 +32,14 @@ import { getHelperLang } from "@/lib/helper-lang";
 import { READ_AFTER_MS, type ReadStatus, type StoryCard } from "@/lib/lernbuch";
 import { isRtl, langInfo, type HelperLang } from "@/lib/languages";
 import { haptic, spring } from "@/lib/motion";
-import { speak, speechSupported, stopSpeaking } from "@/lib/speech";
+import { speechSupported, stopSpeaking as stopDeviceSpeech } from "@/lib/speech";
+import { audioEngine } from "@/lib/audio/player";
+import { useQuestionAudio } from "@/components/audio/use-question-audio";
+
+function stopSpeaking() {
+  stopDeviceSpeech();
+  audioEngine().stop();
+}
 import { cn } from "@/lib/utils";
 import { saveChapterPositionAction, updateLernbuchSettingsAction } from "@/server/actions/lernbuch";
 import { flushQueue, sendMark, waitForMarks } from "./mark-queue";
@@ -105,6 +112,9 @@ export function StoryPlayer({
   const readTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const card = index >= 0 && index < cards.length ? cards[index] : null;
+  const audioFor = useQuestionAudio();
+  const cardRef = useRef<string | null>(null);
+  cardRef.current = card?.id ?? null;
   const total = cards.length;
 
   useEffect(() => {
@@ -202,15 +212,27 @@ export function StoryPlayer({
     void sendMark(card.id, starred ? "starred" : "unstarred");
   };
 
-  const readAloud = () => {
+  // Vorlesen: Studio-Audio (Frage → Antwort), sonst Gerätestimme
+  const readAloud = async () => {
     if (!card) return;
     if (speaking) {
       stopSpeaking();
       setSpeaking(false);
       return;
     }
+    const engine = audioEngine();
+    if (!engine.unlocked) void engine.unlock();
     setSpeaking(true);
-    speak(`${card.question}. Antwort: ${card.answer}`, () => setSpeaking(false));
+    const id = card.id;
+    const set = await audioFor.get(id);
+    const alive = () => cardRef.current === id;
+    if (!alive()) return;
+    await engine.playOrSpeak(set.question, card.question);
+    if (!alive()) return;
+    await engine.silence(400);
+    if (!alive()) return;
+    await engine.playOrSpeak(set.answer, card.answer);
+    if (alive()) setSpeaking(false);
   };
 
   const openHelper = (s: "translate" | "simple" | "why") => {
@@ -308,7 +330,7 @@ export function StoryPlayer({
           <div className="mx-auto max-w-2xl">
             <div className="mb-2 flex items-center justify-between gap-1 overflow-x-auto">
               {speechSupported() && (
-                <ToolButton onClick={readAloud} label={speaking ? "Stopp" : "Vorlesen"} active={speaking} testid="story-speak">
+                <ToolButton onClick={() => void readAloud()} label={speaking ? "Stopp" : "Vorlesen"} active={speaking} testid="story-speak">
                   {speaking ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                 </ToolButton>
               )}

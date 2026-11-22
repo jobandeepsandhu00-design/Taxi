@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpenCheck, Layers, Repeat, RotateCcw, Sparkles } from "lucide-react";
+import { BookOpenCheck, Headphones, Layers, Repeat, RotateCcw, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -48,9 +48,10 @@ export default async function UebenPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <QuickLink href="/fehler" icon={<RotateCcw className="size-5" />} title="Fehlertraining" text={mistakes > 0 ? `${mistakes} offene Fehler` : "Keine offenen Fehler"} />
         <QuickLink href="/lernkarten" icon={<Layers className="size-5" />} title="Karteikarten" text="Wischen: gewusst / nicht gewusst" />
+        <QuickLink href="/muendlich/auto" icon={<Headphones className="size-5" />} title="Mündlich – Auto-Modus" text="Frage hören, laut antworten" />
         <QuickLink href="/quiz" icon={<Sparkles className="size-5" />} title="Freies Quiz" text="Nur freigeschaltete Kapitel" />
       </div>
     </div>

@@ -121,13 +121,13 @@ export default async function DashboardPage() {
 
       <LearnPlanCard initial={learnPlan} />
 
-      <Link href="/muendlich" className="glass glow-hover flex items-center gap-4 rounded-3xl p-4" data-testid="home-oral">
+      <Link href="/muendlich/auto" className="glass glow-hover flex items-center gap-4 rounded-3xl p-4" data-testid="home-oral">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFC107] text-2xl text-black" aria-hidden>
           🎙️
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-display text-base font-bold text-navy">Mündliche Prüfung üben</span>
-          <span className="block text-sm text-muted-foreground">Frage hören, laut antworten – Toni prüft die Kernpunkte.</span>
+          <span className="block text-sm text-muted-foreground">Auto-Modus: Frage hören, laut antworten, Antwort hören.</span>
         </span>
         <span className="text-xl text-muted-foreground" aria-hidden>
           ›

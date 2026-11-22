@@ -1,3 +1,4 @@
+import { DEFAULT_LEXICON } from "../src/lib/tts/prepare";
 import { coachFaqs } from "./seed-data/coach-faq";
 /**
  * Seed: Regionen, Benutzer (Admin + Demo-Lernender), Quellen, Kategorien, Themen,
@@ -243,6 +244,11 @@ async function seedLearningExtras() {
   }
   // Wissensbasis für „Frag Toni“ neu aufbauen
   await prisma.$executeRawUnsafe("REFRESH MATERIALIZED VIEW coach_knowledge").catch((e) => console.warn("coach_knowledge refresh:", e instanceof Error ? e.message : e));
+  // Aussprache-Wörterbuch (vorhandene Einträge nicht überschreiben) + Audio-Einstellungen
+  for (const e of DEFAULT_LEXICON) {
+    await prisma.ttsLexicon.upsert({ where: { term: e.term }, create: { term: e.term, spoken: e.spoken }, update: {} });
+  }
+  await prisma.audioConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
 }
 
 main()

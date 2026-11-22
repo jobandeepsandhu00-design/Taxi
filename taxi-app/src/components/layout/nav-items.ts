@@ -80,6 +80,7 @@ export const adminNav = [
   { href: "/admin/lernplan", label: "Lernplan", icon: CalendarDays },
   { href: "/admin/import", label: "Import / Export", icon: Layers },
   { href: "/admin/erklaerungen", label: "Fehlende Erklärungen", icon: MessageCircleHeart },
+  { href: "/admin/audio", label: "Audio-Studio", icon: Mic },
   { href: "/admin/pruefungen", label: "Prüfungen", icon: ClipboardCheck },
   { href: "/admin/benutzer", label: "Benutzer", icon: Home },
   { href: "/admin/einstellungen", label: "Einstellungen", icon: Settings },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookOpen, CheckCircle2, ChevronDown, ChevronLeft, Headphones, Layers, List, PlayCircle, Star } from "lucide-react";
+import { BookOpen, Mic, CheckCircle2, ChevronDown, ChevronLeft, Headphones, Layers, List, PlayCircle, Star } from "lucide-react";
 import { ChapterCheckButton, SpickzettelButton } from "@/components/lernbuch/chapter-actions";
 import { ChapterStateBadge } from "@/components/lernbuch/state-badge";
 import { PageHeader } from "@/components/page-header";
@@ -37,6 +37,7 @@ export default async function ChapterPage({ params }: { params: Promise<{ topicI
     { href: `${base}/liste`, title: "Lese-Liste", text: "Alles untereinander", icon: List, testid: "mode-list" },
     { href: `${base}/hoeren`, title: "Hör-Modus", text: "Vorlesen lassen", icon: Headphones, testid: "mode-audio" },
     { href: `${base}/karten`, title: "Karteikarten", text: "Umdrehen & prüfen", icon: Layers, testid: "mode-cards" },
+    { href: `/muendlich/auto?kapitel=${chapter.slug}`, title: "Mündlich abfragen", text: "Frage hören, laut antworten", icon: Mic, testid: "mode-oral" },
   ];
   return (
     <div>

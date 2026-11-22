@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, Headphones } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
@@ -18,6 +20,18 @@ export default async function OralStartPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Toni prüft dich" title="Mündliche Prüfung" description="Du hörst die Frage, antwortest laut – und bekommst sofort Feedback zu den Kernpunkten." />
+      <Link href="/muendlich/auto" className="panel-night glow-hover flex items-center gap-4 rounded-3xl p-5 text-white" data-testid="oral-auto-link">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+          <Headphones className="size-6" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-bold tracking-wider text-white/70 uppercase">Neu</span>
+          <span className="block text-lg font-extrabold">Auto-Modus</span>
+          <span className="block text-sm text-white/75">Frage hören, laut antworten, Antwort hören – Kapitel für Kapitel, auch mit gesperrtem Bildschirm.</span>
+        </span>
+        <ArrowRight className="size-6 shrink-0" />
+      </Link>
+      <h2 className="text-lg font-extrabold text-navy">Mit Bewertung durch Toni</h2>
       <OralStart
         enabled={count > 0}
         speech

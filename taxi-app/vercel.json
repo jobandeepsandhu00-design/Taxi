@@ -1,6 +1,16 @@
 {
   "crons": [
-    { "path": "/api/cron/coach-daily", "schedule": "0 5 * * *" },
-    { "path": "/api/cron/streak-reminder", "schedule": "0 17 * * *" }
+    {
+      "path": "/api/cron/coach-daily",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/streak-reminder",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/audio/worker",
+      "schedule": "30 3 * * *"
+    }
   ]
 }

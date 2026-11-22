@@ -5,10 +5,11 @@ import { Check, Pause, Play, RotateCcw, SkipBack, SkipForward, Star } from "luci
 import { useCallback, useEffect, useRef, useState } from "react";
 import { READ_AFTER_MS, type ReadStatus, type StoryCard } from "@/lib/lernbuch";
 import { haptic, spring } from "@/lib/motion";
-import { speechSupported, stopSpeaking } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import { saveChapterPositionAction, updateLernbuchSettingsAction } from "@/server/actions/lernbuch";
 import { flushQueue, sendMark } from "./mark-queue";
+import { useQuestionAudio } from "@/components/audio/use-question-audio";
+import { audioEngine } from "@/lib/audio/player";
 
 type Settings = { audioSpeed: number; showWrongAnswers: boolean };
 type Props = { categoryId: string; cards: StoryCard[]; settings: Settings };
@@ -88,89 +89,95 @@ export function ListReader({ categoryId, cards: initial }: Props) {
   );
 }
 
-/** Hör-Modus: liest Frage + Antwort nacheinander vor (de-AT), mit Media-Session-Steuerung. */
+/** Hör-Modus: Frage → Pause → Antwort → Erklärung (Studio-Audios, sonst Gerätestimme), mit Media-Session-Steuerung. */
 export function AudioReader({ categoryId, cards: initial, settings }: Props) {
   const [cards, setCards] = useState(initial);
   const firstOpen = Math.max(0, initial.findIndex((c) => !c.status));
   const [index, setIndex] = useState(firstOpen);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(settings.audioSpeed);
-  const playingRef = useRef(false);
-  const supported = typeof window !== "undefined" && speechSupported();
+  const [fallback, setFallback] = useState(false);
+  const run = useRef(0);
+  const audioFor = useQuestionAudio();
   const card = cards[index];
 
-  const speakCard = useCallback(
-    (i: number) => {
-      const c = cards[i];
-      if (!c || !speechSupported()) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(`Frage ${i + 1}. ${c.question}. Antwort: ${c.answer}`);
-      u.lang = "de-AT";
-      const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase() === "de-at") ?? window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith("de"));
-      if (voice) u.voice = voice;
-      u.rate = speed;
-      u.onend = () => {
+  const playFrom = useCallback(
+    async (start: number) => {
+      const engine = audioEngine();
+      if (!engine.unlocked) await engine.unlock();
+      const my = ++run.current;
+      setPlaying(true);
+      for (let i = start; i < cards.length; i++) {
+        if (my !== run.current) return;
+        const c = cards[i];
+        setIndex(i);
+        const map = await audioFor.load(cards.slice(i, i + 3).map((x) => x.id));
+        const set = map[c.id] ?? {};
+        void engine.preload([map[cards[i + 1]?.id]?.question, map[cards[i + 1]?.id]?.answer]);
+        setFallback(!set.question);
+        engine.mediaSession({ title: c.question.slice(0, 80), artist: `Karte ${i + 1} von ${cards.length}`, album: "TaxiFit Lernbuch" }, {
+          play: () => engine.resume(),
+          pause: () => engine.pause(),
+          nexttrack: () => void playFrom(Math.min(cards.length - 1, i + 1)),
+          previoustrack: () => void playFrom(Math.max(0, i - 1)),
+        });
+        await engine.playOrSpeak(set.question, c.question, { rate: speed });
+        if (my !== run.current) return;
+        await engine.silence(700);
+        if (my !== run.current) return;
+        await engine.playOrSpeak(set.answer, c.answer, { rate: speed });
+        if (my !== run.current) return;
+        if (c.explanation) {
+          await engine.silence(400);
+          if (my !== run.current) return;
+          await engine.playOrSpeak(set.explanation, c.explanation, { rate: speed });
+          if (my !== run.current) return;
+        }
         if (!c.status) {
           setCards((cs) => cs.map((x) => (x.id === c.id ? { ...x, status: "gelesen" } : x)));
           void sendMark(c.id, "gelesen").then(() => saveChapterPositionAction(categoryId, i).catch(() => undefined));
         }
-        if (playingRef.current && i + 1 < cards.length) {
-          setIndex(i + 1);
-          setTimeout(() => playingRef.current && speakCard(i + 1), 600);
-        } else {
-          playingRef.current = false;
-          setPlaying(false);
-        }
-      };
-      window.speechSynthesis.speak(u);
+        await engine.silence(1200);
+      }
+      if (my === run.current) setPlaying(false);
     },
-    [cards, speed, categoryId],
+    [cards, audioFor, speed, categoryId],
   );
 
-  const play = useCallback(() => {
-    playingRef.current = true;
-    setPlaying(true);
-    speakCard(index);
-  }, [index, speakCard]);
   const pause = useCallback(() => {
-    playingRef.current = false;
+    run.current++;
+    audioEngine().stop();
     setPlaying(false);
-    stopSpeaking();
   }, []);
-  const jump = useCallback(
-    (i: number) => {
-      const n = Math.max(0, Math.min(cards.length - 1, i));
-      setIndex(n);
-      if (playingRef.current) speakCard(n);
-    },
-    [cards.length, speakCard],
-  );
-
-  // Media Session (Sperrbildschirm / Kopfhörer)
-  useEffect(() => {
-    if (!("mediaSession" in navigator) || !card) return;
-    navigator.mediaSession.metadata = new MediaMetadata({ title: card.question.slice(0, 80), artist: `Karte ${index + 1} von ${cards.length}`, album: "TaxiFit Lernbuch" });
-    navigator.mediaSession.setActionHandler("play", play);
-    navigator.mediaSession.setActionHandler("pause", pause);
-    navigator.mediaSession.setActionHandler("nexttrack", () => jump(index + 1));
-    navigator.mediaSession.setActionHandler("previoustrack", () => jump(index - 1));
-    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
-  }, [card, index, cards.length, play, pause, jump, playing]);
-
-  useEffect(() => () => stopSpeaking(), []);
-
-  const changeSpeed = (s: number) => {
-    setSpeed(s);
-    void updateLernbuchSettingsAction({ audioSpeed: s }).catch(() => undefined);
+  const jump = (i: number) => {
+    const n = Math.max(0, Math.min(cards.length - 1, i));
+    if (playing) void playFrom(n);
+    else setIndex(n);
   };
 
-  if (!supported) return <p className="text-sm text-muted-foreground">Dein Browser unterstützt das Vorlesen leider nicht.</p>;
+  useEffect(() => {
+    const r = run;
+    return () => {
+      r.current++;
+      audioEngine().stop();
+    };
+  }, []);
+
+  const changeSpeed = (sp: number) => {
+    setSpeed(sp);
+    audioEngine().setRate(sp);
+    void updateLernbuchSettingsAction({ audioSpeed: sp }).catch(() => undefined);
+  };
+
   if (!card) return null;
   return (
     <div className="space-y-5">
       <div className="glass rounded-2xl p-5" aria-live="polite" data-testid="audio-card">
-        <p className="mb-2 text-xs font-semibold text-muted-foreground">
-          Karte {index + 1} von {cards.length}
+        <p className="mb-2 flex items-center justify-between text-xs font-semibold text-muted-foreground">
+          <span>
+            Karte {index + 1} von {cards.length}
+          </span>
+          {fallback && playing && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning">Ersatzstimme</span>}
         </p>
         <h2 className="text-lg leading-snug font-extrabold text-navy">{card.question}</h2>
         <p className="mt-3 rounded-xl bg-success/10 p-3 text-sm whitespace-pre-line">{card.answer}</p>
@@ -179,7 +186,7 @@ export function AudioReader({ categoryId, cards: initial, settings }: Props) {
         <button type="button" onClick={() => jump(index - 1)} className="rounded-full p-3 hover:bg-accent" aria-label="Vorherige Karte">
           <SkipBack className="size-6" />
         </button>
-        <button type="button" onClick={playing ? pause : play} className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95" aria-label={playing ? "Pause" : "Abspielen"} data-testid="audio-play">
+        <button type="button" onClick={playing ? pause : () => void playFrom(index)} className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95" aria-label={playing ? "Pause" : "Abspielen"} data-testid="audio-play">
           {playing ? <Pause className="size-7" /> : <Play className="size-7 translate-x-0.5" />}
         </button>
         <button type="button" onClick={() => jump(index + 1)} className="rounded-full p-3 hover:bg-accent" aria-label="Nächste Karte">
@@ -188,9 +195,9 @@ export function AudioReader({ categoryId, cards: initial, settings }: Props) {
       </div>
       <div className="flex items-center justify-center gap-2 text-sm">
         <span className="font-semibold text-muted-foreground">Tempo</span>
-        {[0.8, 1, 1.2, 1.5].map((s) => (
-          <button key={s} type="button" onClick={() => changeSpeed(s)} aria-pressed={speed === s} className={cn("rounded-lg px-2.5 py-1 font-semibold", speed === s ? "bg-primary text-primary-foreground" : "bg-foreground/5")}>
-            {s}×
+        {[0.8, 1, 1.2, 1.5].map((sp) => (
+          <button key={sp} type="button" onClick={() => changeSpeed(sp)} aria-pressed={speed === sp} className={cn("rounded-lg px-2.5 py-1 font-semibold", speed === sp ? "bg-primary text-primary-foreground" : "bg-foreground/5")}>
+            {sp}×
           </button>
         ))}
       </div>
@@ -216,9 +223,32 @@ export function ChapterFlashcards({ cards: initial }: Props) {
   const [cards, setCards] = useState(initial);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [autoplay, setAutoplay] = useState(false);
+  const audioFor = useQuestionAudio();
   const card = cards[index];
   const done = index >= cards.length;
   useEffect(() => void flushQueue(), []);
+  useEffect(() => {
+    try {
+      setAutoplay(localStorage.getItem("tp-cards-autoplay") === "1");
+    } catch {
+      /* ignorieren */
+    }
+  }, []);
+  // Automatisch vorlesen: Frage vorne, Antwort beim Umdrehen
+  useEffect(() => {
+    if (!autoplay || !card) return;
+    let alive = true;
+    void audioFor.get(card.id).then((set) => {
+      if (!alive) return;
+      const engine = audioEngine();
+      void (flipped ? engine.playOrSpeak(set.answer, card.answer) : engine.playOrSpeak(set.question, card.question));
+    });
+    return () => {
+      alive = false;
+      audioEngine().stop();
+    };
+  }, [autoplay, card, flipped, audioFor]);
   const rate = (status: "verstanden" | "nochmal") => {
     if (!card) return;
     haptic();
@@ -244,9 +274,30 @@ export function ChapterFlashcards({ cards: initial }: Props) {
   }
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <p className="text-center text-xs font-semibold text-muted-foreground">
-        Karte {index + 1} von {cards.length}
-      </p>
+      <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+        <span>
+          Karte {index + 1} von {cards.length}
+        </span>
+        <label className="flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            className="size-4 accent-[var(--primary)]"
+            checked={autoplay}
+            onChange={(e) => {
+              const v = e.target.checked;
+              setAutoplay(v);
+              if (v) void audioEngine().unlock();
+              try {
+                localStorage.setItem("tp-cards-autoplay", v ? "1" : "0");
+              } catch {
+                /* ignorieren */
+              }
+            }}
+            data-testid="cards-autoplay"
+          />
+          Automatisch vorlesen
+        </label>
+      </div>
       <div style={{ perspective: 1200 }}>
         <AnimatePresence mode="wait">
           <motion.button

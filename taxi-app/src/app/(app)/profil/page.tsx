@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AudioStorageCard } from "./audio-storage";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
@@ -101,6 +102,9 @@ export default async function ProfilePage() {
               <PasswordForm />
             </CardContent>
           </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <AudioStorageCard />
         </StaggerItem>
         <StaggerItem>
           <form action={logoutAction}>

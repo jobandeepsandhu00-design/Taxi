@@ -240,7 +240,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
                     <span>Einfach</span>
                   </button>
                 )}
-                <SpeakButton text={speechText} />
+                <SpeakButton text={speechText} questionId={question.id} optionsText={question.options.map((o) => `Antwort ${o.label}: ${o.text}.`).join(" ")} />
                 <button
                   type="button"
                   onClick={() => setTranslateOpen(true)}

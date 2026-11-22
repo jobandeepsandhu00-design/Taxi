@@ -2,37 +2,58 @@
 
 import { motion } from "motion/react";
 import { Volume2, VolumeX } from "lucide-react";
-import { useEffect, useState } from "react";
-import { audioModeEnabled, speak, speechSupported, stopSpeaking } from "@/lib/speech";
+import { useEffect, useRef, useState } from "react";
+import { useQuestionAudio } from "@/components/audio/use-question-audio";
+import { audioEngine } from "@/lib/audio/player";
+import { audioModeEnabled } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 
-/** Liest die Frage samt Antwortmöglichkeiten vor; im Audio-Modus automatisch. */
-export function SpeakButton({ text, auto = true }: { text: string; auto?: boolean }) {
-  const [supported, setSupported] = useState(false);
+/**
+ * Liest die Frage samt Antwortmöglichkeiten vor – mit den vorproduzierten Studio-Audios
+ * (Frage + „Antwortmöglichkeiten A–D“), sonst mit der Gerätestimme. Im Audio-Modus automatisch.
+ */
+export function SpeakButton({ text, auto = true, questionId, optionsText }: { text: string; auto?: boolean; questionId?: string; optionsText?: string }) {
   const [speaking, setSpeaking] = useState(false);
+  const { get } = useQuestionAudio();
+  const run = useRef(0);
+
+  async function play() {
+    const my = ++run.current;
+    const engine = audioEngine();
+    setSpeaking(true);
+    const set = questionId ? await get(questionId) : {};
+    if (my !== run.current) return;
+    if (set.question) {
+      await engine.play(set.question);
+      if (my !== run.current) return;
+      if (set.options) await engine.play(set.options);
+      else if (optionsText) await engine.speak(optionsText);
+    } else {
+      await engine.speak(text);
+    }
+    if (my === run.current) setSpeaking(false);
+  }
+
+  function stop() {
+    run.current++;
+    audioEngine().stop();
+    setSpeaking(false);
+  }
 
   useEffect(() => {
-    setSupported(speechSupported());
-    if (auto && speechSupported() && audioModeEnabled()) {
-      setSpeaking(true);
-      speak(text, () => setSpeaking(false));
-    }
-    return () => stopSpeaking();
+    const r = run;
+    if (auto && audioModeEnabled()) void play();
+    return () => {
+      r.current++;
+      audioEngine().stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, auto]);
 
-  if (!supported) return null;
   return (
     <button
       type="button"
-      onClick={() => {
-        if (speaking) {
-          stopSpeaking();
-          setSpeaking(false);
-        } else {
-          setSpeaking(true);
-          speak(text, () => setSpeaking(false));
-        }
-      }}
+      onClick={() => (speaking ? stop() : void play())}
       aria-pressed={speaking}
       aria-label={speaking ? "Vorlesen stoppen" : "Frage vorlesen"}
       title={speaking ? "Stopp" : "Vorlesen"}

@@ -4,6 +4,7 @@ import Papa from "papaparse";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { kickAudioAfterChange } from "@/server/audio/kick";
 import { refreshKnowledge } from "@/server/coach/knowledge";
 import type { ActionResult } from "./types";
 
@@ -40,6 +41,7 @@ export async function importExplanationsAction(csv: string, dryRun: boolean): Pr
     const explained = updates.filter((u) => u.data.explanation).map((u) => u.id);
     if (explained.length) await prisma.missingExplanation.deleteMany({ where: { questionId: { in: explained } } });
     await refreshKnowledge();
+    void kickAudioAfterChange();
     revalidatePath("/admin/erklaerungen");
   }
   return { ok: true, data: { dryRun, updated: updates.length, skipped, errors } };

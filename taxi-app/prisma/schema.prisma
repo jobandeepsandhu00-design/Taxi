@@ -81,68 +81,70 @@ model Region {
 }
 
 model User {
-  id                String              @id @default(cuid())
-  email             String              @unique @db.VarChar(254)
-  name              String              @db.VarChar(120)
-  passwordHash      String
-  role              Role                @default(STUDENT)
-  isActive          Boolean             @default(true)
-  regionId          String?
-  region            Region?             @relation(fields: [regionId], references: [id], onDelete: SetNull)
-  targetExamDate    DateTime?           @db.Date
+  audioDrillSettings AudioDrillSettings?
+  audioDrillSessions AudioDrillSession[]
+  id                 String                 @id @default(cuid())
+  email              String                 @unique @db.VarChar(254)
+  name               String                 @db.VarChar(120)
+  passwordHash       String
+  role               Role                   @default(STUDENT)
+  isActive           Boolean                @default(true)
+  regionId           String?
+  region             Region?                @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  targetExamDate     DateTime?              @db.Date
   /// Gastkonto: pro Gerät angelegt, ohne E-Mail/Passwort; kann später in ein echtes Konto umgewandelt werden
-  isGuest           Boolean             @default(false)
-  examType          ExamType?
-  dailyGoalMinutes  Int?
-  onboardedAt       DateTime?
+  isGuest            Boolean                @default(false)
+  examType           ExamType?
+  dailyGoalMinutes   Int?
+  onboardedAt        DateTime?
   /// Gewählter Avatar (Schlüssel, z. B. "taxi")
-  avatar            String?             @db.VarChar(20)
+  avatar             String?                @db.VarChar(20)
   /// Erfahrungspunkte (Level-System)
-  xp                Int                 @default(0)
-  achievements      UserAchievement[]
-  reviewItems       ReviewItem[]
-  lessons           Lesson[]
+  xp                 Int                    @default(0)
+  achievements       UserAchievement[]
+  reviewItems        ReviewItem[]
+  lessons            Lesson[]
   readinessSnapshots ReadinessSnapshot[]
-  variantFeedback   VariantFeedback[]
-  numberProgress    NumberProgress[]
-  routeProgress     RouteProgress[]
-  helperLang        String?             @db.VarChar(8)
-  ortskundeAttempts OrtskundeAttempt[]
-  dailyChallenges   DailyChallengeResult[]
-  hostedDuels       Duel[]              @relation("DuelHost")
-  joinedDuels       Duel[]              @relation("DuelGuest")
-  duelAnswers       DuelAnswer[]
-  pushSubscriptions PushSubscription[]
+  variantFeedback    VariantFeedback[]
+  numberProgress     NumberProgress[]
+  routeProgress      RouteProgress[]
+  helperLang         String?                @db.VarChar(8)
+  ortskundeAttempts  OrtskundeAttempt[]
+  dailyChallenges    DailyChallengeResult[]
+  hostedDuels        Duel[]                 @relation("DuelHost")
+  joinedDuels        Duel[]                 @relation("DuelGuest")
+  duelAnswers        DuelAnswer[]
+  pushSubscriptions  PushSubscription[]
   /// Premium: unbegrenzte Coach-Nachrichten
-  isPremium         Boolean             @default(false)
-  theme             String              @default("weiss") @db.VarChar(16)
-  themeMode         String              @default("light") @db.VarChar(8)
-  coachMessages     CoachMessage[]
-  dailyPlans        DailyPlan[]
-  weeklyReports     WeeklyReport[]
+  isPremium          Boolean                @default(false)
+  theme              String                 @default("weiss") @db.VarChar(16)
+  themeMode          String                 @default("light") @db.VarChar(8)
+  coachMessages      CoachMessage[]
+  dailyPlans         DailyPlan[]
+  weeklyReports      WeeklyReport[]
   /// Mündliche Prüfung: Aufnahmen speichern (false = nur Transkript)
-  oralSaveAudio     Boolean             @default(true)
+  oralSaveAudio      Boolean                @default(true)
   /// Zeitpunkt, an dem der Datenschutzhinweis zur mündlichen Prüfung bestätigt wurde
-  oralPrivacyAck    DateTime?
-  oralSessions      OralSession[]
-  oralAttempts      OralAttempt[]
-  oralProgress      OralProgress[]
-  readProgress      ReadProgress[]
-  chapterProgress   ChapterProgress[]
-  lernbuchSettings  LernbuchSettings?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  lastLoginAt       DateTime?
-  answers           UserAnswer[]
-  quizAttempts      QuizAttempt[]
-  examAttempts      ExamAttempt[]
-  flashcards        FlashcardProgress[]
-  streak            LearningStreak?
-  progress          UserProgress[]
-  mistakes          MistakeEntry[]
-  bookmarks         Bookmark[]
-  dailyActivity     DailyActivity[]
-  createdQuestions  Question[]          @relation("QuestionCreatedBy")
+  oralPrivacyAck     DateTime?
+  oralSessions       OralSession[]
+  oralAttempts       OralAttempt[]
+  oralProgress       OralProgress[]
+  readProgress       ReadProgress[]
+  chapterProgress    ChapterProgress[]
+  lernbuchSettings   LernbuchSettings?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  lastLoginAt        DateTime?
+  answers            UserAnswer[]
+  quizAttempts       QuizAttempt[]
+  examAttempts       ExamAttempt[]
+  flashcards         FlashcardProgress[]
+  streak             LearningStreak?
+  progress           UserProgress[]
+  mistakes           MistakeEntry[]
+  bookmarks          Bookmark[]
+  dailyActivity      DailyActivity[]
+  createdQuestions   Question[]             @relation("QuestionCreatedBy")
 
   @@index([role])
   @@index([isGuest, lastLoginAt])
@@ -154,30 +156,30 @@ enum ExamType {
 }
 
 model Category {
-  id               String         @id @default(cuid())
-  slug             String         @unique @db.VarChar(80)
-  name             String         @db.VarChar(160)
-  shortDescription String         @db.VarChar(300)
-  introduction     String         @db.Text
-  color            String         @default("blue") @db.VarChar(20)
-  icon             String         @default("BookOpen") @db.VarChar(40)
-  order            Int            @default(0)
-  difficulty       Difficulty     @default(MEDIUM)
-  isActive         Boolean        @default(true)
+  id                String            @id @default(cuid())
+  slug              String            @unique @db.VarChar(80)
+  name              String            @db.VarChar(160)
+  shortDescription  String            @db.VarChar(300)
+  introduction      String            @db.Text
+  color             String            @default("blue") @db.VarChar(20)
+  icon              String            @default("BookOpen") @db.VarChar(40)
+  order             Int               @default(0)
+  difficulty        Difficulty        @default(MEDIUM)
+  isActive          Boolean           @default(true)
   /// Verweis auf den offiziellen Prüfungsstoff (z. B. Verordnung, Paragraph)
-  syllabusReference String?       @db.Text
+  syllabusReference String?           @db.Text
   /// true, wenn der Inhalt dieser Kategorie mit dem aktuellen offiziellen Prüfungsstoff abgeglichen wurde
-  syllabusVerified Boolean        @default(false)
-  regionId         String?
-  region           Region?        @relation(fields: [regionId], references: [id], onDelete: SetNull)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  topics           Topic[]
-  questions        Question[]
-  progress         UserProgress[]
-  oralQuestions    OralQuestion[]
-  chapterProgress  ChapterProgress[]
-  chapterSummary   ChapterSummary?
+  syllabusVerified  Boolean           @default(false)
+  regionId          String?
+  region            Region?           @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  topics            Topic[]
+  questions         Question[]
+  progress          UserProgress[]
+  oralQuestions     OralQuestion[]
+  chapterProgress   ChapterProgress[]
+  chapterSummary    ChapterSummary?
 
   @@index([regionId, isActive, order])
 }
@@ -230,9 +232,10 @@ model Question {
   /// Lektion innerhalb der Kategorie (je 5 Fragen); automatisch vergeben, im Admin-Bereich änderbar
   lessonIndex     Int?
   /// Merkhilfe (Lernbuch)
-  mnemonic        String?        @db.Text
+  mnemonic        String?             @db.Text
   /// Einfache Sprache (B1), offline geschrieben und per CSV importiert
-  simpleDe        String?        @db.Text
+  simpleDe        String?             @db.Text
+  audio           QuestionAudio[]
   readProgress    ReadProgress[]
   createdById     String?
   createdBy       User?               @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -288,48 +291,48 @@ model UserAnswer {
 }
 
 model QuizAttempt {
-  id           String        @id @default(cuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mode         QuizMode
-  categoryId   String?
-  title        String        @db.VarChar(200)
-  questionIds  String[]
-  currentIndex Int           @default(0)
-  status       AttemptStatus @default(IN_PROGRESS)
-  correctCount Int           @default(0)
-  answeredCount Int          @default(0)
-  settings     Json?
-  startedAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  finishedAt   DateTime?
-  answers      UserAnswer[]
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mode          QuizMode
+  categoryId    String?
+  title         String        @db.VarChar(200)
+  questionIds   String[]
+  currentIndex  Int           @default(0)
+  status        AttemptStatus @default(IN_PROGRESS)
+  correctCount  Int           @default(0)
+  answeredCount Int           @default(0)
+  settings      Json?
+  startedAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  finishedAt    DateTime?
+  answers       UserAnswer[]
 
   @@index([userId, status])
   @@index([userId, startedAt])
 }
 
 model ExamConfig {
-  id                String        @id @default(cuid())
-  name              String        @db.VarChar(160)
-  description       String?       @db.Text
-  regionId          String?
-  region            Region?       @relation(fields: [regionId], references: [id], onDelete: SetNull)
-  durationMinutes   Int
-  questionCount     Int
-  passPercentage    Int
+  id                   String          @id @default(cuid())
+  name                 String          @db.VarChar(160)
+  description          String?         @db.Text
+  regionId             String?
+  region               Region?         @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  durationMinutes      Int
+  questionCount        Int
+  passPercentage       Int
   /// Optional: { "<categoryId>": anzahl } – feste Anzahl Fragen je Kategorie
   categoryDistribution Json?
   /// Nur Fragen dieser Herkunft verwenden (leer = alle veröffentlichten)
-  allowedOrigins    ContentOrigin[] @default([])
-  isActive          Boolean       @default(true)
-  isDefault         Boolean       @default(false)
+  allowedOrigins       ContentOrigin[] @default([])
+  isActive             Boolean         @default(true)
+  isDefault            Boolean         @default(false)
   /// true, wenn Dauer/Fragenanzahl/Bestehensgrenze mit der offiziellen Prüfungsordnung abgeglichen wurden
-  verified          Boolean       @default(false)
-  officialReference String?       @db.Text
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  attempts          ExamAttempt[]
+  verified             Boolean         @default(false)
+  officialReference    String?         @db.Text
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  attempts             ExamAttempt[]
 
   @@index([regionId, isActive])
 }
@@ -758,64 +761,64 @@ model RouteProgress {
 
 /// Mündliche Prüfungsfrage mit Musterantwort und Kernpunkten (Bewertungsgrundlage)
 model OralQuestion {
-  id             String         @id @default(cuid())
-  examMode       ExamType?
-  categoryId     String
-  category       Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  questionDe     String         @db.Text
-  modelAnswerDe  String         @db.Text
+  id               String         @id @default(cuid())
+  examMode         ExamType?
+  categoryId       String
+  category         Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  questionDe       String         @db.Text
+  modelAnswerDe    String         @db.Text
   /// [{ id, text, required }]
-  keyPoints      Json
-  legalReference String?        @db.VarChar(255)
-  difficulty     Difficulty     @default(MEDIUM)
+  keyPoints        Json
+  legalReference   String?        @db.VarChar(255)
+  difficulty       Difficulty     @default(MEDIUM)
   /// [{ trigger_point_id, question_de }]
-  followUps      Json           @default("[]")
-  verified       Boolean        @default(false)
-  catalogVersion String?        @db.VarChar(40)
+  followUps        Json           @default("[]")
+  verified         Boolean        @default(false)
+  catalogVersion   String?        @db.VarChar(40)
   /// schriftliche Frage, aus der die KI den Entwurf erstellt hat
   sourceQuestionId String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  attempts       OralAttempt[]
-  progress       OralProgress[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  attempts         OralAttempt[]
+  progress         OralProgress[]
 
   @@index([categoryId])
 }
 
 model OralSession {
-  id         String        @id @default(cuid())
-  userId     String
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// "ueben" | "pruefung"
-  mode       String        @db.VarChar(12)
+  mode        String        @db.VarChar(12)
   questionIds String[]
-  totalScore Int?
-  startedAt  DateTime      @default(now())
-  finishedAt DateTime?
-  attempts   OralAttempt[]
+  totalScore  Int?
+  startedAt   DateTime      @default(now())
+  finishedAt  DateTime?
+  attempts    OralAttempt[]
 
   @@index([userId, startedAt])
 }
 
 model OralAttempt {
-  id               String       @id @default(cuid())
-  userId           String
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  oralQuestionId   String
-  oralQuestion     OralQuestion @relation(fields: [oralQuestionId], references: [id], onDelete: Cascade)
-  sessionId        String?
-  session          OralSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  audioPath        String?      @db.VarChar(300)
-  transcript       String       @db.Text
-  followUpQuestion String?      @db.Text
-  followUpTranscript String?    @db.Text
-  coveredPointIds  String[]
-  score            Int
+  id                 String       @id @default(cuid())
+  userId             String
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oralQuestionId     String
+  oralQuestion       OralQuestion @relation(fields: [oralQuestionId], references: [id], onDelete: Cascade)
+  sessionId          String?
+  session            OralSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  audioPath          String?      @db.VarChar(300)
+  transcript         String       @db.Text
+  followUpQuestion   String?      @db.Text
+  followUpTranscript String?      @db.Text
+  coveredPointIds    String[]
+  score              Int
   /// "richtig" | "teilweise" | "falsch"
-  verdict          String       @db.VarChar(12)
-  feedbackDe       String       @db.Text
-  durationMs       Int?
-  createdAt        DateTime     @default(now())
+  verdict            String       @db.VarChar(12)
+  feedbackDe         String       @db.Text
+  durationMs         Int?
+  createdAt          DateTime     @default(now())
 
   @@index([userId, createdAt])
   @@index([sessionId])
@@ -840,19 +843,19 @@ model OralProgress {
 
 /// Lernbuch: Lesestatus pro Frage
 model ReadProgress {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questionId    String
-  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
   /// "gelesen" | "verstanden" | "nochmal"
-  status        String   @db.VarChar(12)
-  timesRead     Int      @default(1)
+  status         String    @db.VarChar(12)
+  timesRead      Int       @default(1)
   /// Tage (YYYY-MM-DD), an denen „verstanden“ gewählt wurde
-  understoodDays String[] @default([])
-  starred       Boolean  @default(false)
-  nextRepeatAt  DateTime?
-  updatedAt     DateTime @updatedAt
+  understoodDays String[]  @default([])
+  starred        Boolean   @default(false)
+  nextRepeatAt   DateTime?
+  updatedAt      DateTime  @updatedAt
 
   @@unique([userId, questionId])
   @@index([userId, status])
@@ -878,14 +881,14 @@ model ChapterProgress {
 
 /// Lernbuch: KI-Spickzettel pro Kapitel
 model ChapterSummary {
-  categoryId  String   @id
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  contentDe   String   @db.Text
-  keyNumbers  Json     @default("[]")
-  traps       Json     @default("[]")
-  verified    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  categoryId String   @id
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  contentDe  String   @db.Text
+  keyNumbers Json     @default("[]")
+  traps      Json     @default("[]")
+  verified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model LernbuchSettings {
@@ -924,4 +927,109 @@ model MissingExplanation {
   lastSeenAt  DateTime @default(now()) @map("last_seen_at")
 
   @@map("missing_explanations")
+}
+
+/// Vorproduzierte Audiodateien je Frage (Frage, Antwort, Antwortmöglichkeiten, Erklärung) und Stimme
+model QuestionAudio {
+  id              String   @id @default(cuid())
+  questionId      String   @map("question_id")
+  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  /// question | answer | options | explanation
+  kind            String   @db.VarChar(16)
+  voiceId         String   @map("voice_id") @db.VarChar(80)
+  lang            String   @default("de-AT") @db.VarChar(8)
+  storagePathOpus String?  @map("storage_path_opus") @db.VarChar(300)
+  storagePathMp3  String?  @map("storage_path_mp3") @db.VarChar(300)
+  durationMs      Int      @default(0) @map("duration_ms")
+  /// sha256(SSML + Stimme) – Änderung am Text oder an der Stimme → neu erzeugen
+  textHash        String?  @map("text_hash") @db.VarChar(64)
+  /// pending | processing | done | failed
+  status          String   @default("pending") @db.VarChar(12)
+  error           String?  @db.Text
+  /// tts | upload (eigene Aufnahme hat Vorrang)
+  source          String   @default("tts") @db.VarChar(8)
+  attempts        Int      @default(0)
+  characters      Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([questionId, kind, voiceId])
+  @@index([status, updatedAt])
+  @@map("question_audio")
+}
+
+/// Generierungs-Aufträge im Audio-Studio
+model AudioJob {
+  id            String    @id @default(cuid())
+  /// all | topic | chapter | question | missing | auto
+  scope         String    @db.VarChar(12)
+  scopeId       String?   @map("scope_id") @db.VarChar(80)
+  voiceIds      String[]  @map("voice_ids")
+  kinds         String[]  @default([])
+  total         Int       @default(0)
+  done          Int       @default(0)
+  failed        Int       @default(0)
+  /// queued | running | done | failed | cancelled
+  status        String    @default("running") @db.VarChar(12)
+  currentLabel  String?   @map("current_label") @db.VarChar(200)
+  startedBy     String?   @map("started_by") @db.VarChar(64)
+  startedAt     DateTime  @default(now()) @map("started_at")
+  finishedAt    DateTime? @map("finished_at")
+  estCharacters Int       @default(0) @map("est_characters")
+  notified      Boolean   @default(false)
+
+  @@index([status, startedAt])
+  @@map("audio_jobs")
+}
+
+/// Aussprache-Wörterbuch (Abkürzungen, Wiener Orte, Lautschrift-Ersatz)
+model TtsLexicon {
+  term      String   @id @db.VarChar(80)
+  spoken    String   @db.VarChar(200)
+  notes     String?  @db.VarChar(300)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("tts_lexicon")
+}
+
+/// Audio-Einstellungen (Stimmen, Preis pro 1 Mio. Zeichen)
+model AudioConfig {
+  id              String   @id @default("default") @db.VarChar(20)
+  voiceFemale     String?  @map("voice_female") @db.VarChar(80)
+  voiceMale       String?  @map("voice_male") @db.VarChar(80)
+  /// female | male
+  defaultVoice    String   @default("female") @map("default_voice") @db.VarChar(8)
+  pricePerMillion Float    @default(16) @map("price_per_million")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("audio_config")
+}
+
+/// Mündlich – Auto-Modus: Einstellungen je Nutzer:in
+model AudioDrillSettings {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  settings  Json
+  updatedAt DateTime @updatedAt
+
+  @@map("audio_drill_settings")
+}
+
+/// Mündlich – Auto-Modus: Durchgang (für „Weiter wo ich war“ und das letzte Ergebnis)
+model AudioDrillSession {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String    @db.VarChar(200)
+  categoryIds String[]  @default([])
+  questionIds String[]
+  position    Int       @default(0)
+  /// { [questionId]: "known" | "unknown" }
+  results     Json      @default("{}")
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("audio_drill_sessions")
 }
