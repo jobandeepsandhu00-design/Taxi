@@ -7,10 +7,6 @@
     {
       "path": "/api/audio/worker",
       "schedule": "30 3 * * *"
-    },
-    {
-      "path": "/api/cron/push",
-      "schedule": "*/15 * * * *"
     }
   ]
 }
