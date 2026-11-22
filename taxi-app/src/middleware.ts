@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   // Cron-Endpunkte prüfen ihr eigenes Geheimnis (CRON_SECRET)
   // Audio-Worker (eigener Schlüssel) und lokale Audiodateien (Entwicklung) ohne Anmeldung
-  const isPublic = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/api/cron/") || pathname === "/api/audio/worker" || pathname.startsWith("/api/audio/file/");
+  const isPublic = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/api/cron/") || pathname === "/api/audio/worker" || pathname === "/api/push/clicked" || pathname.startsWith("/api/audio/file/");
 
   // Gäste dürfen zur Registrierung (Gastkonto in echtes Konto umwandeln)
   if (session && (pathname === "/login" || (pathname === "/registrieren" && !session.guest))) {

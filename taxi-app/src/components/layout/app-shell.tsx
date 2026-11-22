@@ -7,7 +7,7 @@ import { LogOut, Menu, Shield, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { InstallChip } from "@/components/pwa/install-chip";
 import { haptic, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
@@ -114,7 +114,11 @@ function SidebarContent({ user, pillPrefix, onNavigate }: { user: ShellUser; pil
         <form
           action={logoutAction}
           onSubmit={(e) => {
-            if (user.isGuest && !window.confirm("Als Gast abmelden? Dein Gast-Fortschritt wird dabei gelöscht.")) e.preventDefault();
+            if (user.isGuest && !window.confirm("Als Gast abmelden? Dein Gast-Fortschritt wird dabei gelöscht.")) {
+              e.preventDefault();
+              return;
+            }
+            navigator.serviceWorker?.controller?.postMessage({ type: "clear-user-caches" });
           }}
         >
           <button type="submit" className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-foreground/70 transition hover:bg-accent hover:text-destructive">
@@ -140,6 +144,7 @@ function MobileHeader({ user, onMenu }: { user: ShellUser; onMenu: () => void })
           <Logo href="/dashboard" />
         </motion.div>
         <div className="flex items-center gap-1">
+          <InstallChip />
           <ThemeToggle />
           {user.role === "ADMIN" && (
             <Link href="/admin" className="rounded-xl p-2.5 text-foreground/80 transition hover:bg-accent active:scale-95" aria-label="Administration">
@@ -222,7 +227,6 @@ export function AppShell({ user, children, disclaimer, quiz }: { user: ShellUser
 
       <BottomNav due={quiz?.due ?? 0} last={quiz?.last ?? null} />
       <CoachFab />
-      <InstallPrompt />
     </div>
   );
 }

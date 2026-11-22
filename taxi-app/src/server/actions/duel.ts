@@ -8,6 +8,7 @@ import { duelCode, duelWinner, publicName } from "@/lib/challenge";
 import { prisma } from "@/lib/db";
 import { gradeAnswer, pickRandomUnique } from "@/lib/quiz-logic";
 import { rewardXp } from "@/server/gamification";
+import { notifyDuel } from "@/server/push-jobs";
 import { getAnswerKey, getPublicQuestions, publishedWhere, type PublicQuestion } from "@/server/questions";
 
 const DUEL_QUESTIONS = 5;
@@ -33,10 +34,11 @@ export async function joinDuelAction(formData: FormData) {
   if (!duel) redirect("/duell?fehler=code");
   if (duel.hostId !== user.id && duel.status === "WAITING" && !duel.guestId) {
     // Nur einer gewinnt das Beitreten (gleichzeitige Versuche)
-    await prisma.duel.updateMany({
+    const joined = await prisma.duel.updateMany({
       where: { id: duel.id, status: "WAITING", guestId: null },
       data: { guestId: user.id, status: "ACTIVE", startedAt: new Date(Date.now() + INTRO_MS) },
     });
+    if (joined.count) await notifyDuel(duel.hostId, publicName(user.name, user.isGuest), code);
   }
   redirect(`/duell/${code}`);
 }

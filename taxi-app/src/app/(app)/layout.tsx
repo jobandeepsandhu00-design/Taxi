@@ -13,14 +13,19 @@ import { prisma } from "@/lib/db";
 import { dayKey, dayKeyToDate } from "@/lib/dates";
 import { parseQuizConfig } from "@/lib/quiz-config";
 import { publishedWhere } from "@/server/questions";
+import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { vapidPublicKey } from "@/lib/push/send";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, settings] = await Promise.all([requireUser(), getSettings()]);
   if (user.role === "STUDENT" && !user.onboardedAt) redirect("/willkommen");
-  const [unseen, due, lastRow] = await Promise.all([
+  const [unseen, due, lastRow, lessonsDone, quizzesDone, streakRow] = await Promise.all([
     getUnseenAchievements(user.id),
     prisma.reviewItem.count({ where: { userId: user.id, dueDate: { lte: dayKeyToDate(dayKey()) }, question: publishedWhere } }),
     prisma.user.findUnique({ where: { id: user.id }, select: { lastQuizConfig: true } }),
+    prisma.lesson.count({ where: { userId: user.id, completedAt: { not: null } } }),
+    prisma.quizAttempt.count({ where: { userId: user.id, status: "COMPLETED" } }),
+    prisma.learningStreak.findUnique({ where: { userId: user.id }, select: { currentStreak: true } }),
   ]);
   return (
     <QueryProvider>
@@ -29,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ThemeSync uid={user.id} theme={user.theme} mode={user.themeMode} helperLang={user.helperLang} />
       {children}
       {unseen.length > 0 && <CelebrationGate items={unseen} />}
+      <PwaProvider vapidKey={vapidPublicKey()} due={due} done={lessonsDone + quizzesDone} hasExamDate={Boolean(user.targetExamDate)} streak={streakRow?.currentStreak ?? 0} />
     </AppShell>
     </CoachProvider>
     </QueryProvider>

@@ -12,7 +12,9 @@ import { playSound, setSoundEnabled, soundEnabled } from "@/lib/sound";
 import { audioModeEnabled, setAudioMode, speak, speechSupported } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import { setAvatarAction } from "@/server/actions/auth";
-import { PushToggle } from "./push-toggle";
+import Link from "next/link";
+import { BellRing } from "lucide-react";
+import { InstallEntry } from "@/components/pwa/install-chip";
 
 /** Avatar-Auswahl mit Feder-Animation. */
 export function AvatarPicker({ initial }: { initial: string | null }) {
@@ -137,7 +139,17 @@ export function DeviceSettings({ vapidKey }: { vapidKey: string | null }) {
           if (v) speak("Audio-Modus ist eingeschaltet.");
         }}
       />
-      <PushToggle vapidKey={vapidKey} />
+      <InstallEntry />
+      <Link href="/profil/benachrichtigungen" data-testid="profil-notifications" className="flex items-center gap-3 py-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-link">
+          <BellRing className="size-[18px]" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-navy">Benachrichtigungen</span>
+          <span className="block text-xs text-muted-foreground">{vapidKey ? "Erinnerungen, Uhrzeit, Ruhezeiten, Geräte" : "Noch nicht eingerichtet"}</span>
+        </span>
+        <span className="text-muted-foreground">›</span>
+      </Link>
       <label className="flex items-center gap-3 py-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-link">
           <Languages className="size-[18px]" />

@@ -6,6 +6,7 @@ import { MotionProvider } from "@/components/motion/motion-provider";
 import { TapRipple } from "@/components/motion/tap-ripple";
 import { THEME_HEAD_SCRIPT } from "@/lib/theme/script";
 import { buildThemeCss } from "@/lib/theme/css";
+import splash from "@/lib/pwa-splash.json";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
@@ -23,9 +24,10 @@ export const metadata: Metadata = {
   description:
     "Strukturierte Vorbereitung auf die Taxi-Prüfung in Österreich (Wien): Lernmodus, Übungsquiz, Prüfungssimulation, Fehlertraining, Lernkarten und Fortschrittsanalyse.",
   applicationName: "TaxiFit",
-  appleWebApp: { capable: true, title: "TaxiFit", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "TaxiFit", statusBarStyle: "default", startupImage: splash },
   formatDetection: { telephone: false },
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: "/icons/icon-192.png", apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }] },
+  other: { "mobile-web-app-capable": "yes", "apple-mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {

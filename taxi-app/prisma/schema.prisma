@@ -117,6 +117,8 @@ model User {
   joinedDuels        Duel[]                 @relation("DuelGuest")
   duelAnswers        DuelAnswer[]
   pushSubscriptions  PushSubscription[]
+  notificationPrefs  NotificationPrefs?
+  notificationLogs   NotificationLog[]
   /// Premium: unbegrenzte Coach-Nachrichten
   isPremium          Boolean                @default(false)
   theme              String                 @default("weiss") @db.VarChar(16)
@@ -576,17 +578,63 @@ model DuelAnswer {
   @@unique([duelId, userId, index])
 }
 
-/// Web-Push-Abos für Serien-Erinnerungen
+/// Web-Push-Abos (ein Eintrag pro Gerät/Browser)
 model PushSubscription {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  /// ios | android | desktop
+  platform      String?   @db.VarChar(10)
+  userAgent     String?   @db.VarChar(300)
+  createdAt     DateTime  @default(now())
+  lastSuccessAt DateTime?
+  failedCount   Int       @default(0)
+  active        Boolean   @default(true)
 
-  @@index([userId])
+  @@index([userId, active])
+}
+
+/// Benachrichtigungs-Einstellungen pro Nutzer
+model NotificationPrefs {
+  userId          String   @id @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled         Boolean  @default(true)
+  dailyReminder   Boolean  @default(true) @map("daily_reminder")
+  /// "HH:MM" in der Zeitzone des Nutzers
+  reminderTime    String   @default("18:00") @map("reminder_time") @db.VarChar(5)
+  streakAlerts    Boolean  @default(true) @map("streak_alerts")
+  dueAlerts       Boolean  @default(true) @map("due_alerts")
+  challengeAlerts Boolean  @default(true) @map("challenge_alerts")
+  duelAlerts      Boolean  @default(true) @map("duel_alerts")
+  examCountdown   Boolean  @default(true) @map("exam_countdown")
+  weeklyReport    Boolean  @default(true) @map("weekly_report")
+  quietStart      String   @default("22:00") @map("quiet_hours_start") @db.VarChar(5)
+  quietEnd        String   @default("08:00") @map("quiet_hours_end") @db.VarChar(5)
+  timezone        String   @default("Europe/Vienna") @db.VarChar(40)
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_prefs")
+}
+
+/// Protokoll gesendeter Benachrichtigungen (Tageslimit, Varianten-Rotation, Klicks)
+model NotificationLog {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String    @db.VarChar(20)
+  title     String    @db.VarChar(120)
+  body      String    @db.VarChar(300)
+  url       String?   @db.VarChar(300)
+  sentAt    DateTime  @default(now()) @map("sent_at")
+  clickedAt DateTime? @map("clicked_at")
+  /// sent | failed | skipped
+  status    String    @db.VarChar(12)
+
+  @@index([userId, sentAt])
+  @@map("notification_log")
 }
 
 /// Coach-Verlauf (Chat, „Warum?“, Einfache Sprache, mündliche Prüfung) – auch Basis für Tageslimit und Feedback
