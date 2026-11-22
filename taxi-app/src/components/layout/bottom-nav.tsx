@@ -20,7 +20,7 @@ function RoofSignIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="100 110 312 240" className={className} aria-hidden>
       <path d={SIGN} fill="currentColor" stroke="currentColor" strokeWidth={28} strokeLinejoin="round" />
-      <path d={CHECK} fill="none" stroke="var(--primary)" strokeWidth={40} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={CHECK} fill="none" stroke="var(--dock-pill)" strokeWidth={40} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -120,16 +120,16 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
           }}
           onPointerLeave={() => tipTimer.current && window.clearTimeout(tipTimer.current)}
           onContextMenu={(e) => e.preventDefault()}
-          className="relative flex size-14 flex-col items-center justify-center rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#ffc400]"
+          className="relative flex size-14 flex-col items-center justify-center rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--dock-pill)]"
         >
           <motion.span key={active ? "on" : "off"} initial={false} animate={active && !reduce ? { scale: [1, 1.15, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: "easeOut" }}>
-            <item.icon className="size-6 transition-colors" style={{ color: active ? "#ffffff" : "var(--dock-icon)", opacity: compact && !active ? 0.9 : 1 }} strokeWidth={active ? 2.3 : 2} />
+            <item.icon className="size-6 transition-colors" style={{ color: active ? "var(--dock-active)" : "var(--dock-icon)", opacity: compact && !active ? 0.9 : 1 }} strokeWidth={active ? 2.3 : 2} />
           </motion.span>
-          {active && <motion.span layoutId="dock-dot" className="absolute bottom-1.5 size-1 rounded-full bg-[#ffc400]" transition={spring} />}
+          {active && <motion.span layoutId="dock-dot" className="absolute bottom-1.5 size-1 rounded-full bg-[var(--dock-pill)]" transition={spring} />}
         </Link>
         <AnimatePresence>
           {tooltip === item.label && (
-            <motion.span role="tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pointer-events-none absolute -top-9 rounded-lg bg-[#111] px-2 py-1 text-xs font-semibold whitespace-nowrap text-white shadow">
+            <motion.span role="tooltip" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pointer-events-none absolute -top-9 rounded-lg bg-[var(--dock-active)] px-2 py-1 text-xs font-semibold whitespace-nowrap text-[var(--dock)] shadow">
               {item.label}
             </motion.span>
           )}
@@ -139,7 +139,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
   };
 
   const breathe = !reduce && visible && !open;
-  const halo = due > 0 ? "0 0 29px color-mix(in oklab, var(--primary) 54%, transparent)" : "0 0 24px color-mix(in oklab, var(--primary) 45%, transparent)";
+  const halo = due > 0 ? "0 0 29px color-mix(in oklab, var(--dock-pill) 54%, transparent)" : "0 0 24px color-mix(in oklab, var(--dock-pill) 45%, transparent)";
 
   return (
     <>
@@ -153,7 +153,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
           borderRadius: 32,
           background: "var(--dock)",
           border: "1px solid var(--dock-border)",
-          boxShadow: "0 12px 32px rgba(0,0,0,.25)",
+          boxShadow: "0 12px 32px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.06)",
         }}
         animate={{ height: compact ? 56 : 64 }}
         transition={{ type: "spring", stiffness: 320, damping: 30 }}
@@ -165,7 +165,7 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
               <motion.span
                 aria-hidden
                 className="pointer-events-none absolute inset-y-0 left-1 right-1 rounded-[23px] border-2"
-                style={{ borderColor: "var(--primary)", willChange: "transform, opacity" }}
+                style={{ borderColor: "var(--dock-pill)", willChange: "transform, opacity" }}
                 animate={{ scale: [1, 1.12], opacity: [0.45, 0] }}
                 transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
               />
@@ -187,11 +187,11 @@ export function BottomNav({ due, last }: { due: number; last: QuizConfig | null 
                 setOpen((o) => !o);
               }}
               whileTap={{ scale: 0.94 }}
-              className={cn("relative flex h-[46px] w-[104px] items-center justify-center gap-1.5 rounded-[23px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffc400]", quizActive && "outline-2 outline-offset-2 outline-[color-mix(in_oklab,var(--primary)_60%,transparent)]")}
-              style={{ color: "var(--primary-foreground)" }}
+              className={cn("relative flex h-[46px] w-[104px] items-center justify-center gap-1.5 rounded-[23px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dock-pill)]", quizActive && "outline-2 outline-offset-2 outline-[color-mix(in_oklab,var(--dock-pill)_60%,transparent)]")}
+              style={{ color: "var(--dock-pill-fg)" }}
             >
-              {!open && <motion.span layoutId="quiz-launcher" className="absolute inset-0" style={{ borderRadius: 23, background: "var(--primary)", boxShadow: halo }} transition={{ type: "spring", stiffness: 260, damping: 26 }} />}
-              {open && <span className="absolute inset-0 rounded-[23px]" style={{ background: "var(--primary)" }} />}
+              {!open && <motion.span layoutId="quiz-launcher" className="absolute inset-0" style={{ borderRadius: 23, background: "var(--dock-pill)", boxShadow: halo }} transition={{ type: "spring", stiffness: 260, damping: 26 }} />}
+              {open && <span className="absolute inset-0 rounded-[23px]" style={{ background: "var(--dock-pill)" }} />}
               <span className="relative flex items-center gap-1.5">
                 <AnimatePresence mode="wait" initial={false}>
                   {open ? (

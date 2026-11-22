@@ -2,10 +2,13 @@ import { THEMES, type Palette, type ThemeDef } from "./themes";
 
 function vars(p: Palette, dark: boolean, id = "weiss"): string {
   return [
-    // Dunkles Dock (untere Navigation): Wiener Weiß fast schwarz, andere Themes ihre tiefe Überschriftfarbe
-    `--dock:${dark ? "#1c1c1e" : id === "weiss" ? "#111111" : p.heading}`,
-    `--dock-border:${dark ? "rgba(255,255,255,0.1)" : "transparent"}`,
-    `--dock-icon:#8a8f98`,
+    // Dock (untere Navigation): helle Fläche (Theme-Karte), Quiz-Pille in Wiener Weiß blau, sonst Primärfarbe
+    `--dock:${p.card}`,
+    `--dock-border:${p.cardBorder}`,
+    `--dock-icon:${p.mutedForeground}`,
+    `--dock-active:${p.heading}`,
+    `--dock-pill:${id === "weiss" ? (dark ? "#3b82f6" : "#2563eb") : p.primary}`,
+    `--dock-pill-fg:${id === "weiss" ? "#ffffff" : p.primaryForeground}`,
     `--background:${p.background}`,
     `--foreground:${p.foreground}`,
     `--card:${p.card}`,
