@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, ChevronLeft, CloudDownload, Headphones, History, Loader2, Play, Settings2, Shuffle, Sparkles, WifiOff } from "lucide-react";
+import { ChevronLeft, CloudDownload, Headphones, History, Loader2, Play, Settings2, Shuffle, Sparkles, WifiOff } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { estimateDrillSeconds, type DrillSettings } from "@/lib/audio/drill";
 import { cacheAudioUrls, cachedCount, formatMb } from "@/lib/audio/offline";
@@ -21,7 +21,8 @@ export function AutoStart({ settings: initial, topics, open, againCount, presele
   const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const [openTopic, setOpenTopic] = useState<string | null>(() => (preselect ? (topics.find((t) => t.chapters.some((c) => c.slug === preselect || c.id === preselect))?.id ?? topics[0]?.id) : topics[0]?.id) ?? null);
+  // Alle 25 Kapitel in Buch-Reihenfolge
+  const chapters = topics.flatMap((t) => t.chapters).sort((a, b) => a.order - b.order);
 
   const update = (patch: Partial<DrillSettings>) => {
     const next = { ...s, ...patch };
@@ -71,37 +72,32 @@ export function AutoStart({ settings: initial, topics, open, againCount, presele
 
       <DownloadAll urls={allUrls} />
 
-      <section className="space-y-3" aria-label="Kapitel">
-        {topics.map((t) => {
-          const isOpen = openTopic === t.id;
-          return (
-            <div key={t.id} className="glass overflow-hidden rounded-2xl">
-              <button type="button" onClick={() => setOpenTopic(isOpen ? null : t.id)} className="flex w-full items-center justify-between gap-3 p-4 text-left" aria-expanded={isOpen}>
-                <span>
-                  <span className="block font-extrabold text-navy">{t.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {t.chapters.length} Kapitel · {t.chapters.reduce((x, c) => x + c.total, 0)} Fragen
-                  </span>
+      <section aria-label="Kapitel" data-testid="drill-chapters">
+        <h2 className="mb-2 text-lg font-extrabold text-navy">Kapitel</h2>
+        <ul className="glass divide-y divide-border overflow-hidden rounded-2xl">
+          {chapters.map((c) => (
+            <ChapterRow key={c.id} c={c} s={s} highlight={c.slug === preselect || c.id === preselect} onStart={() => go({ mode: "chapter", id: c.id })} disabled={pending} />
+          ))}
+        </ul>
+      </section>
+
+      <section aria-label="Themen" data-testid="drill-topics">
+        <h2 className="mb-2 text-lg font-extrabold text-navy">Themen</h2>
+        <ul className="space-y-3">
+          {topics.map((t) => (
+            <li key={t.id} className="glass flex items-center gap-3 rounded-2xl p-4">
+              <span className="min-w-0 flex-1">
+                <span className="block font-extrabold text-navy">{t.title}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t.chapters.length} Kapitel · {t.chapters.reduce((x, c) => x + c.total, 0)} Fragen · Kapitel {t.chapters.map((c) => c.order).join(", ")}
                 </span>
-                <ChevronDown className={cn("size-5 transition", isOpen && "rotate-180")} />
+              </span>
+              <button type="button" onClick={() => go({ mode: "topic", id: t.id })} disabled={pending} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground active:scale-95" aria-label={`Thema ${t.title} abfragen`} data-testid={`drill-topic-${t.id}`}>
+                <Play className="size-5 translate-x-0.5" />
               </button>
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={spring} className="divide-y divide-border border-t border-border">
-                    {t.chapters.map((c) => (
-                      <ChapterRow key={c.id} c={c} s={s} highlight={c.slug === preselect || c.id === preselect} onStart={() => go({ mode: "chapter", id: c.id })} disabled={pending} />
-                    ))}
-                    <li className="p-3">
-                      <button type="button" onClick={() => go({ mode: "topic", id: t.id })} disabled={pending} className="w-full rounded-xl border border-border py-2 text-sm font-bold text-navy">
-                        Ganzes Thema abfragen
-                      </button>
-                    </li>
-                  </motion.ul>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
+            </li>
+          ))}
+        </ul>
       </section>
       {pending && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm" aria-live="polite">

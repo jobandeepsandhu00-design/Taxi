@@ -60,7 +60,8 @@ test("Mündlich Auto-Modus: Start, Frage hören, Countdown, Antwort aufdecken, G
   await page.getByTestId("drill-settings").getByRole("button", { name: "10 s" }).click();
   await page.getByTestId("drill-settings").getByRole("button", { name: "Stoppen" }).click();
   // Thema mit „Umweltschutz“ öffnen und starten
-  await page.getByRole("button", { name: /Marketing, Umwelt & Sonstiges/ }).click();
+  await expect(page.getByTestId("drill-chapters").locator("li")).toHaveCount(25);
+  await expect(page.getByTestId("drill-topics").locator("li")).toHaveCount(6);
   await page.getByTestId("drill-start-k-umweltschutz").click();
   await page.waitForURL("**/muendlich/auto/**");
   await expect(page.getByTestId("drill")).toBeVisible();
