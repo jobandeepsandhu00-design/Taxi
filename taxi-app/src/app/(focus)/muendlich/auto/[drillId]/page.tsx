@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { parseDrillSettings } from "@/lib/audio/drill";
 import { getAudioMap } from "@/server/audio/urls";
+import { ORAL_SIM_ANSWER_SEC } from "@/lib/quiz-config";
 
 export const metadata: Metadata = { title: "Mündlich – Auto-Modus" };
 
@@ -22,7 +23,10 @@ export default async function DrillPage({ params }: { params: Promise<{ drillId:
       select: { id: true, text: true, explanation: true, mnemonic: true, sourceDetail: true, categoryId: true, category: { select: { name: true, order: true } }, options: { orderBy: { order: "asc" }, select: { text: true, isCorrect: true } } },
     }),
   ]);
-  const settings = parseDrillSettings(settingsRow?.settings);
+  const base = parseDrillSettings(settingsRow?.settings);
+  // Simulation aus dem Quiz-Launcher: 60 s Antwortzeit, Antwort danach vorlesen, laut antworten (wie in der Prüfung)
+  const isSim = (session.config as { mode?: string } | null)?.mode === "simulation";
+  const settings = isSim ? { ...base, answerSec: ORAL_SIM_ANSWER_SEC as 60, afterTimeout: "readAnswer" as const, quiz: false } : base;
   const byId = new Map(qs.map((q) => [q.id, q]));
   const items: DrillItem[] = session.questionIds
     .map((id) => byId.get(id))

@@ -34,7 +34,8 @@ test("Lernbuch: Navigation, Story-Modus lesen, Kapitel-Check, Ergebnis", async (
   // Dashboard-Widget + neue Tab-Leiste
   await expect(page.getByTestId("home-lernbuch")).toBeVisible();
   const nav = page.getByRole("navigation", { name: "Schnellnavigation" });
-  for (const label of ["Start", "Lernbuch", "Üben", "Prüfung", "Fortschritt"]) await expect(nav.getByRole("link", { name: label })).toBeVisible();
+  for (const label of ["Start", "Lernbuch", "Fortschritt", "Profil"]) await expect(nav.getByRole("link", { name: label })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Quiz starten" })).toBeVisible();
   await expect(page.getByTestId("coach-fab")).toBeVisible();
 
   await nav.getByRole("link", { name: "Lernbuch" }).click();
@@ -83,13 +84,13 @@ test("Lernbuch: Navigation, Story-Modus lesen, Kapitel-Check, Ergebnis", async (
 
 test("Üben-Hub: Unter-Tabs und Lese-Liste / Karteikarten / Hör-Modus", async ({ page }) => {
   await guest(page);
-  await page.getByRole("navigation", { name: "Schnellnavigation" }).getByRole("link", { name: "Üben" }).click();
+  await page.goto("/ueben");
   await page.waitForURL("**/ueben");
   const tabs = page.getByRole("navigation", { name: "Üben" });
   await expect(tabs.getByRole("link", { name: "Wiederholung" })).toHaveAttribute("aria-current", "page");
   await tabs.getByRole("link", { name: "Fehlertraining" }).click();
   await page.waitForURL("**/fehler");
-  await expect(page.getByRole("navigation", { name: "Schnellnavigation" }).getByRole("link", { name: "Üben" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("navigation", { name: "Schnellnavigation" }).getByRole("link", { name: "Fortschritt" })).toHaveAttribute("aria-current", "page");
 
   await page.goto("/lernbuch/sonstiges/k-marketing/liste");
   await settle(page);

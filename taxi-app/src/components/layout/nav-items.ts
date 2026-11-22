@@ -23,6 +23,7 @@ import {
   Route as RouteIcon,
   Library,
   Dumbbell,
+  User,
 } from "lucide-react";
 
 export const mainNav = [
@@ -51,10 +52,12 @@ export const mainNav = [
 export const mobileNav: { href: string; label: string; icon: typeof Home; also?: string[] }[] = [
   { href: "/dashboard", label: "Start", icon: Home },
   { href: "/lernbuch", label: "Lernbuch", icon: Library },
-  { href: "/ueben", label: "Üben", icon: Dumbbell, also: ["/lernen", "/fehler", "/lernkarten", "/quiz"] },
-  { href: "/pruefung", label: "Prüfung", icon: ClipboardCheck, also: ["/muendlich"] },
-  { href: "/fortschritt", label: "Fortschritt", icon: BarChart3 },
+  { href: "/fortschritt", label: "Fortschritt", icon: BarChart3, also: ["/fehler", "/lernplan"] },
+  { href: "/profil", label: "Profil", icon: User },
 ];
+
+/** Bereiche, in denen der mittlere Quiz-Knopf als aktiv gilt (Üben, Prüfung, Mündlich …) */
+export const QUIZ_PATHS = ["/quiz", "/ueben", "/lernen", "/lernkarten", "/pruefung", "/muendlich", "/challenge"];
 
 /** Gehört der Pfad zum Tab? (inkl. Unterseiten und zugeordneter Bereiche) */
 export function pathInTab(pathname: string, tab: (typeof mobileNav)[number]): boolean {

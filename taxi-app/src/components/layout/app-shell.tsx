@@ -11,9 +11,11 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { haptic, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
+import { BottomNav } from "./bottom-nav";
 import { CoachFab } from "./coach-fab";
+import type { QuizConfig } from "@/lib/quiz-config";
 import { UebenTabs } from "./ueben-tabs";
-import { adminNav, mainNav, mobileNav, pathInTab } from "./nav-items";
+import { adminNav, mainNav } from "./nav-items";
 
 interface ShellUser {
   name: string;
@@ -169,46 +171,7 @@ function MobileHeader({ user, onMenu }: { user: ShellUser; onMenu: () => void })
   );
 }
 
-/** Untere Tab-Leiste mit gleitender Pille (layoutId) und hüpfendem Icon. */
-function BottomNav() {
-  const pathname = usePathname();
-  return (
-    <nav aria-label="Schnellnavigation" className="glass fixed inset-x-0 bottom-0 z-30 rounded-none border-x-0 border-b-0 shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.35)] lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-      <ul className="mx-auto grid max-w-md grid-cols-5 px-1.5 pt-1.5 pb-1.5">
-        {mobileNav.map((item) => {
-          const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathInTab(pathname, item);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={() => haptic()}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "relative flex flex-col items-center gap-0.5 rounded-xl py-2 text-[10px] font-semibold transition-colors",
-                  active ? "text-primary-foreground" : "text-foreground/60 active:text-foreground",
-                )}
-              >
-                {active && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-xl bg-primary" transition={spring} />}
-                <motion.span
-                  key={active ? "on" : "off"}
-                  className="relative"
-                  initial={active ? { y: 0, scale: 1 } : false}
-                  animate={active ? { y: [0, -5, 0], scale: [1, 1.18, 1] } : { y: 0, scale: 1 }}
-                  transition={{ duration: 0.45, ease: "easeOut" }}
-                >
-                  <item.icon className={cn("size-5", active && "stroke-[2.4]")} />
-                </motion.span>
-                <span className="relative">{item.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
-}
-
-export function AppShell({ user, children, disclaimer }: { user: ShellUser; children: React.ReactNode; disclaimer: string }) {
+export function AppShell({ user, children, disclaimer, quiz }: { user: ShellUser; children: React.ReactNode; disclaimer: string; quiz?: { due: number; last: QuizConfig | null } }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   useEffect(() => setOpen(false), [pathname]);
@@ -257,7 +220,7 @@ export function AppShell({ user, children, disclaimer }: { user: ShellUser; chil
         <footer className="mx-auto hidden max-w-6xl px-8 pb-8 text-xs leading-relaxed text-muted-foreground lg:block">{disclaimer}</footer>
       </div>
 
-      <BottomNav />
+      <BottomNav due={quiz?.due ?? 0} last={quiz?.last ?? null} />
       <CoachFab />
       <InstallPrompt />
     </div>

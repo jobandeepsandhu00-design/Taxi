@@ -81,6 +81,8 @@ model Region {
 }
 
 model User {
+  /// Letzte Quiz-Konfiguration aus dem Quiz-Launcher („Zuletzt“, langes Drücken)
+  lastQuizConfig     Json?
   audioDrillSettings AudioDrillSettings?
   audioDrillSessions AudioDrillSession[]
   id                 String                 @id @default(cuid())
@@ -1026,6 +1028,8 @@ model AudioDrillSession {
   position    Int       @default(0)
   /// { [questionId]: "known" | "unknown" }
   results     Json      @default("{}")
+  /// Quiz-Launcher-Konfiguration (z. B. Simulation 30 min)
+  config      Json?
   finishedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

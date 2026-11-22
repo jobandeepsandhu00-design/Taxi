@@ -38,6 +38,14 @@ export default async function ProgressPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Statistik" title="Mein Fortschritt" description="Alle Lernaktivitäten, Trefferquoten und Prüfungsergebnisse auf einen Blick." />
+      <div className="mb-6 grid grid-cols-2 gap-3" data-testid="progress-links">
+        <Link href="/fehler" className="glass glow-hover flex min-h-14 items-center gap-3 rounded-2xl p-4 font-bold text-navy">
+          <span aria-hidden>🔁</span> Falsche Antworten
+        </Link>
+        <Link href="/lernplan" className="glass glow-hover flex min-h-14 items-center gap-3 rounded-2xl p-4 font-bold text-navy">
+          <span aria-hidden>🗓️</span> Lernplan
+        </Link>
+      </div>
 
       <Card>
         <CardHeader><CardTitle>Lernkalender</CardTitle><CardDescription>Beantwortete Fragen pro Tag, letzte 26 Wochen</CardDescription></CardHeader>
