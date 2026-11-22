@@ -1,6 +1,7 @@
 /** Mündliche Prüfung – gemeinsame Typen und reine Logik (Client + Server, ohne DB). */
 
-export type KeyPoint = { id: string; text: string; required: boolean };
+/** keywords: Stichwörter/Synonyme (optional) – ohne Angabe werden markante Wörter aus dem Text verwendet */
+export type KeyPoint = { id: string; text: string; required: boolean; keywords?: string[] };
 export type FollowUp = { trigger_point_id: string; question_de: string };
 export type OralVerdict = "richtig" | "teilweise" | "falsch";
 export type OralMode = "ueben" | "pruefung";
@@ -17,7 +18,12 @@ export function parseKeyPoints(raw: unknown): KeyPoint[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
-    .map((p, i) => ({ id: String(p.id ?? `k${i + 1}`), text: String(p.text ?? ""), required: Boolean(p.required) }))
+    .map((p, i) => ({
+      id: String(p.id ?? `k${i + 1}`),
+      text: String(p.text ?? ""),
+      required: Boolean(p.required),
+      ...(Array.isArray(p.keywords) ? { keywords: p.keywords.map(String).filter((k) => k.trim()) } : {}),
+    }))
     .filter((p) => p.text.trim().length > 0);
 }
 
@@ -78,33 +84,6 @@ export function pickFollowUp(points: KeyPoint[], covered: string[], followUps: F
   return followUps[0]?.question_de ?? null;
 }
 
-const STOP = new Set(["oder", "sowie", "werden", "wenn", "sind", "nicht", "eine", "einen", "einem", "einer", "dass", "auch", "bzw", "über", "beim", "nach", "mindestens"]);
-
-function words(s: string): string[] {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .split(/[^a-z0-9ß]+/)
-    .filter((w) => w.length >= 4 && !STOP.has(w));
-}
-
-/** Testmodus-Bewertung ohne KI: Kernpunkt gilt als genannt, wenn ein markantes Wort (Stamm) vorkommt. */
-export function fakeCoverage(points: KeyPoint[], transcript: string): string[] {
-  const said = words(transcript);
-  const norm = (x: string) => x.toLowerCase().replace(/\s+/g, "");
-  return points
-    .filter((p) =>
-      // Sehr kurze Punkte ohne längere Wörter (z. B. „2€“): direkter Textvergleich
-      (words(p.text).length === 0 && norm(transcript).includes(norm(p.text))) ||
-      words(p.text).some((w) => {
-        const stem = w.slice(0, Math.max(4, Math.min(6, w.length - 1)));
-        return said.some((s) => s.startsWith(stem) || (s.length >= 5 && w.startsWith(s.slice(0, 5))));
-      }),
-    )
-    .map((p) => p.id);
-}
-
 /** Prüfungsmodus: Fragen nach Kategorie gewichtet und gut gemischt auswählen. */
 export function pickWeighted<T extends { id: string; categoryId: string }>(items: T[], n: number, rand: () => number = Math.random): T[] {
   const groups = new Map<string, T[]>();
@@ -133,4 +112,97 @@ export function sessionPercent(scores: number[], total: number): number {
 
 export function verdictLabel(v: OralVerdict): string {
   return v === "richtig" ? "Richtig" : v === "teilweise" ? "Teilweise richtig" : "Falsch";
+}
+
+/* ───────────── Bewertung ohne KI ───────────── */
+
+/** Kleinschreibung, Umlaute/ß vereinheitlichen, Satzzeichen entfernen. */
+export function normalizeDe(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/ä/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
+    .replace(/ß/g, "ss")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9€%,. ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const SUFFIXES = ["ungen", "heiten", "keiten", "ung", "heit", "keit", "lich", "isch", "ern", "em", "en", "er", "es", "e", "s", "n"];
+
+/** Sehr einfacher deutscher Stemmer (Suffixe abschneiden, Stamm ≥ 4 Zeichen). */
+export function stemDe(word: string): string {
+  let w = normalizeDe(word).replace(/[^a-z0-9]/g, "");
+  for (let round = 0; round < 2; round++) {
+    const suf = SUFFIXES.find((x) => w.endsWith(x) && w.length - x.length >= 4);
+    if (!suf) break;
+    w = w.slice(0, -suf.length);
+  }
+  return w;
+}
+
+const STOP_DE = new Set(["oder", "sowie", "werden", "wird", "wenn", "sind", "nicht", "eine", "einen", "einem", "einer", "eines", "dass", "auch", "bzw", "uber", "beim", "nach", "mindestens", "muss", "mussen", "kann", "konnen", "durch", "unter", "diese", "dieser", "dieses", "haben", "hat", "sein", "zum", "zur", "fur", "mit", "und", "der", "die", "das", "den", "dem", "des", "von", "bei", "aus", "ist"]);
+
+/** kurze Füllwörter (3 Buchstaben); andere 3er-Wörter wie „AfA“, „KFZ“ zählen */
+const STOP3 = new Set(["der", "die", "das", "und", "ist", "ein", "mit", "von", "bei", "aus", "zum", "zur", "fur", "den", "dem", "des", "wer", "was", "wie", "man", "auf", "als", "nur", "sie", "ihr", "wir", "ich", "hat", "bis", "pro", "vor", "uns", "ihn", "dir", "mir", "gut", "neu", "alt", "ja", "nein", "nie", "oft", "eur"]);
+
+function stemsOf(s: string): string[] {
+  return normalizeDe(s)
+    .split(/[^a-z0-9]+/)
+    .filter((w) => (w.length >= 4 || (w.length === 3 && !STOP3.has(w))) && !STOP_DE.has(w))
+    .map(stemDe);
+}
+
+function stemMatch(a: string, b: string): boolean {
+  if (a === b) return true;
+  // Präfix oder Teil eines zusammengesetzten Worts (Höchstarbeitszeit ↔ Arbeitszeit)
+  if ((b.length >= 4 && a.startsWith(b)) || (a.length >= 4 && b.startsWith(a))) return true;
+  if (a.length >= 5 && b.length >= 5) return a.includes(b) || b.includes(a);
+  return false;
+}
+
+/** Ist der Kernpunkt im Text genannt? Stichwörter (eins reicht) oder ≥ 40 % der markanten Wörter. */
+export function pointCovered(point: KeyPoint, said: string[], rawTranscript: string): boolean {
+  const has = (stem: string) => said.some((w) => stemMatch(w, stem));
+  if (point.keywords?.length) {
+    return point.keywords.some((k) => {
+      const ks = stemsOf(k);
+      if (ks.length === 0) return normalizeDe(rawTranscript).replace(/\s/g, "").includes(normalizeDe(k).replace(/\s/g, ""));
+      return ks.every(has); // Mehrwort-Stichwort: alle Teile
+    });
+  }
+  const ws = Array.from(new Set(stemsOf(point.text)));
+  if (ws.length === 0) return normalizeDe(rawTranscript).replace(/\s/g, "").includes(normalizeDe(point.text).replace(/\s/g, ""));
+  const hits = ws.filter(has).length;
+  return hits >= Math.max(1, Math.ceil(ws.length * 0.4));
+}
+
+/** Abgedeckte Kernpunkte (ohne KI). */
+export function ruleCoverage(points: KeyPoint[], transcript: string): string[] {
+  const said = stemsOf(transcript);
+  return points.filter((p) => pointCovered(p, said, transcript)).map((p) => p.id);
+}
+
+const FEEDBACK: Record<OralVerdict, string[]> = {
+  richtig: ["Sehr gut – du hast alle wichtigen Punkte genannt.", "Stark! Alle Kernpunkte sind drin.", "Perfekt erklärt – so kannst du das in der Prüfung sagen."],
+  teilweise: ["Guter Anfang! Es fehlt noch: {missing}.", "Schon einiges richtig – ergänze noch: {missing}.", "Fast! Denk auch an: {missing}."],
+  falsch: ["Da fehlen noch die wichtigsten Punkte: {missing}. Hör dir die Musterantwort an und sprich sie nach.", "Das passt noch nicht ganz. Wichtig sind: {missing}.", "Noch nicht – lies die Musterantwort und probier’s gleich nochmal. Wichtig: {missing}."],
+};
+
+/** Bewertung nach festen Regeln: Abdeckung → Punkte, Urteil, Feedback-Text und ggf. Nachfrage. */
+export function gradeByRules(points: KeyPoint[], followUps: FollowUp[], transcript: string, seed = 0) {
+  const covered = ruleCoverage(points, transcript);
+  const verdict = verdictFor(points, covered);
+  const score = clampScore(coverageScore(points, covered), verdict);
+  const missing = points.filter((p) => !covered.includes(p.id));
+  const missingText = (missing.filter((p) => p.required).length ? missing.filter((p) => p.required) : missing)
+    .slice(0, 3)
+    .map((p) => p.text.replace(/[.\s]+$/, ""))
+    .join("; ");
+  const list = FEEDBACK[verdict];
+  const feedbackDe = list[Math.abs(seed) % list.length].replace("{missing}", missingText || "–");
+  return { coveredPointIds: covered, missingPointIds: missing.map((p) => p.id), score, verdict, feedbackDe, followUpQuestion: pickFollowUp(points, covered, followUps) };
 }

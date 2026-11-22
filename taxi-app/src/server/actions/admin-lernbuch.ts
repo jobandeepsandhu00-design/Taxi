@@ -12,7 +12,7 @@ const outSchema = z.object({ items: z.array(z.object({ id: z.string(), mnemonic:
 export async function fillMissingMnemonicsAction(categoryId: string): Promise<ActionResult<{ filled: number; remaining: number }>> {
   await requireAdmin();
   const cid = z.string().min(1).max(64).parse(categoryId);
-  if (!coachConfigured()) return { ok: false, error: "Die KI ist noch nicht eingerichtet." };
+  if (!coachConfigured()) return { ok: false, error: "KI ist deaktiviert (Umgebungsvariable AI_ENABLED nicht gesetzt)." };
   const qs = await prisma.question.findMany({
     where: { categoryId: cid, status: "PUBLISHED", mnemonic: null },
     select: { id: true, text: true, options: { where: { isCorrect: true }, select: { text: true } } },
@@ -35,6 +35,8 @@ export async function fillMissingMnemonicsAction(categoryId: string): Promise<Ac
       await prisma.question.update({ where: { id: it.id }, data: { mnemonic: it.mnemonic.trim().slice(0, 300) } });
       filled++;
     }
+    const { refreshKnowledge } = await import("@/server/coach/knowledge");
+    await refreshKnowledge();
     const remaining = await prisma.question.count({ where: { categoryId: cid, status: "PUBLISHED", mnemonic: null } });
     return { ok: true, data: { filled, remaining } };
   } catch (err) {

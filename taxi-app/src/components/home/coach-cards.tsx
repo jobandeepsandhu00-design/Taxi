@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { CoachAvatar, type CoachMood } from "@/components/coach/coach-avatar";
 import { haptic, spring } from "@/lib/motion";
@@ -66,9 +66,9 @@ export function DailyPlanCard({ items: initial }: { items: PlanItemView[] }) {
             >
               <AnimatePresence>
                 {it.done && (
-                  <motion.span initial={{ scale: 0, rotate: -45 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={spring}>
-                    <Check className="size-4 stroke-[3]" />
-                  </motion.span>
+                  <motion.svg viewBox="0 0 24 24" className="size-4" initial={{ scale: 0.6 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={spring} aria-hidden>
+                    <motion.path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.35, ease: "easeOut" }} />
+                  </motion.svg>
                 )}
               </AnimatePresence>
             </motion.button>

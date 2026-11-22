@@ -21,14 +21,27 @@ function saveQueue(items: QueueItem[]) {
   }
 }
 
+const inflight = new Set<Promise<void>>();
+
 /** Markierung senden – offline in eine Warteschlange, beim nächsten Mal nachgereicht. */
-export async function sendMark(q: string, s: QueueItem["s"]) {
-  try {
-    const r = await markCardAction(q, s);
-    if (!r.ok) throw new Error(r.error);
-  } catch {
-    saveQueue([...loadQueue(), { q, s }]);
-  }
+export function sendMark(q: string, s: QueueItem["s"]): Promise<void> {
+  const p = (async () => {
+    try {
+      const r = await markCardAction(q, s);
+      if (!r.ok) throw new Error(r.error);
+    } catch {
+      saveQueue([...loadQueue(), { q, s }]);
+    }
+  })();
+  inflight.add(p);
+  void p.finally(() => inflight.delete(p));
+  return p;
+}
+
+/** Auf noch laufende Markierungen warten (vor dem Verlassen der Story), max. 4 s. */
+export async function waitForMarks(): Promise<void> {
+  if (inflight.size === 0) return;
+  await Promise.race([Promise.allSettled([...inflight]), new Promise((r) => setTimeout(r, 4000))]);
 }
 export async function flushQueue() {
   const items = loadQueue();

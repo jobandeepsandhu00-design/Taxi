@@ -35,7 +35,7 @@ import { haptic, spring } from "@/lib/motion";
 import { speak, speechSupported, stopSpeaking } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 import { saveChapterPositionAction, updateLernbuchSettingsAction } from "@/server/actions/lernbuch";
-import { flushQueue, sendMark } from "./mark-queue";
+import { flushQueue, sendMark, waitForMarks } from "./mark-queue";
 import { getSimpleAction, getTranslationAction, type SimpleView, type TranslationView } from "@/server/actions/variants";
 
 type Settings = { autoAdvanceSec: number | null; showWrongAnswers: boolean; textSize: "s" | "m" | "l" | "xl"; audioSpeed: number; quizOnlyUnlocked: boolean };
@@ -49,6 +49,28 @@ const TEXT: Record<Settings["textSize"], { q: string; a: string }> = {
   l: { q: "text-2xl", a: "text-lg" },
   xl: { q: "text-3xl", a: "text-xl" },
 };
+
+/** Link, der vor dem Navigieren auf gespeicherte Markierungen wartet. */
+function LeaveLink({ href, className, children, testid, label }: { href: string; className: string; children: React.ReactNode; testid?: string; label?: string }) {
+  const router = useRouter();
+  return (
+    <a
+      href={href}
+      className={className}
+      data-testid={testid}
+      aria-label={label}
+      onClick={async (e) => {
+        e.preventDefault();
+        stopSpeaking();
+        await waitForMarks();
+        router.push(href);
+        router.refresh();
+      }}
+    >
+      {children}
+    </a>
+  );
+}
 
 export function StoryPlayer({
   kind,
@@ -230,9 +252,9 @@ export function StoryPlayer({
     <div className="fixed inset-0 flex flex-col bg-background" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* Kopf */}
       <header className="flex items-center gap-2 px-3 pt-3 pb-2 sm:px-6">
-        <Link href={exitHref} onClick={() => stopSpeaking()} className="rounded-full p-2 hover:bg-accent" aria-label="Story schließen" data-testid="story-close">
+        <LeaveLink href={exitHref} className="rounded-full p-2 hover:bg-accent" label="Story schließen" testid="story-close">
           <X className="size-5" />
-        </Link>
+        </LeaveLink>
         <div className="min-w-0 flex-1">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={Math.max(0, Math.min(index + 1, total))} aria-label="Fortschritt">
             <motion.div className="h-full origin-left rounded-full bg-primary" animate={{ scaleX: progress }} transition={spring} style={{ width: "100%" }} />
@@ -298,11 +320,11 @@ export function StoryPlayer({
                   <ToolButton onClick={() => openHelper("simple")} label="Einfach (B1)" testid="story-simple">
                     <Sparkles className="size-4" />
                   </ToolButton>
-                  <ToolButton onClick={() => openHelper("why")} label="Warum?" testid="story-why">
-                    <HelpCircle className="size-4" />
-                  </ToolButton>
                 </>
               )}
+              <ToolButton onClick={() => openHelper("why")} label="Warum?" testid="story-why">
+                <HelpCircle className="size-4" />
+              </ToolButton>
               <ToolButton onClick={toggleStar} label={card.starred ? "Gemerkt" : "Merken"} active={card.starred} testid="story-star">
                 <Star className={cn("size-4", card.starred && "fill-current")} />
               </ToolButton>
@@ -347,7 +369,7 @@ export function StoryPlayer({
             <SimplePanel key={card.id} card={card} />
           </FocusSheet>
           <FocusSheet open={sheet === "why"} onClose={() => setSheet(null)} title="Warum?">
-            {sheet === "why" && <WhyPanel key={card.id} questionId={card.id} selectedOptionIds={[]} isCorrect />}
+            {sheet === "why" && <WhyPanel key={card.id} questionId={card.id} selectedOptionIds={[]} isCorrect autoOpen />}
           </FocusSheet>
         </>
       )}
@@ -505,14 +527,14 @@ function SummaryCard({
       )}
       <div className="flex w-full max-w-sm flex-col gap-2">
         {section?.nextHref && (
-          <a href={section.nextHref} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground" data-testid="summary-next-section">
+          <LeaveLink href={section.nextHref} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground" testid="summary-next-section">
             Weiter mit Abschnitt {section.number + 1} <ChevronRight className="size-4" />
-          </a>
+          </LeaveLink>
         )}
         {kind === "chapter" && chapter && allRead && !chapter.checkPassed && !section?.nextHref && (
-          <Link href={exitHref} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground" data-testid="summary-check">
+          <LeaveLink href={exitHref} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-primary-foreground" testid="summary-check">
             <Trophy className="size-4" /> Weiter zum Kapitel-Check
-          </Link>
+          </LeaveLink>
         )}
         {kind === "chapter" && !allRead && (
           <p className="text-sm text-warning">Noch {total - read} {total - read === 1 ? "Karte" : "Karten"} {section ? "in diesem Abschnitt " : ""}ungelesen – für den Kapitel-Check musst du alle lesen.</p>
@@ -520,9 +542,9 @@ function SummaryCard({
         <button type="button" onClick={onRestart} className="h-12 rounded-xl border border-border font-bold">
           Nochmal von vorne
         </button>
-        <Link href={exitHref} className="flex h-12 items-center justify-center rounded-xl font-bold text-link">
+        <LeaveLink href={exitHref} className="flex h-12 items-center justify-center rounded-xl font-bold text-link">
           {kind === "repeat" ? "Zum Lernbuch" : "Zur Kapitelübersicht"}
-        </Link>
+        </LeaveLink>
       </div>
     </div>
   );

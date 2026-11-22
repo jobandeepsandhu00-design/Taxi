@@ -231,6 +231,8 @@ model Question {
   lessonIndex     Int?
   /// Merkhilfe (Lernbuch)
   mnemonic        String?        @db.Text
+  /// Einfache Sprache (B1), offline geschrieben und per CSV importiert
+  simpleDe        String?        @db.Text
   readProgress    ReadProgress[]
   createdById     String?
   createdBy       User?               @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -896,4 +898,30 @@ model LernbuchSettings {
   textSize         String  @default("m") @db.VarChar(2)
   audioSpeed       Float   @default(1)
   quizOnlyUnlocked Boolean @default(true)
+}
+
+/// Coach-FAQ (Prüfungsablauf, Anmeldung, App-Hilfe …) – Teil der Wissensbasis „coach_knowledge“
+model CoachFaq {
+  id         String   @id @db.VarChar(64)
+  questionDe String   @map("question_de") @db.Text
+  answerDe   String   @map("answer_de") @db.Text
+  keywords   String[] @default([])
+  category   String   @db.VarChar(40)
+  linkRoute  String?  @map("link_route") @db.VarChar(200)
+  verified   Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("coach_faq")
+}
+
+/// Fragen ohne Erklärung, die jemand per „Warum?“ geöffnet hat (Admin-Liste)
+model MissingExplanation {
+  questionId  String   @id @map("question_id") @db.VarChar(64)
+  hits        Int      @default(1)
+  firstSeenAt DateTime @default(now()) @map("first_seen_at")
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at")
+
+  @@map("missing_explanations")
 }

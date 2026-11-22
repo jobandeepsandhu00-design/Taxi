@@ -34,7 +34,7 @@ function micAcknowledged() {
   }
 }
 
-export function OralRunner({ sessionId, mode, timer, questions, answered }: { sessionId: string; mode: OralMode; timer: boolean; questions: RunnerQuestion[]; answered: Record<string, SegState> }) {
+export function OralRunner({ sessionId, mode, timer, questions, answered, serverStt = true }: { sessionId: string; mode: OralMode; timer: boolean; questions: RunnerQuestion[]; answered: Record<string, SegState>; serverStt?: boolean }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const exam = mode === "pruefung";
@@ -102,10 +102,21 @@ export function OralRunner({ sessionId, mode, timer, questions, answered }: { se
     [pending, q?.id, sessionId, exam, reduce],
   );
 
+  const liveRef = useRef("");
   const onAudio = useCallback(
     async (blob: Blob, durationMs: number) => {
       if (durationMs < 700) {
         setError("Das war sehr kurz – tippe auf den Knopf, sprich deine Antwort und tippe dann zum Beenden.");
+        return;
+      }
+      // Ohne Server-Spracherkennung: Text aus der Browser-Spracherkennung (de-AT) verwenden
+      if (!serverStt) {
+        const text = liveRef.current.trim();
+        if (text.length < 2) {
+          setError("Ich habe leider nichts verstanden – sprich nochmal deutlich oder tippe deine Antwort.");
+          return;
+        }
+        await grade(text, null, durationMs);
         return;
       }
       setPhase("processing");
@@ -130,10 +141,11 @@ export function OralRunner({ sessionId, mode, timer, questions, answered }: { se
         setPhase(pending ? "followup" : "ask");
       }
     },
-    [grade, pending, q?.id, sessionId],
+    [grade, pending, q?.id, sessionId, serverStt],
   );
 
   const rec = useRecorder({ maxSeconds, onDone: onAudio });
+  liveRef.current = rec.liveText;
   const recording = rec.state === "recording";
 
   useEffect(() => {
@@ -143,6 +155,13 @@ export function OralRunner({ sessionId, mode, timer, questions, answered }: { se
     }
     if (rec.state === "unsupported") setTyping(true);
   }, [rec.state]);
+
+  // Weder Server- noch Browser-Spracherkennung → direkt tippen
+  useEffect(() => {
+    if (serverStt) return;
+    const w = window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
+    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) setTyping(true);
+  }, [serverStt]);
 
   // ── Prüfungsmodus: Frage automatisch vorlesen ────────────────────────
   useEffect(() => {
@@ -195,12 +214,12 @@ export function OralRunner({ sessionId, mode, timer, questions, answered }: { se
     stopSpeaking();
     if (recording) return rec.stop();
     if (!micAcknowledged()) return setMicPrompt(true);
-    await rec.start({ live: !exam });
+    await rec.start({ live: !exam || !serverStt });
   }
 
   async function allowMic() {
     setMicPrompt(false);
-    const ok = await rec.start({ live: !exam });
+    const ok = await rec.start({ live: !exam || !serverStt });
     if (ok) {
       try {
         localStorage.setItem(MIC_OK_KEY, "1");
@@ -311,7 +330,7 @@ export function OralRunner({ sessionId, mode, timer, questions, answered }: { se
               )}
               {!exam && recording && rec.liveText && (
                 <p className="max-w-md text-sm text-muted-foreground italic" aria-live="polite">
-                  „{rec.liveText}“ <span className="block text-[10px] not-italic">Live-Vorschau – bewertet wird die Aufnahme</span>
+                  „{rec.liveText}“ <span className="block text-[10px] not-italic">{serverStt ? "Live-Vorschau – bewertet wird die Aufnahme" : "So habe ich dich verstanden"}</span>
                 </p>
               )}
               {error && (

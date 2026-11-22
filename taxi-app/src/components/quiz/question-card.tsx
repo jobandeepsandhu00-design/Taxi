@@ -416,7 +416,7 @@ export function QuestionCard({ question, bookmarked, initialReveal, onSubmit, on
               {fresh && reveal.reward?.box && <BoxShift from={reveal.reward.box.from} to={reveal.reward.box.to} nextReview={reveal.reward.box.nextReview} />}
             </div>
 
-            {coachEnabled && <WhyPanel key={question.id} questionId={question.id} selectedOptionIds={reveal.selectedOptionIds} isCorrect={reveal.isCorrect} />}
+            {<WhyPanel key={question.id} questionId={question.id} selectedOptionIds={reveal.selectedOptionIds} isCorrect={reveal.isCorrect} />}
 
             {/* Erklärungs-Drawer */}
             <div className="glass rounded-2xl border-t-2 border-t-primary/50 p-5 sm:p-6">

@@ -6,7 +6,7 @@ import { nextLeitner } from "@/lib/gamification";
 import {
   clampScore,
   coverageScore,
-  fakeCoverage,
+  ruleCoverage,
   ORAL_AUDIO_RETENTION_DAYS,
   ORAL_FREE_DAILY,
   parseFollowUps,
@@ -188,7 +188,7 @@ Regeln:
     prompt: `Antwort (Transkript): „${answer.transcript}“${answer.followUpTranscript ? `\nNachfrage des Prüfers: „${answer.followUpQuestion ?? ""}“\nAntwort auf die Nachfrage: „${answer.followUpTranscript}“\nBewerte beide Antworten zusammen.` : ""}`,
     schema: gradeSchema,
     fake: () => {
-      const covered = fakeCoverage(points, combined);
+      const covered = ruleCoverage(points, combined);
       const verdict = verdictFor(points, covered);
       return {
         covered_point_ids: covered,

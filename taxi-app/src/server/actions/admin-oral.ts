@@ -88,7 +88,6 @@ export async function suggestOralAnswerAction(input: { categoryId: string; quest
   await requireAdmin();
   const p = z.object({ categoryId: z.string().min(1).max(64), questionDe: z.string().trim().min(8).max(600) }).safeParse(input);
   if (!p.success) return { ok: false, error: "Bitte zuerst Kategorie und Frage eingeben." };
-  if (!coachConfigured()) return { ok: false, error: "Die KI ist nicht eingerichtet (ANTHROPIC_API_KEY fehlt)." };
   const written = await prisma.question.findMany({
     where: { ...publishedWhere, categoryId: p.data.categoryId },
     select: { id: true, text: true, explanation: true, sourceDetail: true, options: { where: { isCorrect: true }, select: { text: true } } },
@@ -101,6 +100,27 @@ export async function suggestOralAnswerAction(input: { categoryId: string; quest
     .sort((a, b) => b.hits - a.hits)
     .slice(0, 10)
     .map((r) => r.q);
+  // Ohne KI: Entwurf direkt aus der passendsten Skript-Frage (Antwort → Musterantwort, Sätze → Kernpunkte)
+  if (!coachConfigured()) {
+    const best = ranked[0];
+    const answer = best.options.map((o) => o.text).join("\n");
+    const parts = answer
+      .split(/\n+|(?<=[.;])\s+/)
+      .map((x) => x.replace(/^[-•\d.)\s]+/, "").trim())
+      .filter((x) => x.length > 2)
+      .slice(0, 5);
+    return {
+      ok: true,
+      data: {
+        modelAnswerDe: answer,
+        keyPoints: (parts.length >= 2 ? parts : [answer, "Begründung"]).map((t, i) => `${i < 2 ? "! " : ""}${t}`).join("\n"),
+        legalReference: best.sourceDetail ?? "",
+        followUpQuestion: "",
+        followUpPoint: 1,
+      },
+      message: `Entwurf aus dem Skript eingefügt („${best.text.slice(0, 60)}“) – bitte prüfen und speichern (bleibt ungeprüft).`,
+    };
+  }
   try {
     const out = await parseCoach({
       context: "Aufgabe: Für die mündliche Taxi-Prüfung in Wien eine Musterantwort mit Kernpunkten entwerfen – ausschließlich auf Basis der schriftlichen Referenzfragen unten. Nichts erfinden.",

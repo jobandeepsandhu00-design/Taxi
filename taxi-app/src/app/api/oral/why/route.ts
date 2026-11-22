@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { parseKeyPoints } from "@/lib/oral";
 import { rateLimit } from "@/lib/rate-limit";
-import { coachConfigured, coachErrorMessage, parseCoach, UNSURE_SENTENCE } from "@/server/coach/llm";
+import { coachConfigured, parseCoach, UNSURE_SENTENCE } from "@/server/coach/llm";
 
 export const maxDuration = 60;
 
@@ -20,10 +20,14 @@ export async function POST(request: NextRequest) {
   if (!p.success) return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
   const a = await prisma.oralAttempt.findFirst({ where: { id: p.data.attemptId, userId: user.id }, include: { oralQuestion: true } });
   if (!a) return NextResponse.json({ error: "Nicht gefunden." }, { status: 404 });
-  if (!coachConfigured()) return NextResponse.json({ error: "Die KI ist noch nicht eingerichtet." }, { status: 503 });
   const q = a.oralQuestion;
   const points = parseKeyPoints(q.keyPoints);
   const missing = points.filter((k) => !a.coveredPointIds.includes(k.id));
+  // Ohne KI: Erklärung aus Kernpunkten + Musterantwort zusammensetzen
+  const ruleText = missing.length
+    ? `Wichtig sind diese Punkte: ${missing.map((m) => m.text.replace(/[.\s]+$/, "")).join("; ")}. Sie stehen so in der Musterantwort – sprich sie einmal laut nach, dann bleiben sie besser hängen.${q.legalReference ? ` Grundlage: ${q.legalReference}.` : ""}`
+    : "Du hast alle Kernpunkte genannt – super! Wiederhole die Antwort ab und zu laut, damit sie in der Prüfung sitzt.";
+  if (!coachConfigured()) return NextResponse.json({ explanation: ruleText });
   try {
     const out = await parseCoach({
       context: `Mündliche Taxi-Prüfung Wien. Erkläre nur anhand dieser Referenz:
@@ -35,8 +39,8 @@ Erkläre in 2–4 kurzen Sätzen (du-Form), warum diese Punkte wichtig sind und 
       fake: () => ({ explanation: missing.length ? `Wichtig ist vor allem: ${missing.map((m) => m.text).join(", ")}. Merk dir die Reihenfolge aus der Musterantwort.` : "Du hast alle Kernpunkte genannt – super! Wiederhole die Antwort ab und zu laut." }),
       maxTokens: 1500,
     });
-    return NextResponse.json({ explanation: out?.explanation ?? UNSURE_SENTENCE });
-  } catch (err) {
-    return NextResponse.json({ error: coachErrorMessage(err) }, { status: 502 });
+    return NextResponse.json({ explanation: out?.explanation ?? ruleText });
+  } catch {
+    return NextResponse.json({ explanation: ruleText });
   }
 }

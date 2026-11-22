@@ -33,7 +33,7 @@ export function TranslateSheet({ open, onClose, text, questionId, answered = fal
       if (persist) void setHelperLangAction(code).catch(() => undefined);
       setData(null);
       setError(null);
-      if (!aiEnabled || !questionId) return;
+      if (!questionId) return;
       setState("loading");
       const res = await getTranslationAction(questionId, code).catch(() => null);
       if (!res || !res.ok) {
@@ -44,7 +44,7 @@ export function TranslateSheet({ open, onClose, text, questionId, answered = fal
       setData(res.data);
       setState("idle");
     },
-    [aiEnabled, questionId],
+    [questionId],
   );
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export function TranslateSheet({ open, onClose, text, questionId, answered = fal
                   {data.explanation && <p className="border-t border-border pt-3 text-sm leading-relaxed text-foreground/85">{data.explanation}</p>}
                 </div>
               )}
-              {state === "error" && (
+              {state === "error" && aiEnabled && (
                 <div className="text-sm text-muted-foreground">
                   <p>{error}</p>
                   <button type="button" onClick={() => void run(lang)} className="mt-2 inline-flex min-h-11 items-center gap-1.5 font-semibold text-link">
@@ -122,9 +122,9 @@ export function TranslateSheet({ open, onClose, text, questionId, answered = fal
                   </button>
                 </div>
               )}
-              {!aiEnabled && (
+              {state === "error" && !aiEnabled && (
                 <div className="text-sm text-muted-foreground">
-                  <p>Die KI-Übersetzung ist noch nicht eingerichtet.</p>
+                  <p>Für diese Frage gibt es noch keine Übersetzung in der App – öffne sie im Übersetzer:</p>
                   <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1 font-semibold text-link hover:underline">
                     In Google Übersetzer öffnen <ExternalLink className="size-3.5" />
                   </a>

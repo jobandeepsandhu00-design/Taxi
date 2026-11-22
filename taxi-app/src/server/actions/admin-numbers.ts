@@ -49,7 +49,7 @@ const extractSchema = z.object({
 /** Zahlen-Fakten per KI aus vorhandenen Fragen ziehen – landen als „ungeprüft“. */
 export async function extractNumberFactsAction(): Promise<ActionResult<{ created: number }>> {
   await requireAdmin();
-  if (!coachConfigured()) return { ok: false, error: "Die KI ist nicht eingerichtet (ANTHROPIC_API_KEY fehlt)." };
+  if (!coachConfigured()) return { ok: false, error: "KI ist deaktiviert (AI_ENABLED nicht gesetzt) – bitte manuell ausfüllen." };
   const used = await prisma.numberFact.findMany({ where: { sourceQuestionId: { not: null } }, select: { sourceQuestionId: true } });
   const candidates = await prisma.question.findMany({
     where: { ...publishedWhere, id: { notIn: used.map((u) => u.sourceQuestionId!) }, options: { some: { isCorrect: true, text: { contains: "" } } } },

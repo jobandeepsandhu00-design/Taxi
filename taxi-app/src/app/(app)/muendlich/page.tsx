@@ -3,8 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { ORAL_FREE_DAILY } from "@/lib/oral";
-import { coachConfigured } from "@/server/coach/llm";
-import { oralAccess, sttConfigured } from "@/server/oral";
+import { oralAccess } from "@/server/oral";
 import { OralStart } from "./oral-start";
 
 export const metadata: Metadata = { title: "Mündliche Prüfung" };
@@ -20,8 +19,8 @@ export default async function OralStartPage() {
     <div className="space-y-6">
       <PageHeader eyebrow="Toni prüft dich" title="Mündliche Prüfung" description="Du hörst die Frage, antwortest laut – und bekommst sofort Feedback zu den Kernpunkten." />
       <OralStart
-        enabled={coachConfigured() && count > 0}
-        speech={sttConfigured()}
+        enabled={count > 0}
+        speech
         unlimited={access.unlimited}
         remaining={access.unlimited ? null : access.remaining}
         freeDaily={ORAL_FREE_DAILY}

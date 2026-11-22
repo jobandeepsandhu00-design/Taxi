@@ -2,11 +2,15 @@ import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { addDays, dayKey, dayKeyToDate } from "@/lib/dates";
-import { buildDailyPlan, buildWeeklyReport, type PlanItem, type WeeklyReportData } from "@/lib/coach-plan";
+import { buildWeeklyReport, type PlanItem, type WeeklyReportData } from "@/lib/coach-plan";
+import { evaluateRules, planFromInsights, type CoachPlanItem } from "@/lib/coach/rules";
 import { buildCoachContext, contextToPrompt, type CoachContext } from "./context";
+import { getUserStats } from "./stats";
 import { coachConfigured, parseCoach } from "./llm";
 
 interface StoredPlan {
+  /** 2 = aus der Regel-Engine erzeugt */
+  v?: number;
   items: PlanItem[];
   manualDone: string[];
 }
@@ -16,23 +20,49 @@ export interface PlanItemState extends PlanItem {
   progress?: number;
 }
 
-function dayOfYear(key: string): number {
-  const d = dayKeyToDate(key);
-  return Math.floor((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 1)) / 86_400_000) + 1;
+
+/** Plan-Punkt der Regel-Engine → gespeicherter Plan-Punkt (mit Art für die automatische Erledigt-Erkennung). */
+function toPlanItem(it: CoachPlanItem, dailyGoal: number): PlanItem {
+  const base = { id: it.id, label: it.label, hint: it.hint, href: it.route };
+  switch (it.id) {
+    case "due_reviews":
+      return { ...base, kind: "review", href: undefined };
+    case "open_mistakes":
+      return { ...base, kind: "mistakes", href: undefined };
+    case "weak_category":
+    case "untouched_category":
+      return { ...base, kind: "category", slug: it.route.split("/").pop(), target: 10, label: `10 Fragen: ${it.label.replace(/ üben$/, "")}` };
+    case "readiness_high":
+      return { ...base, kind: "exam" };
+    case "goal":
+      return { ...base, kind: "goal", target: dailyGoal };
+    case "challenge":
+      return { ...base, kind: "challenge" };
+    case "lesson":
+    case "exam_soon_low":
+      return { ...base, kind: "lesson" };
+    case "lernbuch_next":
+    case "lernbuch_again":
+    case "kapitel_check_ready":
+      return { ...base, kind: "lernbuch" };
+    default:
+      return { ...base, kind: "manual" };
+  }
 }
 
-/** Tagesplan erzeugen (idempotent pro Tag). */
-export async function ensureDailyPlan(userId: string, ctx?: CoachContext): Promise<StoredPlan> {
+/** Tagesplan aus der Regel-Engine – einmal pro Tag beim ersten Öffnen erzeugt (kein Cron nötig). */
+export async function ensureDailyPlan(userId: string, _ctx?: CoachContext): Promise<StoredPlan> {
+  void _ctx;
   const today = dayKey();
   const day = dayKeyToDate(today);
   const existing = await prisma.dailyPlan.findUnique({ where: { userId_day: { userId, day } } });
-  if (existing) return existing.items as unknown as StoredPlan;
-  const c = ctx ?? (await buildCoachContext(userId));
-  const plan: StoredPlan = {
-    items: buildDailyPlan({ dueToday: c.leitner.dueToday, openMistakes: c.openMistakes, goalQuestions: c.dailyGoalQuestions, daysToExam: c.daysToExam, dayOfYear: dayOfYear(today), categories: c.categories }),
-    manualDone: [],
-  };
-  await prisma.dailyPlan.create({ data: { userId, day, items: plan as unknown as object } }).catch(() => undefined);
+  const stored = existing?.items as unknown as StoredPlan | undefined;
+  if (stored?.v === 2) return stored;
+  const stats = await getUserStats(userId);
+  const plan: StoredPlan = { v: 2, items: planFromInsights(evaluateRules(stats), stats).map((i) => toPlanItem(i, stats.dailyGoal)), manualDone: [] };
+  await prisma.dailyPlan
+    .upsert({ where: { userId_day: { userId, day } }, create: { userId, day, items: plan as unknown as object }, update: { items: plan as unknown as object } })
+    .catch(() => undefined);
   return plan;
 }
 
@@ -40,12 +70,14 @@ export async function ensureDailyPlan(userId: string, ctx?: CoachContext): Promi
 export async function getDailyPlanState(userId: string, ctx?: CoachContext): Promise<PlanItemState[]> {
   const plan = await ensureDailyPlan(userId, ctx);
   const start = dayKeyToDate(dayKey());
-  const [answersToday, mistakeAnswers, challenge, exam, due] = await Promise.all([
+  const [answersToday, mistakeAnswers, challenge, exam, due, readToday, lessonsToday] = await Promise.all([
     prisma.userAnswer.findMany({ where: { userId, createdAt: { gte: start } }, select: { question: { select: { category: { select: { slug: true } } } } } }),
     prisma.userAnswer.count({ where: { userId, createdAt: { gte: start }, mode: "MISTAKES" } }),
     prisma.dailyChallengeResult.findUnique({ where: { userId_day: { userId, day: start } } }),
     prisma.examAttempt.count({ where: { userId, status: { in: ["SUBMITTED", "EXPIRED"] }, submittedAt: { gte: start } } }),
     prisma.reviewItem.count({ where: { userId, dueDate: { lte: start } } }),
+    prisma.readProgress.count({ where: { userId, updatedAt: { gte: start } } }),
+    prisma.lesson.count({ where: { userId, completedAt: { gte: start } } }),
   ]);
   return plan.items.map((it) => {
     let done = false;
@@ -70,6 +102,13 @@ export async function getDailyPlanState(userId: string, ctx?: CoachContext): Pro
         break;
       case "exam":
         done = exam > 0;
+        break;
+      case "lernbuch":
+        progress = readToday;
+        done = readToday >= 5;
+        break;
+      case "lesson":
+        done = lessonsToday > 0;
         break;
     }
     return { ...it, done: done || plan.manualDone.includes(it.id), progress };
@@ -129,10 +168,24 @@ export async function getWeeklyReport(userId: string): Promise<{ data: WeeklyRep
     }).catch(() => null);
     if (out?.note) data.coachNote = out.note;
   }
+  data.coachNote ??= weeklyNote(data);
   await prisma.weeklyReport.upsert({
     where: { userId_weekStart: { userId, weekStart } },
     create: { userId, weekStart, data: data as unknown as object },
     update: { data: data as unknown as object, createdAt: new Date() },
   });
   return { data, weekStart: ws, preview };
+}
+
+/** Wochen-Notiz aus Textbausteinen (ohne KI). */
+function weeklyNote(d: WeeklyReportData): string {
+  const { answered, accuracy, activeDays, streak } = d.stats;
+  if (answered === 0) return "Diese Woche war ruhig. Kein Problem – starte morgen mit einer Mini-Lektion, dann bist du gleich wieder drin.";
+  const parts = [`Diese Woche hast du ${answered} ${answered === 1 ? "Frage" : "Fragen"} an ${activeDays} ${activeDays === 1 ? "Tag" : "Tagen"} beantwortet${accuracy !== null ? ` – ${accuracy} % davon richtig` : ""}.`];
+  if (accuracy !== null && accuracy >= 80) parts.push("Das ist richtig stark!");
+  else if (accuracy !== null && accuracy < 60) parts.push("Lies bei falschen Antworten die Erklärung – das bringt am meisten.");
+  if (streak >= 7) parts.push(`Deine Serie von ${streak} Tagen zeigt: Du bleibst dran.`);
+  else if (activeDays < 4) parts.push("Versuch nächste Woche an mindestens 5 Tagen kurz zu lernen.");
+  if (d.weaknesses[0]) parts.push(`Schwerpunkt für die nächste Woche: „${d.weaknesses[0].name}“.`);
+  return parts.join(" ");
 }

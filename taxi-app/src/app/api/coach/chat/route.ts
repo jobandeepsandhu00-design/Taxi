@@ -27,7 +27,7 @@ function fakeAnswer(message: string, ctx: CoachContext, cites: RetrievedQuestion
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
-  if (!coachConfigured()) return NextResponse.json({ error: "Der Coach ist noch nicht eingerichtet." }, { status: 503 });
+  if (!coachConfigured()) return NextResponse.json({ error: "Nicht verfügbar." }, { status: 404 });
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Ungültige Nachricht." }, { status: 400 });
   const quota = await coachQuota(user);

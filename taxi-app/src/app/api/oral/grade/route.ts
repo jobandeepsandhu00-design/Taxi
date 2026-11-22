@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { ORAL_MAX_SECONDS, parseKeyPoints } from "@/lib/oral";
+import { gradeByRules, ORAL_MAX_SECONDS, parseFollowUps, parseKeyPoints } from "@/lib/oral";
 import { rateLimit } from "@/lib/rate-limit";
-import { coachConfigured, coachErrorMessage } from "@/server/coach/llm";
+import { coachConfigured } from "@/server/coach/llm";
 import { gradeOralAnswer, oralAccess, ORAL_LIMIT_REACHED, updateOralProgress } from "@/server/oral";
 
 export const maxDuration = 60;
@@ -49,13 +49,12 @@ export async function POST(request: NextRequest) {
   if (b.dontKnow) {
     grade = { coveredPointIds: [], missingPointIds: points.map((p) => p.id), score: 0, verdict: "falsch" as const, feedbackDe: "Kein Problem – schau dir die Musterantwort in Ruhe an und sprich sie einmal laut nach.", followUpQuestion: null };
   } else {
-    if (!coachConfigured()) return NextResponse.json({ error: "Die KI-Bewertung ist noch nicht eingerichtet." }, { status: 503 });
-    try {
-      grade = await gradeOralAnswer(q, { transcript: b.transcript, followUpQuestion: b.followUpQuestion, followUpTranscript: b.followUpTranscript });
-    } catch (err) {
-      return NextResponse.json({ error: coachErrorMessage(err) }, { status: 502 });
+    const combined = [b.transcript, b.followUpTranscript].filter(Boolean).join(" ");
+    // Optional KI (AI_ENABLED) – sonst und bei jedem Fehler: Bewertung nach Regeln (Stichwörter je Kernpunkt)
+    if (coachConfigured()) {
+      grade = await gradeOralAnswer(q, { transcript: b.transcript, followUpQuestion: b.followUpQuestion, followUpTranscript: b.followUpTranscript }).catch(() => null);
     }
-    if (!grade) return NextResponse.json({ error: "Die Bewertung hat nicht geklappt – bitte erneut versuchen." }, { status: 502 });
+    grade ??= gradeByRules(points, parseFollowUps(q.followUps), combined, b.transcript.length);
   }
 
   // Prüfungsmodus: genau eine Nachfrage, wenn Pflichtpunkte fehlen

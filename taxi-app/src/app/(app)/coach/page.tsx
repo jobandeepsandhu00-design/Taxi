@@ -1,35 +1,29 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
-import { coachQuota } from "@/server/coach/limits";
-import { coachConfigured } from "@/server/coach/llm";
-import { CoachChat, type ChatItem } from "./coach-chat";
+import { evaluateRules, topWeaknesses } from "@/lib/coach/rules";
+import { projectReadyDate } from "@/lib/readiness";
+import { getDailyPlanState } from "@/server/coach/plans";
+import { getUserStats, readinessHistory } from "@/server/coach/stats";
+import { CoachScreen } from "./coach-screen";
 
 export const metadata: Metadata = { title: "Dein Taxi-Coach" };
 
+/** Smart Coach: alles regelbasiert aus den App-Daten – keine KI nötig. */
 export default async function CoachPage() {
   const user = await requireUser();
-  const [history, quota, recent] = await Promise.all([
-    prisma.coachMessage.findMany({ where: { userId: user.id, kind: "chat" }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, role: true, content: true, citations: true, feedback: true } }),
-    coachQuota(user),
-    prisma.userAnswer.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 20, select: { isCorrect: true } }),
-  ]);
-  const acc = recent.length ? recent.filter((r) => r.isCorrect).length / recent.length : null;
-  const items: ChatItem[] = history.reverse().map((m) => ({
-    id: m.id,
-    role: m.role === "assistant" ? "assistant" : "user",
-    text: m.content,
-    citations: (m.citations as ChatItem["citations"]) ?? [],
-    feedback: (m.feedback as 1 | -1 | null) ?? null,
-  }));
+  const [stats, plan, history] = await Promise.all([getUserStats(user.id), getDailyPlanState(user.id), readinessHistory(user.id)]);
+  const insights = evaluateRules(stats);
+  const projection = projectReadyDate(history, stats.today);
   return (
-    <CoachChat
-      enabled={coachConfigured()}
-      initial={items}
-      remaining={quota.unlimited ? null : quota.remaining}
-      limit={quota.limit}
+    <CoachScreen
       name={user.isGuest ? "Gast" : user.name.split(" ")[0]}
-      mood={acc === null ? "idle" : acc >= 0.75 ? "happy" : acc < 0.45 ? "sad" : "idle"}
+      insights={insights.slice(0, 4)}
+      plan={plan.map((p) => ({ id: p.id, kind: p.kind, label: p.label, hint: p.hint, href: p.href, target: p.target, progress: p.progress, done: p.done }))}
+      weaknesses={topWeaknesses(stats.categories).map((c) => ({ slug: c.slug, name: c.name, accuracy: c.accuracy30, mastered: c.masteredPct, attempts: c.attempts30 }))}
+      history={history}
+      readyDate={projection.enoughData ? projection.date : null}
+      enoughData={projection.enoughData}
+      examDate={stats.examDate}
     />
   );
 }

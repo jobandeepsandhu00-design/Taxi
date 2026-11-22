@@ -644,7 +644,7 @@ export function FocusRunner({ title, questions, initialIndex, bookmarkedIds, mod
       </FocusSheet>
       {!exam && reveal && (
         <FocusSheet open={sheet === "explain"} onClose={() => setSheet(null)} title="Erklärung" testId="explain-sheet">
-          <ExplainContent q={q} reveal={reveal} coachEnabled={coachEnabled} />
+          <ExplainContent q={q} reveal={reveal} />
         </FocusSheet>
       )}
       <FocusDialog
@@ -764,7 +764,7 @@ function RecallCard({ answer }: { answer: string | null }) {
   );
 }
 
-function ExplainContent({ q, reveal, coachEnabled }: { q: ClientQuestion; reveal: AnswerReveal; coachEnabled: boolean }) {
+function ExplainContent({ q, reveal }: { q: ClientQuestion; reveal: AnswerReveal }) {
   const legal = reveal.sourceDetail ?? q.sourceDetail;
   return (
     <div className="space-y-4">
@@ -788,7 +788,7 @@ function ExplainContent({ q, reveal, coachEnabled }: { q: ClientQuestion; reveal
           ))}
         </ul>
       </div>
-      {coachEnabled && <WhyPanel key={q.id} questionId={q.id} selectedOptionIds={reveal.selectedOptionIds} isCorrect={reveal.isCorrect} />}
+      {<WhyPanel key={q.id} questionId={q.id} selectedOptionIds={reveal.selectedOptionIds} isCorrect={reveal.isCorrect} />}
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <ArrowRight className="size-3" /> Weiter mit „Weiter“ oder nach links wischen.
       </div>

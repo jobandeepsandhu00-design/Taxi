@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { CHECK_QUESTIONS } from "@/lib/lernbuch";
 import { shuffle } from "@/lib/quiz-logic";
-import { coachConfigured, coachErrorMessage, parseCoach, UNSURE_SENTENCE } from "@/server/coach/llm";
+import { coachConfigured, parseCoach, UNSURE_SENTENCE } from "@/server/coach/llm";
 import { markCard, saveChapterPosition } from "@/server/lernbuch";
 import { publishedWhere } from "@/server/questions";
 import type { ActionResult } from "./types";
@@ -73,10 +73,11 @@ export async function getChapterSummaryAction(categoryId: string): Promise<Actio
   const cid = id.parse(categoryId);
   const cached = await prisma.chapterSummary.findUnique({ where: { categoryId: cid } });
   if (cached) return { ok: true, data: { content: cached.contentDe, keyNumbers: cached.keyNumbers as never, traps: cached.traps as never, verified: cached.verified } };
-  if (!coachConfigured()) return { ok: false, error: "Die KI ist noch nicht eingerichtet." };
   const category = await prisma.category.findUnique({ where: { id: cid }, select: { name: true } });
   const qs = await prisma.question.findMany({ where: { categoryId: cid, ...publishedWhere }, select: { text: true, options: { where: { isCorrect: true }, select: { text: true } } }, take: 80 });
   if (!category || qs.length === 0) return { ok: false, error: "Kapitel nicht gefunden." };
+  // Ohne KI: Spickzettel aus Kapitel-Einführung, Zahlen in den Antworten und häufigen Fehlern
+  if (!coachConfigured()) return { ok: true, data: await ruleSummary(cid, category.name, qs) };
   try {
     const out = await parseCoach({
       context: `Kapitel „${category.name}“ der Taxi-Konzessionsprüfung Wien. Quelle sind ausschließlich diese Fragen mit Skript-Antworten:\n${qs.map((q) => `F: ${q.text}\nA: ${q.options.map((o) => o.text).join(" / ")}`).join("\n\n").slice(0, 24000)}`,
@@ -89,14 +90,46 @@ Erfinde nichts. Wenn unsicher: „${UNSURE_SENTENCE}“`,
       fake: () => ({ summary: `Spickzettel für ${category.name}: ${qs.slice(0, 3).map((q) => q.text).join(" · ")}`, key_numbers: [], traps: ["Begriffe genau unterscheiden", "Fristen merken", "Zuständigkeiten beachten"] }),
       maxTokens: 3000,
     });
-    if (!out) return { ok: false, error: "Der Spickzettel konnte nicht erstellt werden." };
+    if (!out) return { ok: true, data: await ruleSummary(cid, category.name, qs) };
     const saved = await prisma.chapterSummary.upsert({
       where: { categoryId: cid },
       create: { categoryId: cid, contentDe: out.summary, keyNumbers: out.key_numbers, traps: out.traps.slice(0, 3), verified: false },
       update: {},
     });
     return { ok: true, data: { content: saved.contentDe, keyNumbers: saved.keyNumbers as never, traps: saved.traps as never, verified: saved.verified } };
-  } catch (err) {
-    return { ok: false, error: coachErrorMessage(err) };
+  } catch {
+    return { ok: true, data: await ruleSummary(cid, category.name, qs) };
   }
+}
+
+const NUMBER_RE = /(\d{1,3}(?:[.\s]\d{3})*(?:,\d+)?|\d+(?:,\d+)?)\s*(%|€|Euro|EUR|Tage[n]?|Wochen|Monate[n]?|Jahre[n]?|Stunden|Minuten|km\/h|km|Meter|m|Promille|‰|Personen)(?![a-zäöüß])/i;
+
+/** Regelbasierter Spickzettel (ohne KI, nicht zwischengespeichert – wird mit mehr Lerndaten besser). */
+async function ruleSummary(categoryId: string, name: string, qs: { text: string; options: { text: string }[] }[]) {
+  const cat = await prisma.category.findUnique({ where: { id: categoryId }, select: { shortDescription: true, introduction: true } });
+  const intro = [cat?.shortDescription, cat?.introduction].filter((x) => x && x.trim()).join(" ").trim();
+  const topics = qs.slice(0, 6).map((q) => `• ${q.text}`).join("\n");
+  const content = `${intro ? `${intro}\n\n` : ""}Darum geht es in „${name}“ (${qs.length} Fragen), zum Beispiel:\n${topics}`;
+  const keyNumbers: { value: string; unit: string; rule: string }[] = [];
+  for (const q of qs) {
+    const ans = q.options.map((o) => o.text).join(" ");
+    const m = ans.match(NUMBER_RE);
+    if (!m) continue;
+    if (keyNumbers.some((k) => k.value === m[1] && k.unit === m[2])) continue;
+    keyNumbers.push({ value: m[1], unit: m[2], rule: q.text.length > 90 ? `${q.text.slice(0, 87)}…` : q.text });
+    if (keyNumbers.length >= 8) break;
+  }
+  // Fallen: Fragen dieses Kapitels mit der höchsten Fehlerquote (alle Lernenden), sonst lange Antworten
+  const rows = await prisma.$queryRaw<{ text: string; wrong: number; total: number }[]>`
+    SELECT q.text, SUM(CASE WHEN a."isCorrect" THEN 0 ELSE 1 END)::int AS wrong, COUNT(*)::int AS total
+    FROM "UserAnswer" a JOIN "Question" q ON q.id = a."questionId"
+    WHERE q."categoryId" = ${categoryId} AND q.status = 'PUBLISHED'
+    GROUP BY q.id, q.text HAVING COUNT(*) >= 3
+    ORDER BY (SUM(CASE WHEN a."isCorrect" THEN 0 ELSE 1 END)::float / COUNT(*)) DESC LIMIT 3`;
+  const traps = rows.filter((r) => r.wrong > 0).map((r) => `Oft falsch: „${r.text}“ – Antwort genau lesen.`);
+  for (const q of [...qs].sort((a, b) => b.options.map((o) => o.text).join("").length - a.options.map((o) => o.text).join("").length)) {
+    if (traps.length >= 3) break;
+    traps.push(`Lange Antwort, leicht etwas vergessen: „${q.text}“`);
+  }
+  return { content, keyNumbers, traps: traps.slice(0, 3), verified: false };
 }

@@ -1,3 +1,4 @@
+import { coachFaqs } from "./seed-data/coach-faq";
 /**
  * Seed: Regionen, Benutzer (Admin + Demo-Lernender), Quellen, Kategorien, Themen,
  * Demo-Fragen, Prüfungskonfigurationen und Einstellungen.
@@ -235,6 +236,13 @@ async function seedLearningExtras() {
     void categorySlug;
     await prisma.oralQuestion.upsert({ where: { id }, create: { id, ...data, categoryId: category.id, verified: false, catalogVersion: "seed-2026-11" }, update: { categoryId: category.id } });
   }
+  // Coach-FAQ (ungeprüft) – Inhalte aktualisieren, Prüfstatus behalten
+  for (const [i, f] of coachFaqs.entries()) {
+    const { id, ...data } = f;
+    await prisma.coachFaq.upsert({ where: { id }, create: { id, ...data, order: i, verified: false }, update: { ...data, order: i } });
+  }
+  // Wissensbasis für „Frag Toni“ neu aufbauen
+  await prisma.$executeRawUnsafe("REFRESH MATERIALIZED VIEW coach_knowledge").catch((e) => console.warn("coach_knowledge refresh:", e instanceof Error ? e.message : e));
 }
 
 main()

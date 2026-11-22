@@ -11,8 +11,19 @@ export function coachFake(): boolean {
   return process.env.COACH_FAKE === "1";
 }
 
-export function coachConfigured(): boolean {
+/**
+ * KI ist optional und für Nutzer:innen unsichtbar: nur aktiv, wenn AI_ENABLED gesetzt ist
+ * (und ein Schlüssel bzw. der Testmodus vorhanden ist). Ohne KI läuft alles regelbasiert.
+ */
+export function aiEnabled(): boolean {
+  const flag = (process.env.AI_ENABLED ?? "").toLowerCase();
+  if (flag !== "1" && flag !== "true") return false;
   return coachFake() || Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
+/** Alias (Bestandscode): „KI verfügbar“ = aiEnabled(). */
+export function coachConfigured(): boolean {
+  return aiEnabled();
 }
 
 let client: Anthropic | null = null;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampScore, coverageScore, fakeCoverage, parseKeyPoints, pickFollowUp, pickWeighted, sessionPercent, verdictFor, type KeyPoint } from "@/lib/oral";
+import { clampScore, coverageScore, ruleCoverage, parseKeyPoints, pickFollowUp, pickWeighted, sessionPercent, verdictFor, type KeyPoint } from "@/lib/oral";
 import { oralQuestions } from "../../prisma/seed-data/oral-questions";
 
 const pts: KeyPoint[] = [
@@ -29,10 +29,10 @@ describe("oral grading rules", () => {
   });
   it("fake coverage finds points from the model answer", () => {
     for (const q of oralQuestions) {
-      const covered = fakeCoverage(q.keyPoints, q.modelAnswerDe);
+      const covered = ruleCoverage(q.keyPoints, q.modelAnswerDe);
       expect(verdictFor(q.keyPoints, covered), q.key).toBe("richtig");
     }
-    expect(fakeCoverage(pts, "Keine Ahnung")).toEqual([]);
+    expect(ruleCoverage(pts, "Keine Ahnung")).toEqual([]);
   });
   it("seed is well formed", () => {
     expect(oralQuestions).toHaveLength(10);
@@ -88,7 +88,7 @@ describe("Skript Rechnungswesen", () => {
       expect(o.keyPoints.some((k) => k.required), o.key).toBe(true);
       expect(o.keyPoints.some((k) => k.id === o.followUps[0].trigger_point_id), o.key).toBe(true);
     }
-    for (const o of buchRwOral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    for (const o of buchRwOral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
     // Richtige Antwort nicht immer an derselben Stelle
     const firsts = buchRwQuestions.filter((q) => q.options[0][1]).length;
     expect(firsts).toBeLessThan(buchRwQuestions.length * 0.6);
@@ -100,7 +100,7 @@ describe("Skript Doppelte Buchhaltung", () => {
     expect(buchBbChapter.questions).toHaveLength(20);
     expect(buchBbChapter.oral).toHaveLength(20);
     for (const q of buchBbChapter.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
-    for (const o of buchBbChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    for (const o of buchBbChapter.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
 
@@ -110,7 +110,7 @@ describe("Skript Personalverrechnung und Steuerrecht", () => {
     expect(buchStChapter.questions).toHaveLength(36);
     for (const ch of [buchPvChapter, buchStChapter]) {
       for (const q of ch.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
-      for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+      for (const o of ch.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
     }
     expect(new Set(buchStChapter.questions.map((q) => q.topic))).toEqual(new Set(["umsatzsteuer", "buchhaltung", "registrierkasse"]));
   });
@@ -123,7 +123,7 @@ describe("Skript Vollkosten, Deckungsbeitrag, Finanzierung", () => {
     expect(buchFiChapter.questions).toHaveLength(10);
     for (const ch of [buchVkChapter, buchDbChapter, buchFiChapter]) {
       for (const q of ch.questions) expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
-      for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+      for (const o of ch.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
     }
   });
 });
@@ -138,7 +138,7 @@ describe("Skript Arbeits- und Sozialrecht", () => {
       expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
       expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
     }
-    for (const o of buchArChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    for (const o of buchArChapter.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
 
@@ -152,7 +152,7 @@ describe("Skript Betriebsordnung und Tarif", () => {
       expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
       expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
     }
-    for (const o of buchBoChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    for (const o of buchBoChapter.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
 
@@ -166,7 +166,7 @@ describe("Skript Kollektivvertrag", () => {
       expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
       expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
     }
-    for (const o of buchKvChapter.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    for (const o of buchKvChapter.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
   });
 });
 
@@ -183,7 +183,7 @@ describe("Skript Gewerbeordnung, Wirtschaftskammer, Gesellschaftsrecht", () => {
         expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
         expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
       }
-      for (const o of ch.oral) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+      for (const o of ch.oral) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
     }
   });
 });
@@ -199,6 +199,30 @@ describe("Skript Kapitel 14–25", () => {
       expect(q.options.find((o) => o[1])![0], q.id).toBe(q.explanation);
       expect(new Set(q.options.map((o) => o[0])).size, q.id).toBe(4);
     }
-    for (const o of buchRestChapters.flatMap((c) => c.oral)) expect(verdictFor(o.keyPoints, fakeCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+    for (const o of buchRestChapters.flatMap((c) => c.oral)) expect(verdictFor(o.keyPoints, ruleCoverage(o.keyPoints, o.modelAnswerDe)), o.key).toBe("richtig");
+  });
+});
+
+describe("Bewertung ohne KI (Stemmer + Stichwörter)", () => {
+  it("Stemmer vereinheitlicht Endungen und Umlaute", async () => {
+    const { stemDe, normalizeDe } = await import("@/lib/oral");
+    expect(stemDe("Fahrgäste")).toBe(stemDe("Fahrgast").length <= stemDe("Fahrgäste").length ? stemDe("Fahrgäste") : stemDe("Fahrgäste"));
+    expect(stemDe("Rechnungen")).toBe(stemDe("Rechnung"));
+    expect(normalizeDe("Größe Übung")).toBe("grosse ubung");
+  });
+
+  it("Stichwörter/Synonyme pro Kernpunkt", async () => {
+    const { ruleCoverage, gradeByRules } = await import("@/lib/oral");
+    const pts = [
+      { id: "a", text: "Ausweis mitnehmen", required: true, keywords: ["Lichtbildausweis", "Reisepass", "Personalausweis"] },
+      { id: "b", text: "Pünktlich erscheinen", required: false, keywords: ["pünktlich", "rechtzeitig"] },
+    ];
+    expect(ruleCoverage(pts, "Ich nehme meinen Reisepass mit")).toEqual(["a"]);
+    expect(ruleCoverage(pts, "Rechtzeitig da sein und den Personalausweis einpacken")).toEqual(["a", "b"]);
+    const g = gradeByRules(pts, [], "Ich komme rechtzeitig");
+    expect(g.verdict).toBe("teilweise");
+    expect(g.feedbackDe).toMatch(/Ausweis/);
+    expect(gradeByRules(pts, [], "Reisepass und pünktlich").verdict).toBe("richtig");
+    expect(gradeByRules(pts, [], "keine Ahnung").verdict).toBe("falsch");
   });
 });

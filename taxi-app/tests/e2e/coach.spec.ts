@@ -67,21 +67,18 @@ test.describe.serial("Taxi-Coach", () => {
     await expect(page.getByRole("button", { name: /Daily Challenge – als offen markieren/ })).toBeVisible();
   });
 
-  test("Quiz: Einfache Sprache und „Warum?“ nach falscher Antwort", async () => {
+  test("Quiz: „Warum?“ nach falscher Antwort – aus der Datenbank, ohne KI", async () => {
     await page.goto("/quiz");
     await settle(page);
     await page.getByLabel("Anzahl Fragen").selectOption("20");
     await page.getByRole("button", { name: "Quiz starten" }).click();
     await page.waitForURL("**/quiz/**");
     await settle(page);
-
-    await page.getByRole("button", { name: "Einfache Sprache" }).click();
-    await expect(page.getByText(/^Einfache Sprache \(B1\)/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Einfache Sprache" })).toHaveAttribute("aria-pressed", "true");
+    // Ohne KI kein B1-Knopf, keine „nicht eingerichtet“-Meldung
+    await expect(page.getByRole("button", { name: "Einfache Sprache" })).toHaveCount(0);
 
     let wrong = false;
     for (let i = 0; i < 20 && !wrong; i++) {
-      // letzte Option wählen – erhöht die Chance auf eine falsche Antwort
       await page.getByRole("radiogroup", { name: "Antwortmöglichkeiten" }).or(page.getByRole("group", { name: "Antwortmöglichkeiten" })).locator("button").last().click();
       await page.getByRole("button", { name: "Antwort prüfen" }).click();
       const result = page.getByText(/^(Richtig!|Leider falsch)$/);
@@ -91,37 +88,47 @@ test.describe.serial("Taxi-Coach", () => {
     }
     expect(wrong).toBe(true);
     await page.getByRole("button", { name: /Erklärung & Warum/ }).click();
-    await page.getByRole("button", { name: /Warum\? – Coach erklären lassen/ }).click();
-    await expect(page.getByTestId("why-panel").getByText("Die Regel")).toBeVisible();
-    await expect(page.getByTestId("why-panel").getByText("Beispiel aus dem Taxi-Alltag")).toBeVisible();
+    await page.getByTestId("why-button").click();
+    const why = page.getByTestId("why-panel");
+    await expect(why.getByText("Richtige Antwort")).toBeVisible();
+    await expect(why.getByText("Erklärung", { exact: true })).toBeVisible();
+    await expect(page.getByText(/noch nicht eingerichtet/)).toHaveCount(0);
   });
 
-  test("Chat: Vorschläge, Streaming, Quellenkarten und Feedback", async () => {
+  test("Smart Coach: Toni, Plan, Schwächen, Prognose, Frag Toni (Suche, Tippfehler, Chips)", async () => {
     await page.goto("/coach");
     await settle(page);
-    await expect(page.getByRole("heading", { name: "Dein Taxi-Coach" })).toBeVisible();
-    await expect(page.getByText(/von 30 Nachrichten heute übrig/)).toBeVisible();
+    await expect(page.getByText(/noch nicht eingerichtet/)).toHaveCount(0);
+    await expect(page.getByTestId("coach-hero")).toBeVisible();
+    await expect(page.getByTestId("daily-plan")).toBeVisible();
+    await expect(page.getByTestId("coach-weaknesses").getByRole("link", { name: "Üben" })).toHaveCount(3);
+    await expect(page.getByTestId("coach-prognosis")).toContainText(/ab 5 Lerntagen|Prüfungsbereit voraussichtlich/);
+    await expect(page.getByTestId("coach-weekly")).toBeVisible();
 
-    await page.getByRole("button", { name: "Was soll ich heute lernen?" }).click();
-    await expect(page.getByText(/Heute würde ich so vorgehen/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Hilfreiche Antwort", exact: true }).first()).toBeVisible();
-    await page.getByRole("button", { name: "Hilfreiche Antwort", exact: true }).first().click();
-    await expect(page.getByRole("button", { name: "Hilfreiche Antwort", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
+    // Schnell-Chip → regelbasierte Antwort
+    await page.getByTestId("toni-chip").filter({ hasText: "Was soll ich heute lernen?" }).click();
+    await expect(page.getByTestId("toni-answer")).toContainText("Das würde ich heute lernen");
+    await page.getByTestId("toni-chip").filter({ hasText: "Wie stehe ich?" }).click();
+    await expect(page.getByTestId("toni-answer")).toContainText("So stehst du");
+    await page.getByTestId("toni-chip").filter({ hasText: "Prüfungstipps" }).click();
+    await expect(page.getByTestId("toni-answer")).toContainText("Was muss ich am Prüfungstag mitnehmen?");
 
-    await page.getByRole("button", { name: "Erklär mir den Deckungsbeitrag" }).click();
-    const card = page.getByRole("link", { name: /Frage üben/ }).first();
-    await expect(card).toBeVisible();
-    await expect(page.getByText(/passende Fragen gefunden/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Hilfreiche Antwort", exact: true })).toHaveCount(2);
+    // Suche mit Tippfehler: „Schutzweck“ → Schutzweg
+    await page.getByTestId("toni-input").fill("Schutzweck");
+    await page.getByTestId("toni-ask").click();
+    await expect(page.getByTestId("toni-best")).toContainText(/Schutzweg/i);
 
-    // Verlauf bleibt erhalten
-    await page.reload();
-    await settle(page);
-    await expect(page.getByText(/Heute würde ich so vorgehen/)).toBeVisible();
-    await expect(page.getByText(/\d+ von 30 Nachrichten heute übrig/)).toBeVisible();
+    // Frage aus dem Skript: beste Antwort + ähnliche Fragen
+    await page.getByTestId("toni-input").fill("Was ist Prokura?");
+    await page.getByTestId("toni-ask").click();
+    await expect(page.getByTestId("toni-best")).toContainText(/Prokura/);
+    await expect(page.getByTestId("toni-best")).toContainText("Richtige Antwort");
+    await expect(page.getByTestId("toni-similar").first()).toBeVisible();
 
-    await page.getByRole("link", { name: /Frage üben/ }).first().click();
-    await page.waitForURL("**/fragen/**");
+    // Nichts gefunden → Hinweis + Vorschläge
+    await page.getByTestId("toni-input").fill("qqxyz blorfk");
+    await page.getByTestId("toni-ask").click();
+    await expect(page.getByTestId("toni-empty")).toContainText("Dazu habe ich nichts gefunden");
   });
 
   test("Alte mündliche Prüfung leitet zur Sprechprüfung", async () => {

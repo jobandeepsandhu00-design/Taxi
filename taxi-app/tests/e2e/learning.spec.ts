@@ -89,7 +89,7 @@ test.describe.serial("Easy Learning", () => {
     await expect(page.getByRole("dialog")).toContainText("35 % Beherrschung");
   });
 
-  test("Einfach (B1) mit Glossar, Übersetzungshilfe und strukturiertes „Warum?“", async () => {
+  test("Glossar, Übersetzungshilfe (Cache) und „Warum?“ aus der Datenbank", async () => {
     await page.evaluate(() => localStorage.setItem("tp-lang", "en"));
     await page.goto("/fragen/bbb-04");
     await settle(page);
@@ -97,33 +97,24 @@ test.describe.serial("Easy Learning", () => {
     await page.getByRole("button", { name: "Eigenkapital", exact: true }).first().click();
     await expect(page.getByRole("tooltip")).toContainText("nicht geliehen");
     await page.keyboard.press("Escape");
-    // Einfache Sprache (vorab erzeugt, ungeprüft)
-    await page.getByRole("button", { name: "Einfache Sprache" }).click();
-    await expect(page.getByText("Wie berechnest du das Eigenkapital einer Firma?")).toBeVisible();
-    await expect(page.getByText("Ungeprüft").first()).toBeVisible();
-    await page.getByRole("button", { name: "Einfache Sprache" }).click();
-    // Übersetzungshilfe
+    // Ohne KI: kein B1-Knopf
+    await expect(page.getByRole("button", { name: "Einfache Sprache" })).toHaveCount(0);
+    // Übersetzungshilfe aus dem Cache (Englisch)
     await page.getByRole("button", { name: "Übersetzungshilfe öffnen" }).click();
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText(/Die Prüfung ist auf Deutsch/)).toBeVisible();
     await expect(sheet.getByTestId("translation")).toContainText("How do you calculate equity");
-    // RTL für Arabisch (Testmodus erzeugt die Übersetzung)
-    await sheet.getByRole("radio", { name: "العربية" }).click();
-    await expect(sheet.getByTestId("translation")).toHaveAttribute("dir", "rtl");
+    await expect(sheet.getByText(/noch nicht eingerichtet/)).toHaveCount(0);
     await sheet.getByRole("button", { name: "Schließen" }).last().click();
     await expect(sheet).toHaveCount(0);
-    // falsch antworten (A) → Warum?
+    // falsch antworten (A) → Warum? (Erklärung, Merkhilfe, § aus der DB)
     await options(page).getByRole("radio").first().click();
     await page.getByRole("button", { name: "Antwort prüfen" }).click();
     await expect(page.getByText("Leider falsch", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: /Warum\? – Coach erklären lassen/ }).click();
+    await page.getByTestId("why-button").click();
     const why = page.getByTestId("why-panel");
-    await expect(why.getByText("Die Regel")).toBeVisible();
-    await expect(why.getByText("Beispiel aus dem Taxi-Alltag")).toBeVisible();
-    await expect(why.getByText(/Warum war deine Antwort \(A\) falsch\?/)).toBeVisible();
-    await why.getByRole("button", { name: /Erklärung nicht hilfreich/ }).click();
-    await expect(why.getByText("Danke – wir prüfen die Erklärung.")).toBeVisible();
-    await expect(why.getByRole("button", { name: "Auf العربية erklären" })).toBeVisible();
+    await expect(why.getByText("Richtige Antwort")).toBeVisible();
+    await expect(why.getByTestId("why-pending")).toContainText("Erklärung folgt");
   });
 
   test("Zahlen-Trainer: Auswahl-Runde, Blitz-Runde, Spickzettel", async () => {

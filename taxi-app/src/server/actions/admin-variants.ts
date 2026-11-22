@@ -19,7 +19,7 @@ export async function generateVariantBatchAction(kind: string, lang: string): Pr
   const k = kindSchema.parse(kind);
   const l = k === "simple" ? "de" : lang === "de" ? "de" : isHelperLang(lang) ? lang : null;
   if (!l || (k === "translation" && l === "de")) return { ok: false, error: "Bitte eine Sprache wählen." };
-  if (!coachConfigured()) return { ok: false, error: "Die KI ist nicht eingerichtet (ANTHROPIC_API_KEY fehlt)." };
+  if (!coachConfigured()) return { ok: false, error: "KI ist deaktiviert (AI_ENABLED nicht gesetzt) – bitte manuell ausfüllen." };
   const missing = { ...publishedWhere, variants: { none: { kind: k, lang: l } } };
   const todo = await prisma.question.findMany({ where: missing, select: { id: true }, orderBy: { createdAt: "asc" }, take: BATCH });
   let generated = 0;

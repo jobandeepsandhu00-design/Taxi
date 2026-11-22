@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   const rl = rateLimit(`oral-stt:${user.id}`, 20, 60_000);
   if (!rl.ok) return NextResponse.json({ error: `Zu viele Aufnahmen – bitte ${rl.retryAfterSec} s warten.` }, { status: 429 });
-  if (!sttConfigured()) return NextResponse.json({ error: "Die Spracherkennung ist noch nicht eingerichtet – tippe deine Antwort.", fallback: true }, { status: 503 });
+  if (!sttConfigured()) return NextResponse.json({ error: "Tippe deine Antwort bitte ein.", fallback: true }, { status: 503 });
 
   const form = await request.formData().catch(() => null);
   const audio = form?.get("audio");

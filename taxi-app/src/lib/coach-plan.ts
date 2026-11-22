@@ -1,6 +1,6 @@
 /** Tagesplan und Wochenbericht des Coaches – reine Funktionen (unit-getestet). */
 
-export type PlanItemKind = "review" | "goal" | "category" | "mistakes" | "challenge" | "exam";
+export type PlanItemKind = "review" | "goal" | "category" | "mistakes" | "challenge" | "exam" | "lernbuch" | "lesson" | "manual";
 
 export interface PlanItem {
   id: string;

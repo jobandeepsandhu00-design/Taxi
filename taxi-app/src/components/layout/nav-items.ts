@@ -79,6 +79,7 @@ export const adminNav = [
   { href: "/admin/muendlich", label: "Mündliche Fragen", icon: Mic },
   { href: "/admin/lernplan", label: "Lernplan", icon: CalendarDays },
   { href: "/admin/import", label: "Import / Export", icon: Layers },
+  { href: "/admin/erklaerungen", label: "Fehlende Erklärungen", icon: MessageCircleHeart },
   { href: "/admin/pruefungen", label: "Prüfungen", icon: ClipboardCheck },
   { href: "/admin/benutzer", label: "Benutzer", icon: Home },
   { href: "/admin/einstellungen", label: "Einstellungen", icon: Settings },

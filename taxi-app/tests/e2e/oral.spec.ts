@@ -66,7 +66,7 @@ test("Üben (Gast): Datenschutz, getippte Antwort, Feedback, Tageslimit, Bericht
   await expect(fb.getByText(/^Fehlt:/).first()).toBeAttached();
   await expect(fb.getByTestId("oral-model-answer")).toBeVisible();
   await fb.getByRole("button", { name: "Warum?" }).click();
-  await expect(fb.getByText(/Wichtig ist vor allem/)).toBeVisible();
+  await expect(fb.getByText(/Wichtig sind diese Punkte|alle Kernpunkte genannt/)).toBeVisible();
 
   // Nochmal sprechen: Musterantwort tippen → richtig
   const model = (await fb.getByTestId("oral-model-answer").textContent()) ?? "";
@@ -146,7 +146,7 @@ test("Prüfungsmodus (Admin): Nachfrage, kein Zwischenfeedback, Bericht mit Kate
   await expect(page.getByText("Mündlich · Frage 1/10")).toBeVisible();
 });
 
-test("Admin: mündliche Fragen mit KI-Vorschlag", async ({ page }) => {
+test("Admin: mündliche Fragen mit Vorschlag aus dem Skript", async ({ page }) => {
   await page.goto("/login");
   await settle(page);
   await page.getByLabel("E-Mail-Adresse").fill(ADMIN.email);
@@ -160,6 +160,6 @@ test("Admin: mündliche Fragen mit KI-Vorschlag", async ({ page }) => {
   await page.getByLabel("Kategorie").selectOption({ label: "Rechnungswesen" });
   await page.getByLabel("Frage", { exact: true }).fill("Was sind die Grundsätze der Buchführung?");
   await page.getByRole("button", { name: /Musterantwort & Kernpunkte vorschlagen/ }).click();
-  await expect(page.getByText(/KI-Entwurf eingefügt/)).toBeVisible();
+  await expect(page.getByText(/Entwurf aus dem Skript eingefügt/)).toBeVisible();
   await expect(page.getByLabel("Musterantwort")).not.toHaveValue("");
 });

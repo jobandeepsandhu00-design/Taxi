@@ -1,3 +1,4 @@
+import { sttConfigured } from "@/server/oral";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { SegState } from "@/components/focus/focus-parts";
@@ -46,6 +47,7 @@ export default async function OralSessionPage({ params, searchParams }: { params
       sessionId={session.id}
       mode={mode}
       timer={timer === "1"}
+      serverStt={sttConfigured()}
       answered={answered}
       questions={ordered.map((q) => ({ id: q.id, questionDe: q.questionDe, category: q.category.name, verified: q.verified }))}
     />

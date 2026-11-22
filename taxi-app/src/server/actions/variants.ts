@@ -14,7 +14,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string; limitReache
 const idSchema = z.string().min(1).max(64);
 
 async function canGenerate(user: { id: string; role: string }): Promise<Result<null>> {
-  if (!coachConfigured()) return { ok: false, error: "Die KI-Hilfe ist noch nicht eingerichtet." };
+  if (!coachConfigured()) return { ok: false, error: "Dafür gibt es in der App noch keine Version." };
   const quota = await coachQuota(user);
   if (quota.remaining <= 0) return { ok: false, error: LIMIT_REACHED, limitReached: true };
   return { ok: true, data: null };

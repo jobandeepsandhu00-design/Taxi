@@ -15,6 +15,7 @@ import {
   topicSchema,
   type QuestionInput,
 } from "@/lib/validation";
+import { refreshKnowledge } from "@/server/coach/knowledge";
 import type { ActionResult } from "./types";
 
 const idSchema = z.string().min(1).max(64);
@@ -102,6 +103,7 @@ export async function saveQuestionAction(id: string | null, input: QuestionInput
     saved = await prisma.question.create({ data: { ...data, createdById: admin.id, options: { create: options } } });
   }
   revalidatePath("/admin/fragen");
+  void refreshKnowledge();
   return { ok: true, data: { id: saved.id }, message: "Frage gespeichert." };
 }
 
@@ -114,6 +116,7 @@ export async function setQuestionStatusAction(id: string, status: "DRAFT" | "PUB
   }
   await prisma.question.update({ where: { id }, data: { status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).parse(status) } });
   revalidatePath("/admin/fragen");
+  void refreshKnowledge();
   return { ok: true, data: undefined };
 }
 
@@ -124,6 +127,7 @@ export async function bulkSetStatusAction(ids: string[], status: "DRAFT" | "PUBL
   if (status === "PUBLISHED") where.OR = [{ origin: { not: "OFFICIAL" } }, { source: { verified: true } }];
   const res = await prisma.question.updateMany({ where, data: { status } });
   revalidatePath("/admin/fragen");
+  void refreshKnowledge();
   return { ok: true, data: { count: res.count } };
 }
 
@@ -131,6 +135,7 @@ export async function deleteQuestionAction(id: string): Promise<ActionResult> {
   await requireAdmin();
   await prisma.question.delete({ where: { id: idSchema.parse(id) } });
   revalidatePath("/admin/fragen");
+  void refreshKnowledge();
   return { ok: true, data: undefined };
 }
 
@@ -419,6 +424,7 @@ export async function importQuestionsCsvAction(csv: string, dryRun: boolean): Pr
     { timeout: 120_000 },
   );
   revalidatePath("/admin/fragen");
+  void refreshKnowledge();
   return { ok: true, data: summary };
 }
 
