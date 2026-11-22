@@ -6,7 +6,7 @@ import { CountdownChip, Greeting } from "@/components/home/hero";
 import { AchievementStrip, CategoryList, QuickActions, StreakFlame, XpCard, ZeroState, type HomeCategory } from "@/components/home/cards";
 import { DailyRings, ReadinessRing } from "@/components/home/rings";
 import { CoachBubble, DailyPlanCard, PrognosisCard } from "@/components/home/coach-cards";
-import { LessonCta } from "@/components/home/lesson-cta";
+import { ExamCard } from "@/components/home/exam-card";
 import { LernbuchWidget } from "@/components/lernbuch/lernbuch-widget";
 import { getLernbuchOverview } from "@/server/lernbuch";
 import { LearnPlanCard } from "@/components/learn-plan/learn-plan-card";
@@ -67,6 +67,13 @@ export default async function DashboardPage() {
     prisma.userAchievement.findMany({ where: { userId: user.id }, select: { key: true } }),
   ]);
   const coachCtx = await buildCoachContext(user.id);
+  const [examBest, oralSessions] = await Promise.all([
+    prisma.examAttempt.aggregate({ where: { userId: user.id, status: { in: ["SUBMITTED", "EXPIRED"] } }, _max: { scorePercent: true } }),
+    prisma.audioDrillSession.findMany({ where: { userId: user.id, finishedAt: { not: null } }, orderBy: { finishedAt: "desc" }, take: 30, select: { results: true, questionIds: true } }),
+  ]);
+  const bestWritten = examBest._max.scorePercent !== null ? Math.round(examBest._max.scorePercent) : null;
+  const oralScores = oralSessions.filter((o) => o.questionIds.length >= 3).map((o) => Math.round((Object.values((o.results as Record<string, string>) ?? {}).filter((x) => x === "known").length / o.questionIds.length) * 100));
+  const bestOral = oralScores.length ? Math.max(...oralScores) : null;
   const [plan, learnPlan, lernbuch] = await Promise.all([getDailyPlanState(user.id, coachCtx), getLearnPlan(user.id), getLernbuchOverview(user.id)]);
   const daysToExam = user.targetExamDate ? diffDays(dayKey(), dateToDayKey(user.targetExamDate)) : null;
   const firstName = user.isGuest ? "Gast" : user.name.split(" ")[0];
@@ -117,7 +124,7 @@ export default async function DashboardPage() {
 
       <LernbuchWidget o={lernbuch} />
 
-      <LessonCta due={due} />
+      <ExamCard bestWritten={bestWritten} bestOral={bestOral} />
 
       <LearnPlanCard initial={learnPlan} />
 
