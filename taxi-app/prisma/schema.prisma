@@ -1085,3 +1085,11 @@ model AudioDrillSession {
   @@index([userId, createdAt])
   @@map("audio_drill_sessions")
 }
+
+/// Interner Schlüssel, mit dem pg_cron (Supabase) die Push-Cron-Route aufruft – wird in der Datenbank erzeugt
+model InternalCronKey {
+  id  Int    @id @default(1)
+  key String
+
+  @@map("internal_cron_key")
+}
