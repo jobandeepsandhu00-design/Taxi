@@ -10,6 +10,10 @@ export type DrillSettings = {
   repeatQuestion: boolean;
   pauseOnReveal: boolean;
   record: boolean;
+  /** Portion: 5 oder 10 Fragen pro Teil, 0 = ganzes Kapitel */
+  packSize: 0 | 5 | 10;
+  /** Quiz: nach dem Vorlesen Antwortmöglichkeiten A–D antippen statt selbst bewerten */
+  quiz: boolean;
 };
 
 export const DEFAULT_DRILL_SETTINGS: DrillSettings = {
@@ -23,6 +27,8 @@ export const DEFAULT_DRILL_SETTINGS: DrillSettings = {
   repeatQuestion: false,
   pauseOnReveal: true,
   record: false,
+  packSize: 10,
+  quiz: false,
 };
 
 export function parseDrillSettings(raw: unknown): DrillSettings {
@@ -39,6 +45,8 @@ export function parseDrillSettings(raw: unknown): DrillSettings {
     repeatQuestion: Boolean(r.repeatQuestion),
     pauseOnReveal: typeof r.pauseOnReveal === "boolean" ? r.pauseOnReveal : d.pauseOnReveal,
     record: Boolean(r.record),
+    packSize: r.packSize === 0 || r.packSize === 5 ? r.packSize : 10,
+    quiz: Boolean(r.quiz),
   };
 }
 
@@ -46,4 +54,10 @@ export function parseDrillSettings(raw: unknown): DrillSettings {
 export function estimateDrillSeconds(questionMs: number, answerMs: number, count: number, s: Pick<DrillSettings, "answerSec" | "afterTimeout">): number {
   const per = (questionMs || 6000) / 1000 + s.answerSec + (s.afterTimeout === "readAnswer" ? (answerMs || 8000) / 1000 : 0) + 1;
   return Math.round(per * count);
+}
+
+/** Teile eines Kapitels (je packSize Fragen). */
+export function chapterParts(total: number, packSize: number): { part: number; from: number; to: number }[] {
+  if (!packSize || total <= packSize) return [];
+  return Array.from({ length: Math.ceil(total / packSize) }, (_, i) => ({ part: i + 1, from: i * packSize + 1, to: Math.min(total, (i + 1) * packSize) }));
 }

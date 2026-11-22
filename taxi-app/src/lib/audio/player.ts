@@ -215,6 +215,20 @@ class AudioEngine {
       u.onerror = () => this.finish("error");
       this.speaking = u;
       window.speechSynthesis.speak(u);
+      // Sicherheitsnetz: manche Browser melden das Ende nie (oder haben keine deutsche Stimme)
+      const maxMs = 3000 + u.text.length * 90;
+      const started = performance.now();
+      const guard = () => {
+        if (this.current?.resolve !== resolve) return;
+        if (window.speechSynthesis.paused) return void setTimeout(guard, 500);
+        if (performance.now() - started > maxMs || (!window.speechSynthesis.speaking && !window.speechSynthesis.pending && performance.now() - started > 1500)) {
+          this.cancelSpeech();
+          this.finish("ended");
+          return;
+        }
+        setTimeout(guard, 500);
+      };
+      setTimeout(guard, 500);
     });
   }
 

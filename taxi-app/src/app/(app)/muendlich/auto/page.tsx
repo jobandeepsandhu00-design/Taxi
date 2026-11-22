@@ -15,7 +15,7 @@ export default async function AutoModusPage({ searchParams }: { searchParams: Pr
   const [settingsRow, overview, sessions, open, questions, again] = await Promise.all([
     prisma.audioDrillSettings.findUnique({ where: { userId: user.id } }),
     getLernbuchOverview(user.id),
-    prisma.audioDrillSession.findMany({ where: { userId: user.id, finishedAt: { not: null } }, orderBy: { finishedAt: "desc" }, take: 200, select: { categoryIds: true, results: true, questionIds: true } }),
+    prisma.audioDrillSession.findMany({ where: { userId: user.id, finishedAt: { not: null } }, orderBy: { finishedAt: "desc" }, take: 200, select: { categoryIds: true, results: true, questionIds: true, title: true } }),
     prisma.audioDrillSession.findFirst({ where: { userId: user.id, finishedAt: null }, orderBy: { updatedAt: "desc" }, select: { id: true, title: true, position: true, questionIds: true } }),
     prisma.question.findMany({ where: { ...publishedWhere, category: { isActive: true } }, select: { id: true, categoryId: true } }),
     prisma.readProgress.count({ where: { userId: user.id, status: "nochmal" } }),
@@ -39,10 +39,18 @@ export default async function AutoModusPage({ searchParams }: { searchParams: Pr
   }
   // letztes Ergebnis je Kapitel (Durchgang nur mit diesem Kapitel)
   const last = new Map<string, { known: number; total: number }>();
+  const parts = new Map<string, Record<number, { known: number; total: number }>>();
   for (const s of sessions) {
-    if (s.categoryIds.length !== 1 || last.has(s.categoryIds[0])) continue;
+    if (s.categoryIds.length !== 1) continue;
+    const cat = s.categoryIds[0];
     const r = Object.values((s.results as Record<string, string>) ?? {});
-    last.set(s.categoryIds[0], { known: r.filter((x) => x === "known").length, total: s.questionIds.length });
+    const res = { known: r.filter((x) => x === "known").length, total: s.questionIds.length };
+    const m = s.title.match(/· Teil (\d+)$/);
+    if (m) {
+      const rec = parts.get(cat) ?? {};
+      rec[Number(m[1])] ??= res;
+      parts.set(cat, rec);
+    } else if (!last.has(cat)) last.set(cat, res);
   }
   const topics = overview.topics.map((t) => ({
     id: t.id,
@@ -59,6 +67,7 @@ export default async function AutoModusPage({ searchParams }: { searchParams: Pr
         withAudio: byCat.get(c.id)?.withAudio ?? 0,
         urls: byCat.get(c.id)?.urls ?? [],
         last: last.get(c.id) ?? null,
+        parts: parts.get(c.id) ?? {},
       }),
     ),
   }));

@@ -55,6 +55,7 @@ test("Mündlich Auto-Modus: Start, Frage hören, Countdown, Antwort aufdecken, G
   await page.goto("/muendlich/auto");
   await settle(page);
   await expect(page.getByRole("heading", { name: "Auto-Modus" })).toBeVisible();
+  await page.getByTestId("drill-mode-oral").click();
   // kurze Antwortzeit für den Test
   await page.getByTestId("drill-settings-toggle").click();
   await page.getByTestId("drill-settings").getByRole("button", { name: "10 s" }).click();
@@ -66,7 +67,7 @@ test("Mündlich Auto-Modus: Start, Frage hören, Countdown, Antwort aufdecken, G
   await page.waitForURL("**/muendlich/auto/**");
   await expect(page.getByTestId("drill")).toBeVisible();
   const tap = page.getByTestId("drill-tap-start");
-  if (await tap.isVisible().catch(() => false)) await tap.click();
+  await tap.click({ timeout: 1500 }).catch(() => undefined);
   await expect(page.getByTestId("drill-counter")).toHaveText("Frage 1 / 1");
   await expect(page.getByTestId("drill-question")).toBeVisible();
   // nach dem Vorlesen (Testton ~1,2 s) läuft der Countdown
@@ -76,4 +77,31 @@ test("Mündlich Auto-Modus: Start, Frage hören, Countdown, Antwort aufdecken, G
   await expect(page.getByTestId("drill-answer")).not.toContainText("•••");
   await page.getByTestId("drill-known").click();
   await expect(page.getByTestId("drill-end")).toContainText("1 gewusst · 0 nicht gewusst");
+});
+
+test("Auto-Modus: Portionen à 5 Fragen und Quiz A–D", async ({ page }) => {
+  test.setTimeout(120_000);
+  await admin(page);
+  await page.goto("/muendlich/auto");
+  await settle(page);
+  await page.getByTestId("drill-pack-5").click();
+  // Rechnungswesen (43 Fragen) → 9 Teile à 5
+  await expect(page.getByTestId("drill-parts-k-rechnungswesen").getByRole("button")).toHaveCount(9);
+  await expect(page.getByTestId("drill-part-k-rechnungswesen-2")).toHaveText("6–10");
+  await page.getByTestId("drill-mode-quiz").click();
+  await expect(page.getByTestId("drill-mode-quiz")).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("drill-settings-toggle").click();
+  await page.getByTestId("drill-settings").getByRole("button", { name: "10 s" }).click();
+  await page.getByTestId("drill-start-k-umweltschutz").click();
+  await page.waitForURL("**/muendlich/auto/**");
+  const tap = page.getByTestId("drill-tap-start");
+  await tap.click({ timeout: 1500 }).catch(() => undefined);
+  await expect(page.getByTestId("drill-options")).toBeVisible({ timeout: 15_000 });
+  // richtige Antwort antippen (die mit der Skript-Antwort)
+  const n = await page.getByTestId("drill-options").getByRole("radio").count();
+  expect(n).toBeGreaterThanOrEqual(2);
+  await page.getByTestId("drill-option-0").click();
+  await expect(page.locator('[data-correct="true"]')).toHaveCount(1);
+  await expect(page.getByTestId("drill-end")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("drill-end")).toContainText(/[01] gewusst · [01] nicht gewusst/);
 });

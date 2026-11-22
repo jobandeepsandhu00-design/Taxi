@@ -23,6 +23,8 @@ const startSchema = z.object({
   mode: z.enum(["chapter", "topic", "all", "unknown", "random10", "resume", "ids"]),
   id: z.string().max(80).optional(),
   ids: z.array(z.string().max(64)).max(1000).optional(),
+  /** Teil eines Kapitels (1-basiert, Größe aus den Einstellungen) */
+  part: z.number().int().min(1).max(200).optional(),
 });
 
 type Q = { id: string; categoryId: string; lessonIndex: number | null; category: { order: number; name: string } };
@@ -64,6 +66,11 @@ export async function startDrillAction(input: z.infer<typeof startSchema>): Prom
   }
   if (qs.length === 0) return { ok: false, error: p.mode === "unknown" || settings.order === "unknown" ? "Super – keine nicht gewussten Fragen offen." : "Keine Fragen gefunden." };
   let ids = qs.sort(sortBook).map((q) => q.id);
+  if (p.mode === "chapter" && p.part && settings.packSize) {
+    ids = ids.slice((p.part - 1) * settings.packSize, p.part * settings.packSize);
+    if (ids.length === 0) return { ok: false, error: "Diesen Teil gibt es nicht." };
+    title = `${title} · Teil ${p.part}`;
+  }
   if (p.mode === "random10") {
     ids = shuffle(ids).slice(0, 10);
     title = "Zufällig 10";

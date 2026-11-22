@@ -4,14 +4,14 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, CloudDownload, Headphones, History, Loader2, Play, Settings2, Shuffle, Sparkles, WifiOff } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import { estimateDrillSeconds, type DrillSettings } from "@/lib/audio/drill";
+import { chapterParts, estimateDrillSeconds, type DrillSettings } from "@/lib/audio/drill";
 import { cacheAudioUrls, cachedCount, formatMb } from "@/lib/audio/offline";
 import { audioEngine } from "@/lib/audio/player";
 import { haptic, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { saveDrillSettingsAction, startDrillAction } from "@/server/actions/audio-drill";
 
-export type StartChapter = { id: string; slug: string; title: string; order: number; total: number; qMs: number; aMs: number; withAudio: number; urls: string[]; last: { known: number; total: number } | null };
+export type StartChapter = { id: string; slug: string; title: string; order: number; total: number; qMs: number; aMs: number; withAudio: number; urls: string[]; last: { known: number; total: number } | null; parts: Record<number, { known: number; total: number }> };
 type Topic = { id: string; title: string; chapters: StartChapter[] };
 
 const fmtMin = (sec: number) => (sec < 90 ? `${sec} s` : `${Math.round(sec / 60)} Min.`);
@@ -63,6 +63,26 @@ export function AutoStart({ settings: initial, topics, open, againCount, presele
 
       {error && <p className="rounded-xl bg-warning/10 p-3 text-sm font-semibold text-warning" role="alert">{error}</p>}
 
+      <section className="glass space-y-3 rounded-2xl p-4" aria-label="Modus" data-testid="drill-mode">
+        <div>
+          <p className="mb-1.5 text-xs font-bold tracking-wider text-link uppercase">So antwortest du</p>
+          <div className="grid grid-cols-2 gap-2">
+            <ModeButton active={!s.quiz} onClick={() => update({ quiz: false })} title="Laut antworten" text="Antwort sagen, dann selbst bewerten" testid="drill-mode-oral" />
+            <ModeButton active={s.quiz} onClick={() => update({ quiz: true })} title="Quiz A–D" text="Nach dem Vorlesen die richtige Antwort antippen" testid="drill-mode-quiz" />
+          </div>
+        </div>
+        <div>
+          <p className="mb-1.5 text-xs font-bold tracking-wider text-link uppercase">Portion pro Kapitel</p>
+          <div className="flex gap-2">
+            {([5, 10, 0] as const).map((n) => (
+              <button key={n} type="button" onClick={() => update({ packSize: n })} aria-pressed={s.packSize === n} className={cn("flex-1 rounded-xl py-2 text-sm font-bold", s.packSize === n ? "bg-primary text-primary-foreground" : "bg-foreground/5")} data-testid={`drill-pack-${n}`}>
+                {n ? `${n} Fragen` : "Ganzes Kapitel"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Schnellstart">
         <QuickStart icon={<Headphones className="size-5" />} label="Alle Kapitel" onClick={() => go({ mode: "all" })} disabled={pending} testid="drill-all" />
         <QuickStart icon={<Sparkles className="size-5" />} label="Nur nicht gewusste" hint={`${againCount}`} onClick={() => go({ mode: "unknown" })} disabled={pending || againCount === 0} testid="drill-unknown" />
@@ -76,7 +96,7 @@ export function AutoStart({ settings: initial, topics, open, againCount, presele
         <h2 className="mb-2 text-lg font-extrabold text-navy">Kapitel</h2>
         <ul className="glass divide-y divide-border overflow-hidden rounded-2xl">
           {chapters.map((c) => (
-            <ChapterRow key={c.id} c={c} s={s} highlight={c.slug === preselect || c.id === preselect} onStart={() => go({ mode: "chapter", id: c.id })} disabled={pending} />
+            <ChapterRow key={c.id} c={c} s={s} highlight={c.slug === preselect || c.id === preselect} onStart={(part) => go({ mode: "chapter", id: c.id, part })} disabled={pending} />
           ))}
         </ul>
       </section>
@@ -118,7 +138,7 @@ function QuickStart({ icon, label, hint, onClick, disabled, testid }: { icon: Re
   );
 }
 
-function ChapterRow({ c, s, onStart, disabled, highlight }: { c: StartChapter; s: DrillSettings; onStart: () => void; disabled: boolean; highlight: boolean }) {
+function ChapterRow({ c, s, onStart, disabled, highlight }: { c: StartChapter; s: DrillSettings; onStart: (part?: number) => void; disabled: boolean; highlight: boolean }) {
   const [cached, setCached] = useState<number | null>(null);
   const [dl, setDl] = useState<{ done: number; total: number } | null>(null);
   useEffect(() => {
@@ -127,16 +147,18 @@ function ChapterRow({ c, s, onStart, disabled, highlight }: { c: StartChapter; s
   const offline = cached !== null && c.urls.length > 0 && cached >= c.urls.length;
   const avgQ = c.withAudio ? c.qMs / c.withAudio : 0;
   const avgA = c.withAudio ? c.aMs / c.withAudio : 0;
-  const est = estimateDrillSeconds(avgQ, avgA, c.total, s);
+  const parts = chapterParts(c.total, s.packSize);
+  const est = estimateDrillSeconds(avgQ, avgA, parts.length ? s.packSize : c.total, s);
   return (
-    <li className={cn("flex items-center gap-3 p-3", highlight && "bg-primary/8")} data-testid={`drill-chapter-${c.slug}`}>
+    <li className={cn("p-3", highlight && "bg-primary/8")} data-testid={`drill-chapter-${c.slug}`}>
+     <div className="flex items-center gap-3">
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-navy">
           <span className="mr-1 text-muted-foreground">{c.order}.</span>
           {c.title}
         </p>
         <p className="text-xs text-muted-foreground">
-          {c.total} Fragen · ca. {fmtMin(est)}
+          {c.total} Fragen · ca. {fmtMin(est)}{parts.length ? " pro Teil" : ""}
           {c.last && <> · zuletzt {c.last.known}/{c.last.total} gewusst</>}
           {c.withAudio < c.total && <> · {c.withAudio === 0 ? "Ersatzstimme" : `${c.withAudio}/${c.total} mit Studio-Audio`}</>}
         </p>
@@ -158,9 +180,33 @@ function ChapterRow({ c, s, onStart, disabled, highlight }: { c: StartChapter; s
           {dl ? <span className="text-[10px] font-bold">{Math.round((dl.done / dl.total) * 100)}%</span> : offline ? <span aria-hidden>✅</span> : <CloudDownload className="size-5" />}
         </button>
       )}
-      <button type="button" onClick={onStart} disabled={disabled} className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground active:scale-95" aria-label={`${c.title} starten`} data-testid={`drill-start-${c.slug}`}>
+      <button type="button" onClick={() => onStart(parts.length ? nextPart(parts.length, c.parts) : undefined)} disabled={disabled} className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground active:scale-95" aria-label={parts.length ? `${c.title}: nächsten Teil starten` : `${c.title} starten`} data-testid={`drill-start-${c.slug}`}>
         <Play className="size-5 translate-x-0.5" />
       </button>
+     </div>
+      {parts.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5" data-testid={`drill-parts-${c.slug}`}>
+          {parts.map((p) => {
+            const r = c.parts[p.part];
+            const good = r && r.known >= Math.ceil(r.total * 0.8);
+            return (
+              <button
+                key={p.part}
+                type="button"
+                onClick={() => onStart(p.part)}
+                disabled={disabled}
+                className={cn("rounded-full border px-2.5 py-1 text-xs font-bold active:scale-95", good ? "border-success/40 bg-success/10 text-success" : r ? "border-warning/40 bg-warning/10 text-warning" : "border-border text-navy")}
+                aria-label={`Teil ${p.part}: Fragen ${p.from} bis ${p.to}${r ? `, zuletzt ${r.known} von ${r.total} gewusst` : ""}`}
+                data-testid={`drill-part-${c.slug}-${p.part}`}
+              >
+                {good ? "✓ " : ""}
+                {p.from === p.to ? p.from : `${p.from}–${p.to}`}
+                {r && !good ? ` · ${r.known}/${r.total}` : ""}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </li>
   );
 }
@@ -229,5 +275,23 @@ function SettingsPanel({ s, update }: { s: DrillSettings; update: (p: Partial<Dr
         <Toggle label="Antwort aufnehmen (zum Selbst-Check)" checked={s.record} onChange={(v) => update({ record: v })} />
       </div>
     </motion.section>
+  );
+}
+
+/** Nächster offener Teil: erster ohne Ergebnis bzw. ohne ≥ 80 % gewusst. */
+function nextPart(count: number, done: Record<number, { known: number; total: number }>): number {
+  for (let i = 1; i <= count; i++) {
+    const r = done[i];
+    if (!r || r.known < Math.ceil(r.total * 0.8)) return i;
+  }
+  return 1;
+}
+
+function ModeButton({ active, onClick, title, text, testid }: { active: boolean; onClick: () => void; title: string; text: string; testid: string }) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={active} data-testid={testid} className={cn("rounded-xl border p-3 text-left transition", active ? "border-primary bg-primary/12" : "border-border")}>
+      <span className="block text-sm font-extrabold text-navy">{title}</span>
+      <span className="block text-xs text-muted-foreground">{text}</span>
+    </button>
   );
 }

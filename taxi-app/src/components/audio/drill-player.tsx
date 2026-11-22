@@ -13,7 +13,7 @@ import { haptic, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { finishDrillAction, recordDrillAction, startDrillAction } from "@/server/actions/audio-drill";
 
-export type DrillItem = { id: string; question: string; answer: string; explanation: string | null; mnemonic: string | null; legal: string | null; chapter: string };
+export type DrillItem = { id: string; question: string; answer: string; options: { text: string; correct: boolean }[]; explanation: string | null; mnemonic: string | null; legal: string | null; chapter: string };
 type Result = "known" | "unknown";
 type Phase = "question" | "countdown" | "timeout" | "answer";
 
@@ -55,6 +55,8 @@ export function DrillPlayer({
   const [done, setDone] = useState(false);
   const [announce, setAnnounce] = useState("");
   const [recordings, setRecordings] = useState<Record<string, string>>({});
+  /** Quiz-Modus: gewählte Antwortmöglichkeit */
+  const [picked, setPicked] = useState<number | null>(null);
   const token = useRef(0);
   const pausedRef = useRef(false);
   const revealedRef = useRef(false);
@@ -166,6 +168,7 @@ export function DrillPlayer({
       const alive = () => token.current === my;
       setPhase("question");
       setRevealed(false);
+      setPicked(null);
       setRemaining(totalMs);
       setAnnounce("");
       // die nächsten 2 Fragen vorladen
@@ -204,7 +207,12 @@ export function DrillPlayer({
       stopRecording();
       engine.beep("chime");
       haptic();
-      if (settings.answerCard === "autoReveal" || settings.afterTimeout === "readAnswer") setRevealed(true);
+      if (settings.quiz) {
+        // Zeit abgelaufen ohne Antwort → richtige Antwort zeigen, zählt als „nicht gewusst“
+        setRevealed(true);
+        setResults((x) => ({ ...x, [it.id]: "unknown" }));
+        void recordDrillAction({ sessionId, questionId: it.id, known: false, position: i + 1 }).catch(() => undefined);
+      } else if (settings.answerCard === "autoReveal" || settings.afterTimeout === "readAnswer") setRevealed(true);
       if (settings.afterTimeout === "stop") {
         setPhase("timeout");
         return;
@@ -239,6 +247,29 @@ export function DrillPlayer({
     setPhase("answer");
     await playAnswer();
   }, [stopRecording, playAnswer]);
+
+  /** Quiz: Antwortmöglichkeit antippen → richtig/falsch, Antwort hören, weiter */
+  const pick = useCallback(
+    async (i: number) => {
+      if (picked !== null) return;
+      const my = ++token.current;
+      haptic();
+      stopRecording();
+      const ok = item.options[i]?.correct ?? false;
+      setPicked(i);
+      setRevealed(true);
+      setPhase("answer");
+      setResults((x) => ({ ...x, [item.id]: ok ? "known" : "unknown" }));
+      void recordDrillAction({ sessionId, questionId: item.id, known: ok, position: index + 1 }).catch(() => undefined);
+      engine.beep(ok ? "chime" : "tick");
+      await playAnswer();
+      if (token.current !== my) return;
+      await engine.silence(1500, undefined, () => pausedRef.current);
+      if (token.current !== my) return;
+      goTo(index + 1);
+    },
+    [picked, item, stopRecording, sessionId, index, engine, playAnswer, goTo],
+  );
 
   const rateAnswer = useCallback(
     (known: boolean) => {
@@ -302,7 +333,7 @@ export function DrillPlayer({
             <p className="sr-only" aria-live="assertive">
               {announce}
             </p>
-            {phase === "countdown" && <p className="text-sm font-bold text-navy">{paused ? "Pausiert" : "Antworte jetzt laut …"}</p>}
+            {phase === "countdown" && <p className="text-sm font-bold text-navy">{paused ? "Pausiert" : settings.quiz ? "Tippe die richtige Antwort an …" : "Antworte jetzt laut …"}</p>}
             {settings.showText ? (
               <h1 className="text-center text-2xl leading-snug font-extrabold text-navy sm:text-3xl" data-testid="drill-question">
                 {item.question}
@@ -312,8 +343,10 @@ export function DrillPlayer({
                 <Headphones className="size-5" /> Hör genau zu
               </p>
             )}
-            <AnswerCard item={item} revealed={revealed} onReveal={() => void reveal()} recording={recordings[item.id]} />
-            {(revealed || phase === "timeout") && (
+            {settings.quiz && phase !== "question" && <QuizOptions item={item} picked={picked} revealed={revealed} onPick={(i) => void pick(i)} />}
+            {settings.quiz && phase === "question" && <p className="text-sm text-muted-foreground">Gleich erscheinen die Antwortmöglichkeiten …</p>}
+            {(!settings.quiz || revealed) && <AnswerCard item={item} revealed={revealed} onReveal={() => void reveal()} recording={recordings[item.id]} />}
+            {!settings.quiz && (revealed || phase === "timeout") && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="grid w-full grid-cols-2 gap-3">
                 <RateButton known={false} active={results[item.id] === "unknown"} onClick={() => rateAnswer(false)} />
                 <RateButton known active={results[item.id] === "known"} onClick={() => rateAnswer(true)} />
@@ -568,6 +601,45 @@ function DrillEnd({ title, items, audio, results, recordings, nextChapterId, onE
           </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Quiz-Modus: Antwortmöglichkeiten A–D; nach der Wahl grün/rot. */
+function QuizOptions({ item, picked, revealed, onPick }: { item: DrillItem; picked: number | null; revealed: boolean; onPick: (i: number) => void }) {
+  const reduce = useReducedMotion();
+  return (
+    <div className="grid w-full gap-2" role="radiogroup" aria-label="Antwortmöglichkeiten" data-testid="drill-options">
+      {item.options.map((o, i) => {
+        const state = !revealed ? "open" : o.correct ? "correct" : picked === i ? "wrong" : "dim";
+        return (
+          <motion.button
+            key={i}
+            type="button"
+            role="radio"
+            aria-checked={picked === i}
+            disabled={revealed}
+            onClick={() => onPick(i)}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+            animate={{ opacity: state === "dim" ? 0.5 : 1, y: 0, scale: state === "correct" && !reduce ? [1, 1.02, 1] : 1 }}
+            transition={{ ...spring, delay: reduce ? 0 : i * 0.05 }}
+            className={cn(
+              "flex items-start gap-3 rounded-2xl border p-3 text-left text-[15px] leading-snug",
+              state === "open" && "border-border bg-card active:scale-[0.99]",
+              state === "correct" && "border-success bg-success/15",
+              state === "wrong" && "border-destructive bg-destructive/10",
+              state === "dim" && "border-border",
+            )}
+            data-testid={`drill-option-${i}`}
+            data-correct={revealed ? String(o.correct) : undefined}
+          >
+            <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold", state === "correct" ? "bg-success text-white" : state === "wrong" ? "bg-destructive text-white" : "bg-foreground/8 text-navy")}>
+              {state === "correct" ? <Check className="size-4" /> : state === "wrong" ? <X className="size-4" /> : String.fromCharCode(65 + i)}
+            </span>
+            <span className="line-clamp-6 whitespace-pre-line">{o.text}</span>
+          </motion.button>
+        );
+      })}
     </div>
   );
 }
