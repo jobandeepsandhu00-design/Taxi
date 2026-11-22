@@ -1,7 +1,11 @@
 import { THEMES, type Palette, type ThemeDef } from "./themes";
 
-function vars(p: Palette, dark: boolean): string {
+function vars(p: Palette, dark: boolean, id = "weiss"): string {
   return [
+    // Dunkles Dock (untere Navigation): Wiener Weiß fast schwarz, andere Themes ihre tiefe Überschriftfarbe
+    `--dock:${dark ? "#1c1c1e" : id === "weiss" ? "#111111" : p.heading}`,
+    `--dock-border:${dark ? "rgba(255,255,255,0.1)" : "transparent"}`,
+    `--dock-icon:#8a8f98`,
     `--background:${p.background}`,
     `--foreground:${p.foreground}`,
     `--card:${p.card}`,
@@ -55,9 +59,9 @@ export function buildThemeCss(): string {
   return Object.values(THEMES)
     .map(
       (t) =>
-        `[data-theme="${t.id}"]{${shared(t)};${vars(t.light, false)}}` +
-        `.dark[data-theme="${t.id}"],.dark [data-theme="${t.id}"]{${vars(t.dark, true)}}` +
-        `[data-theme="${t.id}"].light-scope,.dark [data-theme="${t.id}"].light-scope{${vars(t.light, false)}}`,
+        `[data-theme="${t.id}"]{${shared(t)};${vars(t.light, false, t.id)}}` +
+        `.dark[data-theme="${t.id}"],.dark [data-theme="${t.id}"]{${vars(t.dark, true, t.id)}}` +
+        `[data-theme="${t.id}"].light-scope,.dark [data-theme="${t.id}"].light-scope{${vars(t.light, false, t.id)}}`,
     )
     .join("\n");
 }

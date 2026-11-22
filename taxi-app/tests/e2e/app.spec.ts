@@ -104,7 +104,7 @@ test.describe.serial("Lernende/r", () => {
 
     // Fokus-Modus: keine App-Navigation, kein Avatar
     await expect(page.getByTestId("focus-mode")).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Schnellnavigation" })).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Hauptnavigation" })).toHaveCount(0);
 
     await answerFirstOption(page);
     await page.getByRole("button", { name: /Erklärung & Warum/ }).click();
