@@ -91,3 +91,23 @@ test("Launcher: Mündlich Mini-Quiz startet den Auto-Modus", async ({ page }) =>
   await expect(page.getByTestId("drill")).toBeVisible();
   await expect(page.getByTestId("drill-counter")).toHaveText("Frage 1 / 3");
 });
+
+test("Mündliche Simulation: Antwortzeit 10/30/60 s wählen, Fragenanzahl passt sich an", async ({ page }) => {
+  await guest(page);
+  await page.getByTestId("quiz-fab").click();
+  await page.getByTestId("launcher-type-muendlich").click();
+  await page.getByTestId("sim-15").click();
+  const confirm = page.getByTestId("sim-confirm");
+  await expect(page.getByTestId("oral-sec-60")).toHaveAttribute("aria-checked", "true");
+  await expect(confirm).toContainText("60 s Zeit");
+  const count = async () => Number((await confirm.textContent())?.match(/≈ (\d+) Fragen/)?.[1]);
+  const n60 = await count();
+  await page.getByTestId("oral-sec-10").click();
+  await expect(page.getByTestId("oral-sec-10")).toHaveAttribute("aria-checked", "true");
+  await expect(confirm).toContainText("10 s Zeit");
+  expect(await count()).toBeGreaterThan(n60);
+  await page.getByTestId("sim-start").click();
+  await page.waitForURL(/\/muendlich\/auto\/[^/]+$/);
+  // gewählte Zeit bleibt für das nächste Mal gespeichert
+  expect(await page.evaluate(() => localStorage.getItem("tp-oral-answer-sec"))).toBe("10");
+});

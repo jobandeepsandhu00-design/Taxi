@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion, type PanInf
 import { BookOpen, Check, ChevronLeft, ChevronRight, Dice5, Loader2, Play, RotateCcw, Target, Timer, X, Zap } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { haptic } from "@/lib/motion";
-import { configLabel, configToQuery, ORAL_SIM_ANSWER_SEC, simulationQuestionCount, SIM_DURATIONS, type QuizConfig, type QuizType } from "@/lib/quiz-config";
+import { configLabel, configToQuery, ORAL_ANSWER_OPTIONS, ORAL_SIM_ANSWER_SEC, simulationQuestionCount, SIM_DURATIONS, type QuizConfig, type QuizType } from "@/lib/quiz-config";
 import { cn } from "@/lib/utils";
 import { getLauncherDataAction } from "@/server/actions/quiz-launcher";
 import type { LauncherData } from "@/server/quiz-launch";
@@ -100,7 +100,6 @@ export function QuizLauncher({ open, onClose, returnFocus, last }: { open: boole
   };
 
   const oral = type === "muendlich";
-  const answerSec = data?.answerSec ?? 30;
   const mistakes = data ? (oral ? data.mistakes.muendlich : data.mistakes.schriftlich) : null;
 
   return (
@@ -233,7 +232,7 @@ export function QuizLauncher({ open, onClose, returnFocus, last }: { open: boole
                 </>
               )}
 
-              {view.kind === "confirm" && <ConfirmSim cfg={view.cfg} answerSec={answerSec} onStart={() => start(view.cfg)} starting={starting} />}
+              {view.kind === "confirm" && <ConfirmSim cfg={view.cfg} onStart={start} starting={starting} />}
               {view.kind === "chapters" && <ChapterPicker type={type} data={data} onStart={start} starting={starting} />}
             </motion.div>
             {starting && (
@@ -291,17 +290,56 @@ function Row({ icon, title, text, onClick, badge, chevron, disabled, testid, i }
   );
 }
 
-function ConfirmSim({ cfg, answerSec, onStart, starting }: { cfg: QuizConfig; answerSec: number; onStart: () => void; starting: boolean }) {
+const ANSWER_KEY = "tp-oral-answer-sec";
+
+function ConfirmSim({ cfg, onStart, starting }: { cfg: QuizConfig; onStart: (c: QuizConfig) => void; starting: boolean }) {
   const oral = cfg.type === "muendlich";
-  const n = simulationQuestionCount(cfg.type, cfg.durationMin ?? 30);
-  void answerSec;
+  const [sec, setSec] = useState<number>(() => {
+    if (cfg.answerSec) return cfg.answerSec;
+    try {
+      const v = Number(localStorage.getItem(ANSWER_KEY));
+      return (ORAL_ANSWER_OPTIONS as readonly number[]).includes(v) ? v : ORAL_SIM_ANSWER_SEC;
+    } catch {
+      return ORAL_SIM_ANSWER_SEC;
+    }
+  });
+  const pick = (v: number) => {
+    setSec(v);
+    try {
+      localStorage.setItem(ANSWER_KEY, String(v));
+    } catch {
+      /* ignorieren */
+    }
+  };
+  const n = simulationQuestionCount(cfg.type, cfg.durationMin ?? 30, sec);
   const rules = oral
-    ? [`≈ ${n} Fragen in ${cfg.durationMin} Minuten`, `Jede Frage wird vorgelesen – ${ORAL_SIM_ANSWER_SEC} s Zeit zum laut Antworten (wie in der Prüfung)`, "Danach hörst du die richtige Antwort und bewertest dich selbst", "Ergebnis am Ende"]
+    ? [`≈ ${n} Fragen in ${cfg.durationMin} Minuten`, `Jede Frage wird vorgelesen – ${sec} s Zeit zum laut Antworten${sec === 60 ? " (wie in der Prüfung)" : ""}`, "Danach hörst du die richtige Antwort und bewertest dich selbst", "Ergebnis am Ende"]
     : [`${n} Fragen · ${cfg.durationMin} Minuten Zeit`, "Der Timer läuft weiter – auch wenn du die App verlässt", "Kein Feedback bis zum Ende", "Fragen markieren und am Ende nochmal ansehen"];
+  const onStartClick = () => onStart(oral ? { ...cfg, answerSec: sec } : cfg);
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} data-testid="sim-confirm">
       <p className="text-xs font-bold tracking-wider text-link uppercase">{oral ? "🎙 Mündliche" : "✍️ Schriftliche"} Simulation</p>
       <h3 className="mt-1 text-2xl font-extrabold text-navy">{cfg.durationMin === 60 ? "Echte Prüfung · 60 min" : cfg.durationMin === 30 ? "Standard · 30 min" : "Kurztest · 15 min"}</h3>
+      {oral && (
+        <div className="mt-4" role="radiogroup" aria-label="Antwortzeit pro Frage" data-testid="oral-answer-time">
+          <p className="text-xs font-bold text-muted-foreground">Antwortzeit pro Frage</p>
+          <div className="mt-1.5 grid grid-cols-3 gap-2">
+            {ORAL_ANSWER_OPTIONS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={sec === v}
+                onClick={() => pick(v)}
+                data-testid={`oral-sec-${v}`}
+                className={`min-h-12 rounded-xl border-2 text-base font-extrabold transition active:scale-[0.97] ${sec === v ? "border-primary bg-primary/15 text-navy" : "border-border text-muted-foreground"}`}
+              >
+                {v} s
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <ul className="mt-4 space-y-2">
         {rules.map((r) => (
           <li key={r} className="flex gap-2 text-sm">
@@ -309,7 +347,7 @@ function ConfirmSim({ cfg, answerSec, onStart, starting }: { cfg: QuizConfig; an
           </li>
         ))}
       </ul>
-      <button type="button" onClick={onStart} disabled={starting} className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-lg font-extrabold text-primary-foreground active:scale-[0.98]" data-testid="sim-start" data-autofocus>
+      <button type="button" onClick={onStartClick} disabled={starting} className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-lg font-extrabold text-primary-foreground active:scale-[0.98]" data-testid="sim-start" data-autofocus>
         <Play className="size-5" /> Starten
       </button>
     </motion.div>

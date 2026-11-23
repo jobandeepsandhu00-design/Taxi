@@ -477,3 +477,30 @@
   .tp-main { padding-bottom: calc(76px + max(2px, env(safe-area-inset-bottom, 0px) - 20px)); }
   .tp-coach-fab { bottom: calc(76px + max(2px, env(safe-area-inset-bottom, 0px) - 20px)); }
 }
+
+/* Lade-Skelett: kurz unsichtbar (kein Flackern bei schnellen Wechseln), dann sanft pulsierend */
+.tp-skeleton {
+  opacity: 0;
+  animation:
+    tpSkelIn 0.2s ease-out 0.12s forwards,
+    tpSkelPulse 1.4s ease-in-out 0.32s infinite;
+}
+@keyframes tpSkelIn {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tpSkelPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tp-skeleton {
+    animation: tpSkelIn 0.01s linear 0.12s forwards;
+  }
+}

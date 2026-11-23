@@ -108,7 +108,7 @@ export async function launchQuiz(userId: string, cfg: QuizConfig): Promise<strin
     switch (cfg.mode) {
       case "simulation": {
         void settings;
-        const n = simulationQuestionCount("muendlich", cfg.durationMin ?? 30);
+        const n = simulationQuestionCount("muendlich", cfg.durationMin ?? 30, cfg.answerSec);
         const pool = await idsWhere({});
         path = await createDrill(userId, `Mündliche Simulation · ${cfg.durationMin} min`, pickRandomUnique(pool.map((q) => q.id), n), cfg);
         break;

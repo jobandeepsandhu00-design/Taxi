@@ -56,23 +56,24 @@ function SectionTitle({ children, action }: { children: React.ReactNode; action?
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  await expireOverdueExams(user.id);
-  const [stats, categories, openQuizzes, openExam, due, me, unlocked] = await Promise.all([
+  // Alles parallel laden (vorher vier Wellen nacheinander)
+  const expired = expireOverdueExams(user.id);
+  const [stats, categories, openQuizzes, openExam, due, me, unlocked, coachCtx, oralSessions, learnPlan, lernbuch] = await Promise.all([
     getDashboardStats(user.id),
     getCategoryOverview(user.id),
     prisma.quizAttempt.findMany({ where: { userId: user.id, status: "IN_PROGRESS" }, orderBy: { updatedAt: "desc" }, take: 2 }),
-    prisma.examAttempt.findFirst({ where: { userId: user.id, status: "IN_PROGRESS" }, include: { examConfig: true } }),
+    expired.then(() => prisma.examAttempt.findFirst({ where: { userId: user.id, status: "IN_PROGRESS" }, include: { examConfig: true } })),
     getDueReviewCount(user.id),
     prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { xp: true } }),
     prisma.userAchievement.findMany({ where: { userId: user.id }, select: { key: true } }),
-  ]);
-  const coachCtx = await buildCoachContext(user.id);
-  const [oralSessions] = await Promise.all([
+    buildCoachContext(user.id),
     prisma.audioDrillSession.findMany({ where: { userId: user.id, finishedAt: { not: null } }, orderBy: { finishedAt: "desc" }, take: 30, select: { results: true, questionIds: true } }),
+    getLearnPlan(user.id),
+    getLernbuchOverview(user.id),
   ]);
   const oralScores = oralSessions.filter((o) => o.questionIds.length >= 3).map((o) => Math.round((Object.values((o.results as Record<string, string>) ?? {}).filter((x) => x === "known").length / o.questionIds.length) * 100));
   const bestOral = oralScores.length ? Math.max(...oralScores) : null;
-  const [plan, learnPlan, lernbuch] = await Promise.all([getDailyPlanState(user.id, coachCtx), getLearnPlan(user.id), getLernbuchOverview(user.id)]);
+  const plan = await getDailyPlanState(user.id, coachCtx);
   const daysToExam = user.targetExamDate ? diffDays(dayKey(), dateToDayKey(user.targetExamDate)) : null;
   const firstName = user.isGuest ? "Gast" : user.name.split(" ")[0];
   const goalQuestions = dailyGoalQuestions(user.dailyGoalMinutes);

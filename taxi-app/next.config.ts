@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
+    // Zuletzt besuchte Seiten kurz im Router behalten → Tab-Wechsel hin und zurück ohne neuen Server-Aufruf
+    staleTimes: { dynamic: 30, static: 300 },
+    // Nur benötigte Icons/Animationen bündeln
+    optimizePackageImports: ["lucide-react", "motion", "recharts"],
   },
   async headers() {
     return [
