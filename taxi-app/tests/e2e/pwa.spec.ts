@@ -72,7 +72,10 @@ test.describe("iPhone (Safari)", () => {
     await expect(sheet).toBeHidden();
 
     // Benachrichtigungen: Hinweis, dass auf dem iPhone die installierte App nötig ist
-    await page.getByTestId("profil-notifications").click();
+    await expect(async () => {
+      await page.getByTestId("profil-notifications").click();
+      await page.waitForURL("**/profil/benachrichtigungen", { timeout: 4000 });
+    }).toPass({ timeout: 20_000 });
     await expect(page.getByTestId("notif-status")).toContainText("installierten App");
   });
 });
