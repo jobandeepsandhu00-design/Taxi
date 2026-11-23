@@ -224,7 +224,7 @@ function ChapterProgress({ p }: { p: NonNullable<StorySlideData["progress"]> }) 
   );
 }
 
-export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, originFor, onClose, closeSignal = 0 }: Props) {
+export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, onClose, closeSignal = 0 }: Props) {
   const [groups, setGroups] = useState(initialGroups);
   const router = useRouter();
   const reduce = Boolean(useReducedMotion());
@@ -311,7 +311,7 @@ export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay",
       flush();
       setClosing(true);
       const seenOut = Object.fromEntries(Object.entries(seen.current).map(([k, v]) => [k, [...v]]));
-      window.setTimeout(() => onClose(seenOut, groups), reduce ? 120 : 380);
+      window.setTimeout(() => onClose(seenOut, groups), reduce ? 80 : 170);
       void lastKey;
     },
     [closing, flush, onClose, reduce, groups],
@@ -472,7 +472,6 @@ export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay",
     else next();
   };
 
-  const closeTarget = originFor?.(group.key) ?? origin ?? null;
   const fixed = mode !== "preview";
   const cube = useMemo(
     () => ({
@@ -491,8 +490,9 @@ export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay",
       data-testid="story-viewer"
       className={cn("z-[90] overflow-hidden bg-black text-white select-none", fixed ? "fixed inset-0" : "absolute inset-0")}
       initial={fixed && origin && !reduce ? { clipPath: clipFor(origin) } : { opacity: 0 }}
-      animate={closing ? (closeTarget && !reduce ? { clipPath: clipFor(closeTarget), opacity: 1 } : { opacity: 0 }) : { clipPath: "circle(150% at 50% 50%)", opacity: 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 32 }}
+      animate={closing ? { opacity: 0, scale: 0.94 } : { clipPath: "circle(150% at 50% 50%)", opacity: 1, scale: 1 }}
+      // Öffnen: kurzer Kreis-Morph mit fester Dauer; Schließen: schnelles Ausblenden (Clip-Path-Animation ist auf iPhones langsam)
+      transition={closing ? { duration: reduce ? 0.08 : 0.17, ease: "easeIn" } : { duration: reduce ? 0.12 : 0.32, ease: [0.22, 1, 0.36, 1] }}
       style={{ perspective: 1200, touchAction: "none" }}
     >
       <motion.div className="absolute inset-0" animate={{ y: dragY * 0.6, scale: 1 - Math.min(dragY, 300) / 1500 }} transition={{ type: "spring", stiffness: 500, damping: 40 }}>

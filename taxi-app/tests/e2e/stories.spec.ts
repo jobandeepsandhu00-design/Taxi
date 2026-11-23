@@ -45,8 +45,11 @@ test("Story-Leiste: Kreise, öffnen, weiter tippen, automatisch zur nächsten Gr
   await viewer.click({ position: { x: 330, y: 400 } });
   // Ende der Gruppe → nächste ungesehene Gruppe
   await expect(viewer).not.toHaveAttribute("aria-label", "Story: Zahl des Tages");
+  const t0 = Date.now();
   await page.getByTestId("story-close").click();
-  await expect(viewer).toBeHidden();
+  await expect(viewer).toBeHidden({ timeout: 1500 });
+  console.log("story close ms", Date.now() - t0);
+  expect(Date.now() - t0).toBeLessThan(800);
   await expect(page.getByTestId("story-circle-zahl")).toHaveAttribute("aria-label", /gesehen/);
 
   // gespeichert: nach dem Neuladen weiterhin gesehen
