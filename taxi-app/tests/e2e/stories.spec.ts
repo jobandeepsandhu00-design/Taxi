@@ -108,3 +108,46 @@ test("Admin: Stories verwalten, Vorschau im Handy-Rahmen", async ({ page }) => {
   await tipp.getByRole("button", { name: "Slide speichern" }).click();
   await expect(tipp.getByText(title)).toBeVisible();
 });
+
+test("Lern-Story: alle Kapitel als Kreise, Frage für Frage mit Antwort, Tempo wählbar, Fortschritt bleibt", async ({ page }) => {
+  await guest(page);
+  const row = page.getByTestId("story-row");
+  await row.hover();
+  const chapters = row.locator('[data-story-key^="kap-"]');
+  expect(await chapters.count()).toBeGreaterThanOrEqual(20);
+  const first = chapters.first();
+  const key = await first.getAttribute("data-story-key");
+  await first.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  await first.click();
+  const viewer = page.getByTestId("story-viewer");
+  await expect(page.getByTestId("story-pace")).toBeVisible();
+  // Tempo: 3 Fragen/Minute, 3 Minuten → 9 Fragen pro Tag
+  await page.getByTestId("story-pace").getByRole("button", { name: "3", exact: true }).click();
+  await page.getByTestId("story-pace").getByRole("button", { name: "3 Min" }).click();
+  await expect(page.getByTestId("story-pace")).toContainText("= 9 Fragen pro Tag");
+  await expect(viewer).toContainText("Heute 9 Fragen");
+  // erste Frage
+  await viewer.click({ position: { x: 340, y: 200 } });
+  await expect(page.getByTestId("story-title")).toContainText("Frage 1 von");
+  const q1 = await page.getByTestId("story-question").textContent();
+  await page.getByTestId("story-reveal").click();
+  await expect(page.getByTestId("story-answer")).toBeVisible();
+  await page.getByTestId("story-next").click();
+  await expect(page.getByTestId("story-title")).toContainText("Frage 2 von");
+  await page.getByTestId("story-close").click();
+  await expect(viewer).toBeHidden();
+  // nach dem Neuladen geht es bei Frage 3 weiter
+  await page.waitForTimeout(800);
+  await page.reload();
+  await settle(page);
+  await page.getByTestId("story-row").hover();
+  const again = page.locator(`[data-story-key="${key}"]`);
+  await again.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  await again.click();
+  await expect(page.getByTestId("story-viewer")).toContainText("2 von");
+  await page.getByTestId("story-viewer").click({ position: { x: 340, y: 200 } });
+  await expect(page.getByTestId("story-title")).toContainText("Frage 3 von");
+  expect(await page.getByTestId("story-question").textContent()).not.toBe(q1);
+});

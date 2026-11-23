@@ -50,3 +50,23 @@ export async function answerStoryQuizAction(input: z.infer<typeof quizSchema>): 
     return { ok: false, correct: false, correctOptionIds: [], error: e instanceof Error ? e.message : "Antwort konnte nicht gespeichert werden." };
   }
 }
+
+/** Kapitel-Story: heutige Portion laden (Tempo aus dem Cookie). `extra` = „Noch eine Portion“. */
+export async function getChapterStoryAction(categoryId: string, extra = 0): Promise<import("@/lib/stories").StorySlideData[]> {
+  const user = await requireUser();
+  const id = z.string().min(1).max(64).safeParse(categoryId);
+  if (!id.success) return [];
+  const { cookies } = await import("next/headers");
+  const { parsePace, PACE_COOKIE } = await import("@/lib/stories");
+  const { chapterSlides } = await import("@/server/stories/chapters");
+  const pace = parsePace((await cookies()).get(PACE_COOKIE)?.value);
+  return chapterSlides(user.id, id.data, pace, Math.max(0, Math.min(30, Math.round(extra))));
+}
+
+/** Tempo speichern (Cookie, 1 Jahr). */
+export async function setLearnPaceAction(qpm: number, minutes: number): Promise<void> {
+  await requireUser();
+  const { cookies } = await import("next/headers");
+  const { parsePace, paceToCookie, PACE_COOKIE } = await import("@/lib/stories");
+  (await cookies()).set(PACE_COOKIE, paceToCookie(parsePace(`${qpm}-${minutes}`)), { maxAge: 365 * 86400, path: "/", sameSite: "lax" });
+}

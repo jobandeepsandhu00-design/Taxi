@@ -8,6 +8,9 @@ import { getUserStats } from "@/server/coach/stats";
 import { dueReviewIds } from "@/server/lessons";
 import { publishedWhere } from "@/server/questions";
 import { objectPublicUrl } from "@/server/storage";
+import { cookies } from "next/headers";
+import { PACE_COOKIE, parsePace } from "@/lib/stories";
+import { chapterGroups } from "./chapters";
 import { ensureDaily, quizFromQuestion, resolveDbSlides } from "./daily";
 
 const MOOD_EMOJI: Record<string, string> = { happy: "😄", neutral: "🙂", concerned: "🤔", celebrate: "🎉" };
@@ -142,5 +145,8 @@ export async function getStoryFeed(userId: string): Promise<StoryGroupData[]> {
   for (const g of list) g.seenIds = g.slides.filter((s) => seen.has(s.id)).map((s) => s.id);
   // „Erfolge“ nur, bis sie angesehen wurden
   const visible = list.filter((g) => g.type !== "erfolg" || g.seenIds.length < g.slides.length);
-  return orderGroups(visible);
+  // Lern-Story: alle Kapitel (Frage für Frage) – hinter den Tages-Stories
+  const pace = parsePace((await cookies()).get(PACE_COOKIE)?.value);
+  const chapters = await chapterGroups(userId, pace).catch(() => []);
+  return [...orderGroups(visible), ...orderGroups(chapters)];
 }

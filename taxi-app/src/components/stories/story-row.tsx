@@ -34,8 +34,8 @@ function StoryCircle({ g, seen, isNew, onOpen, dup, hiddenWhileOpen }: { g: Stor
           <span className="absolute inset-[3px] rounded-full bg-background p-[2px]">
             <span
               data-avatar
-              className={cn("flex h-full w-full items-center justify-center overflow-hidden rounded-full text-[30px] transition-opacity", hiddenWhileOpen && "opacity-0")}
-              style={{ background: g.iconUrl ? undefined : "linear-gradient(160deg,#fff7d6,#ffe9a3)" }}
+              className={cn("flex h-full w-full items-center justify-center overflow-hidden rounded-full transition-opacity", g.type === "kapitel" ? "font-display text-[28px] font-extrabold text-[#FFC400]" : "text-[30px]", hiddenWhileOpen && "opacity-0")}
+              style={{ background: g.iconUrl ? undefined : g.type === "kapitel" ? "linear-gradient(160deg,#111,#2a2a2a)" : "linear-gradient(160deg,#fff7d6,#ffe9a3)" }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- Story-Bild aus Supabase Storage */}
               {g.iconUrl ? <img src={g.iconUrl} alt="" className="h-full w-full object-cover" loading="lazy" draggable={false} /> : <span aria-hidden>{g.icon}</span>}
@@ -159,8 +159,19 @@ export function StoryRow({ groups: initial, today }: { groups: StoryGroupData[];
     return { x: r.left + r.width / 2, y: r.top + r.height / 2, r: r.width / 2 };
   }, []);
 
-  const close = useCallback((seen: Record<string, string[]>) => {
-    setGroups((gs) => gs.map((g) => ({ ...g, seenIds: seen[g.key] ?? g.seenIds })));
+  const close = useCallback((seen: Record<string, string[]>, loaded?: StoryGroupData[]) => {
+    const byKey = new Map((loaded ?? []).map((g) => [g.key, g]));
+    // geladene Kapitel-Portionen übernehmen; Kapitel gilt als erledigt, wenn alle Fragen der Portion gesehen wurden
+    setGroups((gs) =>
+      gs.map((g) => {
+        const l = byKey.get(g.key);
+        const slides = l && !l.slides.every((x) => x.kind === "loading") ? l.slides : g.slides;
+        const seenIds = seen[g.key] ?? g.seenIds;
+        const qa = slides.filter((x) => x.kind === "qa");
+        const done = g.lazy ? g.done || (qa.length > 0 && qa.every((x) => seenIds.includes(x.id))) : g.done;
+        return { ...g, slides, seenIds, done };
+      }),
+    );
     setOpen(null);
     state.current.pausedUntil = Date.now() + 1500;
     if (storyEntry.current) {
@@ -184,7 +195,7 @@ export function StoryRow({ groups: initial, today }: { groups: StoryGroupData[];
   if (!groups.length) return null;
 
   const item = (g: StoryGroupData, dup = false) => (
-    <StoryCircle key={`${dup ? "d-" : ""}${g.key}`} g={g} dup={dup} seen={isGroupSeen(g)} isNew={isToday(g.createdAt, today)} hiddenWhileOpen={!dup && open?.key === g.key} onOpen={(el) => openGroup(g.key, el)} />
+    <StoryCircle key={`${dup ? "d-" : ""}${g.key}`} g={g} dup={dup} seen={isGroupSeen(g)} isNew={g.type !== "kapitel" && isToday(g.createdAt, today)} hiddenWhileOpen={!dup && open?.key === g.key} onOpen={(el) => openGroup(g.key, el)} />
   );
 
   return (

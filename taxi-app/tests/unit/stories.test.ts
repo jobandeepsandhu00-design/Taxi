@@ -40,3 +40,17 @@ describe("stories", () => {
     expect(safeRoute("javascript:alert(1)")).toBeNull();
   });
 });
+
+describe("Lern-Story Tempo", () => {
+  it("Cookie lesen, Portion und Dauer", async () => {
+    const { parsePace, portionSize, qaDurationMs, isGroupSeen } = await import("@/lib/stories");
+    expect(parsePace("3-10")).toEqual({ qpm: 3, minutes: 10 });
+    expect(parsePace("9-99")).toEqual({ qpm: 2, minutes: 5 });
+    expect(parsePace(undefined)).toEqual({ qpm: 2, minutes: 5 });
+    expect(portionSize({ qpm: 2, minutes: 5 })).toBe(10);
+    expect(qaDurationMs({ qpm: 2, minutes: 5 })).toBe(30_000);
+    const loading = { id: "l", title: "", body: "", durationMs: 1, kind: "loading" as const };
+    expect(isGroupSeen({ slides: [loading], seenIds: [], lazy: { categoryId: "c" } })).toBe(false);
+    expect(isGroupSeen({ slides: [loading], seenIds: [], lazy: { categoryId: "c" }, done: true })).toBe(true);
+  });
+});

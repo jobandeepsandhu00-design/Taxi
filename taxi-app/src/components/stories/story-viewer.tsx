@@ -3,13 +3,13 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Check, ChevronUp, Loader2, MapPin, Volume2, VolumeX, X } from "lucide-react";
+import { Check, ChevronRight, ChevronUp, Eye, Loader2, MapPin, Volume2, VolumeX, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fireConfetti } from "@/lib/confetti";
 import { haptic } from "@/lib/motion";
-import { firstUnseenIndex, isGroupSeen, safeRoute, timeAgo, type StoryGroupData, type StorySlideData } from "@/lib/stories";
+import { firstUnseenIndex, isGroupSeen, MINUTE_OPTIONS, PACE_COOKIE, parsePace, portionSize, QPM_OPTIONS, safeRoute, timeAgo, type StoryGroupData, type StorySlideData } from "@/lib/stories";
 import { cn } from "@/lib/utils";
-import { answerStoryQuizAction, markStoriesSeenAction, storyEventAction } from "@/server/actions/stories";
+import { answerStoryQuizAction, getChapterStoryAction, markStoriesSeenAction, setLearnPaceAction, storyEventAction } from "@/server/actions/stories";
 
 const MapView = dynamic(() => import("@/components/map/map-view"), { ssr: false, loading: () => <div className="h-full w-full animate-pulse bg-black/10" aria-label="Karte wird geladen" /> });
 
@@ -23,7 +23,7 @@ type Props = {
   origin?: { x: number; y: number; r: number } | null;
   /** Kreis-Position einer Gruppe beim Schließen (zum „Zurückschrumpfen“) */
   originFor?: (key: string) => { x: number; y: number; r: number } | null;
-  onClose: (seen: Record<string, string[]>) => void;
+  onClose: (seen: Record<string, string[]>, groups?: StoryGroupData[]) => void;
   /** von außen schließen (z. B. Zurück-Taste) */
   closeSignal?: number;
 };
@@ -59,6 +59,19 @@ function SlideBackground({ slide, running, reduce, muted }: { slide: StorySlideD
         transition={{ duration: slide.durationMs / 1000, ease: "linear" }}
         draggable={false}
       />
+    );
+  }
+  if (slide.kind === "qa" || slide.kind === "loading") {
+    return (
+      <div className="absolute inset-0" style={{ background: slide.bg || "linear-gradient(160deg,#111,#1e3a8a)" }}>
+        <div className="absolute -top-24 -right-24 size-72 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="absolute -bottom-32 -left-20 size-80 rounded-full bg-[#FFC400]/15 blur-3xl" aria-hidden />
+        {slide.kind === "loading" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="size-10 animate-spin text-[#FFC400]" />
+          </div>
+        )}
+      </div>
     );
   }
   return (
@@ -159,7 +172,60 @@ function QuizBlock({ slide, groupKey, preview, onAnswered }: { slide: StorySlide
 
 /* ── Viewer ──────────────────────────────────────────────── */
 
-export function StoryViewer({ groups, startKey, mode = "overlay", origin, originFor, onClose, closeSignal = 0 }: Props) {
+function readPace() {
+  if (typeof document === "undefined") return parsePace(null);
+  const m = document.cookie.match(new RegExp(`(?:^|; )${PACE_COOKIE}=([^;]*)`));
+  return parsePace(m ? decodeURIComponent(m[1]!) : null);
+}
+
+/** Tempo der Lern-Story: Fragen pro Minute und Minuten pro Tag */
+function PaceChips({ value, onChange }: { value: { qpm: number; minutes: number } | null; onChange: (p: { qpm: number; minutes: number }) => void }) {
+  const cur = value ?? readPace();
+  const chip = (active: boolean) => cn("min-h-10 min-w-12 rounded-full border-2 px-3 text-sm font-extrabold transition", active ? "border-[#FFC400] bg-[#FFC400] text-[#111]" : "border-white/30 bg-white/10 text-white");
+  return (
+    <div className="mt-4 space-y-3" data-interactive data-testid="story-pace">
+      <div>
+        <p className="text-xs font-bold text-white/70">Tempo · Fragen pro Minute</p>
+        <div className="mt-1.5 flex gap-2">
+          {QPM_OPTIONS.map((q) => (
+            <button key={q} type="button" aria-pressed={cur.qpm === q} onClick={() => onChange({ ...cur, qpm: q })} className={chip(cur.qpm === q)}>
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-bold text-white/70">Lernzeit pro Tag und Kapitel</p>
+        <div className="mt-1.5 flex gap-2">
+          {MINUTE_OPTIONS.map((m) => (
+            <button key={m} type="button" aria-pressed={cur.minutes === m} onClick={() => onChange({ ...cur, minutes: m })} className={chip(cur.minutes === m)}>
+              {m} Min
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-xs text-white/60">= {portionSize(parsePace(`${cur.qpm}-${cur.minutes}`))} Fragen pro Tag</p>
+    </div>
+  );
+}
+
+/** Fortschrittsbalken eines Kapitels */
+function ChapterProgress({ p }: { p: NonNullable<StorySlideData["progress"]> }) {
+  const pct = p.total ? Math.round((p.seen / p.total) * 100) : 0;
+  return (
+    <div className="mt-3">
+      <div className="h-2 overflow-hidden rounded-full bg-white/20">
+        <motion.div className="h-full rounded-full bg-[#FFC400]" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
+      </div>
+      <p className="mt-1 text-xs font-semibold text-white/75">
+        {p.seen} von {p.total} Fragen gesehen · {pct} %
+      </p>
+    </div>
+  );
+}
+
+export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, originFor, onClose, closeSignal = 0 }: Props) {
+  const [groups, setGroups] = useState(initialGroups);
   const router = useRouter();
   const reduce = Boolean(useReducedMotion());
   const preview = mode === "preview";
@@ -174,6 +240,10 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
   const [hidden, setHidden] = useState(false);
   const [closing, setClosing] = useState(false);
   const [dragY, setDragY] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const revealedRef = useRef(false);
+  const [pace, setPace] = useState<{ qpm: number; minutes: number } | null>(null);
+  const loadingKeys = useRef<Set<string>>(new Set());
   const slide = group.slides[Math.min(si, group.slides.length - 1)]!;
 
   const seen = useRef<Record<string, Set<string>>>(Object.fromEntries(groups.map((g) => [g.key, new Set(g.seenIds)])));
@@ -182,7 +252,7 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
   const barRef = useRef<HTMLDivElement>(null);
   const answeredRef = useRef(false);
 
-  const paused = hold || quizWait || mapOpen || hidden || closing;
+  const paused = hold || quizWait || mapOpen || hidden || closing || slide.kind === "loading";
   const duration = Math.max(2500, slide.durationMs || 6000);
 
   /* Gesehen markieren (gebündelt) */
@@ -194,10 +264,12 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
   }, [preview]);
 
   useEffect(() => {
-    if (!seen.current[group.key]?.has(slide.id)) {
-      seen.current[group.key]?.add(slide.id);
+    if (slide.kind !== "loading" && !seen.current[group.key]?.has(slide.id)) {
+      (seen.current[group.key] ??= new Set()).add(slide.id);
       queue.current.add(slide.id);
     }
+    setRevealed(false);
+    revealedRef.current = false;
     // nächste 2 Bilder vorladen
     const rest = [...group.slides.slice(si + 1), ...(groups[gi + 1]?.slides ?? [])].slice(0, 2);
     rest.forEach((s) => preload(s.imageUrl));
@@ -207,6 +279,23 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
     elapsed.current = 0;
     if (barRef.current) barRef.current.style.transform = "scaleX(0)";
   }, [group, slide, si, gi, groups]);
+
+  /* Kapitel-Story: Portion laden, sobald die Gruppe dran ist */
+  const loadChapter = useCallback(
+    async (key: string, categoryId: string, extra = 0, keepIndex = false) => {
+      if (loadingKeys.current.has(key)) return;
+      loadingKeys.current.add(key);
+      const slides = preview ? [] : await getChapterStoryAction(categoryId, extra).catch(() => []);
+      loadingKeys.current.delete(key);
+      setGroups((gs) => gs.map((x) => (x.key === key ? { ...x, slides: slides.length ? slides : [{ id: `empty:${key}`, title: "Keine Fragen", body: "In diesem Kapitel gibt es noch keine Fragen.", durationMs: 4000, emoji: "📭" }], done: false } : x)));
+      if (!keepIndex) setSi(0);
+      elapsed.current = 0;
+    },
+    [preview],
+  );
+  useEffect(() => {
+    if (group.lazy && group.slides.every((x) => x.kind === "loading")) void loadChapter(group.key, group.lazy.categoryId);
+  }, [group, loadChapter]);
 
   useEffect(() => {
     const t = window.setInterval(flush, 2500);
@@ -222,10 +311,10 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
       flush();
       setClosing(true);
       const seenOut = Object.fromEntries(Object.entries(seen.current).map(([k, v]) => [k, [...v]]));
-      window.setTimeout(() => onClose(seenOut), reduce ? 120 : 380);
+      window.setTimeout(() => onClose(seenOut, groups), reduce ? 120 : 380);
       void lastKey;
     },
-    [closing, flush, onClose, reduce],
+    [closing, flush, onClose, reduce, groups],
   );
 
   const closeSignalRef = useRef(closeSignal);
@@ -242,7 +331,7 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
       let next = gi + delta;
       if (opts.skipSeen && delta > 0) {
         const after = groups.slice(gi + 1);
-        const unseen = after.findIndex((g) => !isGroupSeen({ slides: g.slides, seenIds: [...(seen.current[g.key] ?? [])] }));
+        const unseen = after.findIndex((g) => !isGroupSeen({ ...g, seenIds: [...(seen.current[g.key] ?? [])] }));
         next = unseen >= 0 ? gi + 1 + unseen : groups.length;
       }
       if (next < 0) {
@@ -280,6 +369,10 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
       last = t;
       if (!paused) {
         elapsed.current += dt;
+        if (slide.kind === "qa" && !revealedRef.current && elapsed.current > duration * 0.45) {
+          revealedRef.current = true;
+          setRevealed(true);
+        }
         const p = Math.min(1, elapsed.current / duration);
         if (barRef.current) barRef.current.style.transform = `scaleX(${p})`;
         if (p >= 1) {
@@ -291,7 +384,7 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [paused, duration, next]);
+  }, [paused, duration, next, slide.kind]);
 
   /* Tab im Hintergrund → pausieren */
   useEffect(() => {
@@ -424,14 +517,80 @@ export function StoryViewer({ groups, startKey, mode = "overlay", origin, origin
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.25 }}
-                    className={cn(slide.quiz && "no-scrollbar max-h-[calc(100dvh-120px)] overflow-y-auto overscroll-contain")}
-                    style={slide.quiz ? { touchAction: "pan-y" } : undefined}
-                    data-interactive={slide.quiz ? "" : undefined}
+                    className={cn((slide.quiz || slide.kind === "qa") && "no-scrollbar max-h-[calc(100dvh-120px)] overflow-y-auto overscroll-contain")}
+                    style={slide.quiz || slide.kind === "qa" ? { touchAction: "pan-y" } : undefined}
+                    data-interactive={slide.quiz || slide.kind === "qa" ? "" : undefined}
                   >
-                    <h2 className="text-2xl leading-tight font-extrabold text-white drop-shadow" data-testid="story-title">
-                      {slide.title}
-                    </h2>
-                    {slide.body && <p className={cn("mt-2 leading-snug whitespace-pre-line text-white/90", slide.quiz ? "text-sm" : "text-base")}>{slide.body}</p>}
+                    {slide.kind === "qa" ? (
+                      <>
+                        <h2 className="text-xs font-extrabold tracking-wider text-[#FFC400] uppercase" data-testid="story-title">
+                          {slide.title}
+                        </h2>
+                        <p className="mt-2 text-xl leading-snug font-extrabold whitespace-pre-line text-white" data-testid="story-question">
+                          {slide.body}
+                        </p>
+                        <AnimatePresence initial={false} mode="wait">
+                          {revealed ? (
+                            <motion.div key="a" initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="mt-4 rounded-2xl border-l-4 border-[#22c55e] bg-white/15 p-4 backdrop-blur" data-testid="story-answer">
+                              <p className="text-[11px] font-extrabold tracking-wider text-[#86efac] uppercase">Antwort</p>
+                              <p className="mt-1 text-base leading-snug font-semibold whitespace-pre-line text-white">{slide.answer}</p>
+                              {slide.explanation && <p className="mt-2 text-sm leading-snug whitespace-pre-line text-white/75">{slide.explanation}</p>}
+                            </motion.div>
+                          ) : (
+                            <motion.button
+                              key="b"
+                              type="button"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={() => {
+                                revealedRef.current = true;
+                                setRevealed(true);
+                                elapsed.current = Math.max(elapsed.current, duration * 0.45);
+                              }}
+                              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-white/30 bg-white/10 text-base font-extrabold text-white backdrop-blur"
+                              data-testid="story-reveal"
+                            >
+                              <Eye className="size-5" /> Antwort zeigen
+                            </motion.button>
+                          )}
+                        </AnimatePresence>
+                        {revealed && (
+                          <button type="button" onClick={next} className="mt-3 flex min-h-11 w-full items-center justify-center gap-1 rounded-2xl bg-[#FFC400] text-sm font-extrabold text-[#111]" data-testid="story-next">
+                            Nächste Frage <ChevronRight className="size-4" />
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-2xl leading-tight font-extrabold text-white drop-shadow" data-testid="story-title">
+                          {slide.title}
+                        </h2>
+                        {slide.body && <p className={cn("mt-2 leading-snug whitespace-pre-line text-white/90", slide.quiz ? "text-sm" : "text-base")}>{slide.body}</p>}
+                      </>
+                    )}
+                    {(slide.kind === "intro" || slide.kind === "end") && slide.progress && <ChapterProgress p={slide.progress} />}
+                    {slide.kind === "intro" && group.lazy && (
+                      <PaceChips
+                        value={pace}
+                        onChange={async (p) => {
+                          setPace(p);
+                          await setLearnPaceAction(p.qpm, p.minutes).catch(() => undefined);
+                          void loadChapter(group.key, group.lazy!.categoryId, 0, true);
+                        }}
+                      />
+                    )}
+                    {slide.kind === "end" && group.lazy && slide.progress && (
+                      <button
+                        type="button"
+                        data-interactive
+                        onClick={() => void loadChapter(group.key, group.lazy!.categoryId, Math.max(0, slide.progress!.portion - 1))}
+                        className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-white/40 bg-white/10 text-base font-extrabold text-white"
+                        data-testid="story-more"
+                      >
+                        Noch {slide.progress.portion} Fragen lernen
+                      </button>
+                    )}
                     {slide.quiz && (
                       <QuizBlock
                         key={slide.id}
