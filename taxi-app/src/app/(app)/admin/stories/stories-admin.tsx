@@ -2,7 +2,7 @@
 
 import { ChevronDown, Eye, Loader2, Plus, RefreshCw, Smartphone, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { StoryViewer } from "@/components/stories/story-viewer";
 import { STORY_TYPES, type StoryGroupData, type StorySlideData, type StoryType } from "@/lib/stories";
 import { cn } from "@/lib/utils";
@@ -48,15 +48,19 @@ const label = "text-xs font-semibold text-muted-foreground";
 
 function useRun() {
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const run = (fn: () => Promise<{ ok: boolean; message?: string; error?: string }>, confirm?: string) => {
+  // ohne useTransition: Formulare schließen sich nach dem Speichern (siehe question-form.tsx)
+  const run = async (fn: () => Promise<{ ok: boolean; message?: string; error?: string }>, confirm?: string) => {
     if (confirm && !window.confirm(confirm)) return;
-    start(async () => {
+    setPending(true);
+    try {
       const r = await fn();
       setMsg(r.ok ? { ok: true, text: r.message ?? "Gespeichert." } : { ok: false, text: r.error ?? "Fehler" });
       if (r.ok) router.refresh();
-    });
+    } finally {
+      setPending(false);
+    }
   };
   return { pending, msg, run };
 }

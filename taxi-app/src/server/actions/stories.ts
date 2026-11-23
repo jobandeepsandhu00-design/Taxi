@@ -54,7 +54,7 @@ export async function answerStoryQuizAction(input: z.infer<typeof quizSchema>): 
 /** Kapitel-Story: heutige Portion laden (Tempo aus dem Cookie). `extra` = „Noch eine Portion“. */
 export async function getChapterStoryAction(categoryId: string, extra = 0): Promise<import("@/lib/stories").StorySlideData[]> {
   const user = await requireUser();
-  const id = z.string().min(1).max(64).safeParse(categoryId);
+  const id = z.string().min(1).max(70).safeParse(categoryId);
   if (!id.success) return [];
   const { cookies } = await import("next/headers");
   const { parsePace, PACE_COOKIE } = await import("@/lib/stories");

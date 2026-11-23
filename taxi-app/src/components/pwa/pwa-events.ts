@@ -4,6 +4,8 @@ export type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Pr
 declare global {
   interface Window {
     __tpInstall?: InstallEvent | null;
+    /** „Aktualisieren“ getippt → nach dem SW-Wechsel neu laden */
+    __tpWantsUpdate?: boolean;
   }
 }
 

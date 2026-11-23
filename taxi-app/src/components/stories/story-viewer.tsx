@@ -26,8 +26,8 @@ type Props = {
   onClose: (seen: Record<string, string[]>, groups?: StoryGroupData[]) => void;
   /** von außen schließen (z. B. Zurück-Taste) */
   closeSignal?: number;
-  /** Admin: Bearbeiten-Knopf auf Kapitel-Fragen */
-  canEdit?: boolean;
+  /** Admin: Bearbeiten öffnet den Katalog-Editor, sonst die persönliche Bearbeitung */
+  isAdmin?: boolean;
 };
 
 /* ── Hilfen ──────────────────────────────────────────────── */
@@ -226,7 +226,7 @@ function ChapterProgress({ p }: { p: NonNullable<StorySlideData["progress"]> }) 
   );
 }
 
-export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, onClose, closeSignal = 0, canEdit = false }: Props) {
+export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, onClose, closeSignal = 0, isAdmin = false }: Props) {
   const [groups, setGroups] = useState(initialGroups);
   const router = useRouter();
   const reduce = Boolean(useReducedMotion());
@@ -529,9 +529,15 @@ export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay",
                           <h2 className="text-xs font-extrabold tracking-wider text-[#FFC400] uppercase" data-testid="story-title">
                             {slide.title}
                           </h2>
-                          {canEdit && group.lazy && (
+                          {!preview && group.lazy && (
                             <a
-                              href={`/admin/kapitel/${group.lazy.categoryId}?q=${encodeURIComponent(slide.id.replace(/^kap:/, ""))}`}
+                              href={
+                                group.lazy.categoryId.startsWith("u:")
+                                  ? `/lernbuch/eigene/u-${group.lazy.categoryId.slice(2)}?q=${encodeURIComponent(slide.id.replace(/^kap:/, ""))}`
+                                  : isAdmin
+                                    ? `/admin/kapitel/${group.lazy.categoryId}?q=${encodeURIComponent(slide.id.replace(/^kap:/, ""))}`
+                                    : `/lernbuch/eigene/${group.lazy.categoryId}?q=${encodeURIComponent(slide.id.replace(/^kap:/, ""))}`
+                              }
                               className="flex min-h-9 items-center gap-1 rounded-full bg-white/15 px-3 text-xs font-bold text-white"
                               data-testid="story-edit"
                             >

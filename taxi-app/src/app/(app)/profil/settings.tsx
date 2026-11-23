@@ -140,6 +140,14 @@ export function DeviceSettings({ vapidKey }: { vapidKey: string | null }) {
         }}
       />
       <InstallEntry />
+      <Link href="/lernbuch/eigene" className="flex items-center gap-3 py-3" data-testid="profil-my-questions">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-link">✏️</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-navy">Meine Fragen & Kapitel</span>
+          <span className="block text-xs text-muted-foreground">Fragen ändern, ausblenden, eigene hinzufügen</span>
+        </span>
+        <span className="text-muted-foreground">›</span>
+      </Link>
       <Link href="/profil/benachrichtigungen" data-testid="profil-notifications" className="flex items-center gap-3 py-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-link">
           <BellRing className="size-[18px]" />

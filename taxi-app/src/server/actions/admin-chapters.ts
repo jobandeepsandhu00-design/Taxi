@@ -20,7 +20,8 @@ function changed(categoryId?: string) {
   revalidatePath("/admin/kapitel");
   if (categoryId) revalidatePath(`/admin/kapitel/${categoryId}`);
   revalidatePath("/admin/fragen");
-  revalidatePath("/lernbuch", "layout");
+  revalidatePath("/lernbuch/[topicId]/[chapterId]", "page");
+  revalidatePath("/lernbuch");
   void refreshKnowledge();
   void kickAudioAfterChange();
 }

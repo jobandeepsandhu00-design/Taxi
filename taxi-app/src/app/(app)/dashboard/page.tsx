@@ -125,7 +125,7 @@ export default async function DashboardPage() {
       </section>
 
       <Suspense fallback={<StoryRowSkeleton />}>
-        <StoryRowServer userId={user.id} canEdit={user.role === "ADMIN"} />
+        <StoryRowServer userId={user.id} isAdmin={user.role === "ADMIN"} />
       </Suspense>
 
       <LernbuchWidget o={lernbuch} />

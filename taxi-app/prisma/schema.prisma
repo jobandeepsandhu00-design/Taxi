@@ -119,6 +119,8 @@ model User {
   pushSubscriptions  PushSubscription[]
   notificationPrefs  NotificationPrefs?
   notificationLogs   NotificationLog[]
+  userChapters       UserChapter[]
+  userQuestions      UserQuestion[]
   /// Premium: unbegrenzte Coach-Nachrichten
   isPremium          Boolean                @default(false)
   theme              String                 @default("weiss") @db.VarChar(16)
@@ -241,6 +243,7 @@ model Question {
   simpleDe        String?             @db.Text
   audio           QuestionAudio[]
   readProgress    ReadProgress[]
+  userVersions    UserQuestion[]
   createdById     String?
   createdBy       User?               @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt       DateTime            @default(now())
@@ -1180,4 +1183,43 @@ model StoryEvent {
 
   @@index([groupKey, kind])
   @@map("story_events")
+}
+
+/// Eigene Kapitel einer Person (nur für sie sichtbar)
+model UserChapter {
+  id        String         @id @default(cuid())
+  userId    String         @map("user_id")
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String         @db.VarChar(120)
+  createdAt DateTime       @default(now()) @map("created_at")
+  questions UserQuestion[]
+
+  @@index([userId])
+  @@map("user_chapters")
+}
+
+/// Persönliche Ebene über dem Fragenkatalog: eigene Fragen, eigene Fassungen und ausgeblendete Fragen
+model UserQuestion {
+  id             String       @id @default(cuid())
+  userId         String       @map("user_id")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// own | override | hide
+  kind           String       @db.VarChar(10)
+  baseQuestionId String?      @map("base_question_id")
+  baseQuestion   Question?    @relation(fields: [baseQuestionId], references: [id], onDelete: Cascade)
+  /// eigene Frage in einem Katalog-Kapitel
+  categoryId     String?      @map("category_id")
+  userChapterId  String?      @map("user_chapter_id")
+  userChapter    UserChapter? @relation(fields: [userChapterId], references: [id], onDelete: Cascade)
+  text           String?      @db.Text
+  /// [{ text, isCorrect }]
+  options        Json?
+  explanation    String?      @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@unique([userId, baseQuestionId])
+  @@index([userId, categoryId])
+  @@index([userChapterId])
+  @@map("user_questions")
 }

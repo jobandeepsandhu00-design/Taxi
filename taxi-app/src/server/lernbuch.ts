@@ -14,6 +14,7 @@ import {
   type StoryCard,
 } from "@/lib/lernbuch";
 import { publishedWhere } from "@/server/questions";
+import { applyPersonalLayer } from "@/server/my-questions";
 
 /** Übersicht: Themen + Kapitel + Fortschritt in einem Aufruf. */
 export async function getLernbuchOverview(userId: string): Promise<LernbuchOverview> {
@@ -102,7 +103,7 @@ export async function getChapterCards(userId: string, categoryId: string): Promi
     },
   });
   qs.sort((a, b) => (a.lessonIndex ?? 0) - (b.lessonIndex ?? 0) || naturalCompare(a.id, b.id));
-  return qs.map((q) => {
+  const cards = qs.map((q) => {
     const answer = q.options.filter((o) => o.isCorrect).map((o) => o.text).join("\n\n");
     return {
       id: q.id,
@@ -118,6 +119,8 @@ export async function getChapterCards(userId: string, categoryId: string): Promi
       starred: Boolean(q.readProgress[0]?.starred),
     };
   });
+  // persönliche Ebene: eigene Fassungen, ausgeblendete und eigene Fragen
+  return applyPersonalLayer(userId, categoryId, cards);
 }
 
 /** Fällige „Nochmal“-Karten (alle Kapitel). */

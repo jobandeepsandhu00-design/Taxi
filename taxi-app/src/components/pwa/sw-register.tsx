@@ -30,9 +30,11 @@ export function ServiceWorkerRegister() {
       navigator.serviceWorker.addEventListener("message", (e) => {
         if (e.data?.type === "navigate" && typeof e.data.url === "string" && e.data.url.startsWith("/")) window.location.href = e.data.url;
       });
+      // Nur neu laden, wenn der Nutzer „Aktualisieren“ getippt hat – NICHT bei der ersten Übernahme durch den SW
+      // (sonst lädt die Seite beim ersten Besuch unerwartet neu und verschluckt Klicks).
       let reloading = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (reloading) return;
+        if (reloading || !window.__tpWantsUpdate) return;
         reloading = true;
         window.location.reload();
       });
@@ -75,7 +77,10 @@ export function ServiceWorkerRegister() {
         >
           <RefreshCw className="size-5 shrink-0 text-[#ffc400]" />
           <span className="min-w-0 flex-1 text-sm font-semibold">Neue Version verfügbar</span>
-          <button type="button" onClick={() => waiting.postMessage({ type: "skip-waiting" })} className="min-h-10 rounded-xl bg-[#ffc400] px-4 text-sm font-extrabold text-[#111] active:scale-95">
+          <button type="button" onClick={() => {
+              window.__tpWantsUpdate = true;
+              waiting.postMessage({ type: "skip-waiting" });
+            }} className="min-h-10 rounded-xl bg-[#ffc400] px-4 text-sm font-extrabold text-[#111] active:scale-95">
             Aktualisieren
           </button>
         </motion.div>

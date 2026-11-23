@@ -46,11 +46,9 @@ export default async function ChapterPage({ params }: { params: Promise<{ topicI
       </Link>
       <PageHeader eyebrow={`Kapitel ${chapter.order}`} title={chapter.name} description={`${cards.length} Karten · ca. ${estMinutes(cards.length)} Min. Lesezeit`} action={
           <span className="flex items-center gap-2">
-            {user.role === "ADMIN" && (
-              <Link href={`/admin/kapitel/${chapter.id}`} className="rounded-full border border-border px-3 py-1 text-xs font-bold text-link" data-testid="chapter-edit-link">
-                ✏️ Bearbeiten
-              </Link>
-            )}
+            <Link href={user.role === "ADMIN" ? `/admin/kapitel/${chapter.id}` : `/lernbuch/eigene/${chapter.id}`} className="rounded-full border border-border px-3 py-1 text-xs font-bold text-link" data-testid="chapter-edit-link">
+              ✏️ Bearbeiten
+            </Link>
             <ChapterStateBadge state={state} className="text-xs" />
           </span>
         } />

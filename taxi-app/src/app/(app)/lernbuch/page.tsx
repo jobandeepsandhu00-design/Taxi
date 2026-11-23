@@ -20,7 +20,7 @@ export default async function LernbuchPage() {
   const chapters = o.topics.flatMap((t) => t.chapters).sort((a, b) => a.order - b.order);
   return (
     <div>
-      <PageHeader eyebrow="Lernbuch" title="Erst lernen, dann üben" description="Lies jede Frage mit der richtigen Antwort aus dem Skript – Karte für Karte. Danach bestätigst du dein Wissen mit dem Kapitel-Check." />
+      <PageHeader eyebrow="Lernbuch" title="Erst lernen, dann üben" description="Lies jede Frage mit der richtigen Antwort aus dem Skript – Karte für Karte. Danach bestätigst du dein Wissen mit dem Kapitel-Check." action={<Link href="/lernbuch/eigene" className="rounded-full border border-border px-3 py-1.5 text-xs font-bold text-link" data-testid="lernbuch-my-link">✏️ Meine Fragen & Kapitel</Link>} />
 
       <section className="glass mb-6 grid gap-5 rounded-2xl p-5 sm:grid-cols-[auto_1fr] sm:items-center sm:p-6" aria-label="Lernbuch-Fortschritt">
         <ProgressRing value={pct} size={112} label={`${pct} % gelesen`}>

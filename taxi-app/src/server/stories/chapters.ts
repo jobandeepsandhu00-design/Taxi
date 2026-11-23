@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { dayKey, dayKeyToDate } from "@/lib/dates";
 import { chapterSlideId, portionSize, qaDurationMs, type LearnPace, type StoryGroupData, type StorySlideData } from "@/lib/stories";
 import { getChapterCards } from "@/server/lernbuch";
+import { getMyChapterCards } from "@/server/my-questions";
 
 /**
  * Lern-Story pro Kapitel: jeden Tag eine Portion (Minuten × Fragen pro Minute) – Frage, dann Antwort.
@@ -26,7 +27,32 @@ export async function chapterGroups(userId: string, pace: LearnPace): Promise<St
     GROUP BY c.id, c.name, c."order"
     ORDER BY c."order"`;
   const portion = portionSize(pace);
-  return rows.map((r, i) => {
+  // eigene Kapitel (nur für diese Person)
+  const own = await prisma.userChapter.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, questions: { where: { kind: "own" }, select: { id: true } } } });
+  const ownIds = own.flatMap((c) => c.questions.map((q) => `kap:uq:${q.id}`));
+  const ownViews = ownIds.length ? await prisma.storyView.findMany({ where: { userId, slideId: { in: ownIds } }, select: { slideId: true, viewedAt: true } }) : [];
+  const ownGroups: StoryGroupData[] = own
+    .filter((c) => c.questions.length)
+    .map((c) => {
+      const ids = new Set(c.questions.map((q) => `kap:uq:${q.id}`));
+      const v = ownViews.filter((x) => ids.has(x.slideId));
+      const total = c.questions.length;
+      const today = v.filter((x) => x.viewedAt >= todayStart).length;
+      return {
+        key: `kap-u-${c.id}`,
+        title: `★ ${c.name}`,
+        icon: "★",
+        ring: ["#FFC400", "#16a34a", "#FFC400"],
+        type: "kapitel",
+        personal: false,
+        createdAt: new Date(`${dayKey()}T05:00:00+01:00`).toISOString(),
+        slides: [{ id: `loading:u:${c.id}`, title: c.name, body: "", durationMs: 60_000, kind: "loading", progress: { seen: v.length, total, today, portion } }],
+        seenIds: [],
+        lazy: { categoryId: `u:${c.id}` },
+        done: today >= Math.min(portion, total) || (v.length >= total && today > 0),
+      } satisfies StoryGroupData;
+    });
+  return [...rows.map((r, i) => {
     const total = Number(r.total);
     const seen = Number(r.seen);
     const today = Number(r.today);
@@ -43,12 +69,15 @@ export async function chapterGroups(userId: string, pace: LearnPace): Promise<St
       lazy: { categoryId: r.id },
       done: today >= Math.min(portion, total) || (seen >= total && today > 0),
     } satisfies StoryGroupData;
-  });
+  }), ...ownGroups];
 }
 
 /** Heutige Portion eines Kapitels: Einstieg, Frage-Antwort-Folien, Abschluss. */
 export async function chapterSlides(userId: string, categoryId: string, pace: LearnPace, extra = 0): Promise<StorySlideData[]> {
-  const [cat, cards] = await Promise.all([prisma.category.findUnique({ where: { id: categoryId }, select: { name: true, slug: true } }), getChapterCards(userId, categoryId)]);
+  const ownChapter = categoryId.startsWith("u:") ? categoryId.slice(2) : null;
+  const [cat, cards] = ownChapter
+    ? await Promise.all([prisma.userChapter.findFirst({ where: { id: ownChapter, userId }, select: { name: true } }), getMyChapterCards(userId, ownChapter)])
+    : await Promise.all([prisma.category.findUnique({ where: { id: categoryId }, select: { name: true } }), getChapterCards(userId, categoryId)]);
   if (!cat || !cards.length) return [];
   const ids = cards.map((c) => chapterSlideId(c.id));
   const views = await prisma.storyView.findMany({ where: { userId, slideId: { in: ids } }, select: { slideId: true, viewedAt: true } });
@@ -95,7 +124,7 @@ export async function chapterSlides(userId: string, categoryId: string, pace: Le
       durationMs: 7000,
       emoji: "🏁",
       bg: "linear-gradient(160deg,#854d0e,#f59e0b)",
-      cta: { label: "Kapitel im Lernbuch", route: `/lernbuch/weiter` },
+      cta: ownChapter ? { label: "Eigene Fragen bearbeiten", route: `/lernbuch/eigene/u-${ownChapter}` } : { label: "Kapitel im Lernbuch", route: `/lernbuch/weiter` },
       progress: { ...progress, seen: Math.min(cards.length, seen + (unseen.length ? pick.length : 0)), today: today + pick.length },
     },
   ];

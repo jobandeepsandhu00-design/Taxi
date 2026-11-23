@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, ChevronRight, Eye, EyeOff, Loader2, Plus, Trash2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { createChapterAction, deleteChapterAction, moveChapterAction, updateChapterAction } from "@/server/actions/admin-chapters";
 
@@ -11,18 +11,22 @@ type Chapter = { id: string; no: number; name: string; shortDescription: string;
 
 export function ChapterList({ chapters }: { chapters: Chapter[] }) {
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [name, setName] = useState("");
-  const run = (fn: () => Promise<{ ok: boolean; message?: string; error?: string }>, after?: () => void) =>
-    start(async () => {
+  const run = async (fn: () => Promise<{ ok: boolean; message?: string; error?: string }>, after?: () => void) => {
+    setPending(true);
+    try {
       const r = await fn();
       setMsg(r.ok ? (r.message ? { ok: true, text: r.message } : null) : { ok: false, text: r.error ?? "Fehler" });
       if (r.ok) {
         after?.();
         router.refresh();
       }
-    });
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div className="space-y-4">

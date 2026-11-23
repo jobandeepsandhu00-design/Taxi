@@ -17,6 +17,8 @@ export async function markCardAction(questionId: string, status: "gelesen" | "ve
   const user = await requireUser();
   const qid = id.parse(questionId);
   const st = z.enum(["gelesen", "verstanden", "nochmal", "starred", "unstarred"]).parse(status);
+  // eigene Fragen (persönlich): Status nur in der Ansicht, kein Lernbuch-Fortschritt in der Datenbank
+  if (qid.startsWith("uq:")) return { ok: true, data: { status: st === "starred" || st === "unstarred" ? "gelesen" : st, starred: st === "starred" } };
   const q = await prisma.question.findFirst({ where: { id: qid, ...publishedWhere }, select: { id: true } });
   if (!q) return { ok: false, error: "Frage nicht gefunden." };
   const r = await markCard(user.id, qid, st);

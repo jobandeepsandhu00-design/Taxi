@@ -50,7 +50,7 @@ function StoryCircle({ g, seen, isNew, onOpen, dup, hiddenWhileOpen }: { g: Stor
 }
 
 /** Story-Leiste unter der Begrüßung: läuft langsam von selbst (Laufband), pausiert bei Berührung, wischbar. */
-export function StoryRow({ groups: initial, today, canEdit = false }: { groups: StoryGroupData[]; today: string; canEdit?: boolean }) {
+export function StoryRow({ groups: initial, today, isAdmin = false }: { groups: StoryGroupData[]; today: string; isAdmin?: boolean }) {
   const reduce = useReducedMotion();
   const [groups, setGroups] = useState(initial);
   const [open, setOpen] = useState<{ key: string; origin: { x: number; y: number; r: number } } | null>(null);
@@ -233,7 +233,7 @@ export function StoryRow({ groups: initial, today, canEdit = false }: { groups: 
 
       {typeof document !== "undefined" &&
         createPortal(
-          <AnimatePresence>{open && <StoryViewer key="viewer" groups={groups} startKey={open.key} origin={open.origin} originFor={originFor} onClose={close} closeSignal={closeSignal} canEdit={canEdit} />}</AnimatePresence>,
+          <AnimatePresence>{open && <StoryViewer key="viewer" groups={groups} startKey={open.key} origin={open.origin} originFor={originFor} onClose={close} closeSignal={closeSignal} isAdmin={isAdmin} />}</AnimatePresence>,
           document.body,
         )}
     </section>

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { logoutAction } from "@/server/actions/auth";
 import { BottomNav } from "./bottom-nav";
 import { CoachFab } from "./coach-fab";
+import { NavProgress } from "./nav-progress";
 import type { QuizConfig } from "@/lib/quiz-config";
 import { UebenTabs } from "./ueben-tabs";
 import { adminNav, mainNav } from "./nav-items";
@@ -225,6 +226,7 @@ export function AppShell({ user, children, disclaimer, quiz }: { user: ShellUser
         <footer className="mx-auto hidden max-w-6xl px-8 pb-8 text-xs leading-relaxed text-muted-foreground lg:block">{disclaimer}</footer>
       </div>
 
+      <NavProgress />
       <BottomNav due={quiz?.due ?? 0} last={quiz?.last ?? null} />
       <CoachFab />
     </div>
