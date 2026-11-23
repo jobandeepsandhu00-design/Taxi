@@ -22,6 +22,7 @@ type Prefs = {
   duelAlerts: boolean;
   examCountdown: boolean;
   weeklyReport: boolean;
+  storyAlerts: boolean;
   quietStart: string;
   quietEnd: string;
   timezone: string;
@@ -52,6 +53,7 @@ const TYPES: { key: keyof Prefs; label: string; hint: string }[] = [
   { key: "examCountdown", label: "Prüfungs-Countdown", hint: "📅 30, 14, 7, 3 und 1 Tag vor dem Termin" },
   { key: "weeklyReport", label: "Wochenbericht", hint: "📊 Sonntags um 18:00" },
   { key: "duelAlerts", label: "Duelle", hint: "⚔️ Sofort, wenn jemand deinem Duell beitritt" },
+  { key: "storyAlerts", label: "Wien-Ort des Tages", hint: "📍 Neue Story mit Ort, Karte und Kurz-Check" },
 ];
 
 function deviceName(d: Device): string {

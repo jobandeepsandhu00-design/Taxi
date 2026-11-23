@@ -7,6 +7,9 @@ import { AchievementStrip, CategoryList, QuickActions, StreakFlame, XpCard, Zero
 import { DailyRings, ReadinessRing } from "@/components/home/rings";
 import { CoachBubble, DailyPlanCard, PrognosisCard } from "@/components/home/coach-cards";
 import { ExamCard } from "@/components/home/exam-card";
+import { Suspense } from "react";
+import { StoryRowServer } from "@/components/stories/story-row-server";
+import { StoryRowSkeleton } from "@/components/stories/story-row";
 import { LernbuchWidget } from "@/components/lernbuch/lernbuch-widget";
 import { getLernbuchOverview } from "@/server/lernbuch";
 import { LearnPlanCard } from "@/components/learn-plan/learn-plan-card";
@@ -120,6 +123,10 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      <Suspense fallback={<StoryRowSkeleton />}>
+        <StoryRowServer userId={user.id} />
+      </Suspense>
 
       <LernbuchWidget o={lernbuch} />
 

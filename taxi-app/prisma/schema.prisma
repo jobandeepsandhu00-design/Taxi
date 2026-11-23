@@ -611,6 +611,8 @@ model NotificationPrefs {
   duelAlerts      Boolean  @default(true) @map("duel_alerts")
   examCountdown   Boolean  @default(true) @map("exam_countdown")
   weeklyReport    Boolean  @default(true) @map("weekly_report")
+  /// „Neuer Wien-Ort des Tages“ (Stories)
+  storyAlerts     Boolean  @default(false) @map("story_alerts")
   quietStart      String   @default("22:00") @map("quiet_hours_start") @db.VarChar(5)
   quietEnd        String   @default("08:00") @map("quiet_hours_end") @db.VarChar(5)
   timezone        String   @default("Europe/Vienna") @db.VarChar(40)
@@ -1092,4 +1094,90 @@ model InternalCronKey {
   key String
 
   @@map("internal_cron_key")
+}
+
+/// Story-Gruppen (Kreise auf der Startseite). Persönliche Gruppen (toni, woche, erfolg) werden live erzeugt.
+model StoryGroup {
+  id         String       @id @default(cuid())
+  key        String       @unique @db.VarChar(40)
+  titleDe    String       @map("title_de") @db.VarChar(60)
+  /// Emoji oder Pfad im Bucket „stories“
+  iconImage  String?      @map("icon_image") @db.VarChar(300)
+  ringColors Json?        @map("ring_colors")
+  /// tipp | ort | regel | zahl | quiz | toni | woche | erfolg | news | saison
+  type       String       @db.VarChar(12)
+  isPersonal Boolean      @default(false) @map("is_personal")
+  sort       Int          @default(0)
+  activeFrom DateTime?    @map("active_from")
+  activeTo   DateTime?    @map("active_to")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  slides     StorySlide[]
+
+  @@map("story_groups")
+}
+
+model StorySlide {
+  id          String     @id @default(cuid())
+  groupId     String     @map("group_id")
+  group       StoryGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sort        Int        @default(0)
+  imagePath   String?    @map("image_path") @db.VarChar(300)
+  videoPath   String?    @map("video_path") @db.VarChar(300)
+  bgColor     String?    @map("bg_color") @db.VarChar(40)
+  /// Platzhalter-Illustration (Emoji), wenn kein Bild
+  emoji       String?    @db.VarChar(16)
+  titleDe     String     @map("title_de") @db.VarChar(120)
+  bodyDe      String     @map("body_de") @db.Text
+  durationMs  Int        @default(6000) @map("duration_ms")
+  /// { label, route }
+  cta         Json?
+  /// { question_id }
+  quiz        Json?
+  /// { lat, lng, label }
+  map         Json?
+  imageCredit String?    @map("image_credit") @db.VarChar(200)
+  verified    Boolean    @default(false)
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([groupId, sort])
+  @@map("story_slides")
+}
+
+/// Gesehene Slides (auch erzeugte, z. B. „regel:2026-11-23:<id>“ – daher ohne Fremdschlüssel)
+model StoryView {
+  userId   String   @map("user_id")
+  slideId  String   @map("slide_id") @db.VarChar(120)
+  viewedAt DateTime @default(now()) @map("viewed_at")
+
+  @@id([userId, slideId])
+  @@index([slideId])
+  @@map("story_views")
+}
+
+/// Tagesauswahl der Content-Engine (eine Zeile je Tag und Gruppe)
+model StoryDaily {
+  day       DateTime @db.Date
+  groupKey  String   @map("group_key") @db.VarChar(40)
+  /// Liste aufgelöster Slides (JSON) – gespeichert, damit alle Nutzer:innen denselben Inhalt sehen
+  slides    Json
+  /// Quell-IDs (für „keine Wiederholung in 30 Tagen“)
+  sourceIds String[] @map("source_ids")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([day, groupKey])
+  @@map("story_daily")
+}
+
+/// Analytics: complete | cta | quiz
+model StoryEvent {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  groupKey  String   @map("group_key") @db.VarChar(40)
+  slideId   String?  @map("slide_id") @db.VarChar(120)
+  kind      String   @db.VarChar(12)
+  correct   Boolean?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([groupKey, kind])
+  @@map("story_events")
 }

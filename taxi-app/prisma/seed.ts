@@ -24,6 +24,7 @@ import { buchBoChapter } from "./seed-data/buch-betriebsordnung";
 import { buchKvChapter } from "./seed-data/buch-kollektivvertrag";
 import { buchGoChapter, buchGrChapter, buchWkChapter } from "./seed-data/buch-gewerbe";
 import { buchRest, buchRestChapters } from "./seed-data/buch-rest";
+import { STORY_GROUPS } from "./seed-data/stories";
 
 const prisma = new PrismaClient();
 
@@ -249,6 +250,19 @@ async function seedLearningExtras() {
     await prisma.ttsLexicon.upsert({ where: { term: e.term }, create: { term: e.term, spoken: e.spoken }, update: {} });
   }
   await prisma.audioConfig.upsert({ where: { id: "default" }, create: { id: "default" }, update: {} });
+  // Stories: Gruppen + Platzhalter-Slides (nur anlegen, Admin-Änderungen bleiben erhalten)
+  for (const g of STORY_GROUPS) {
+    const group = await prisma.storyGroup.upsert({
+      where: { key: g.key },
+      create: { key: g.key, titleDe: g.title, iconImage: g.icon, type: g.type, isPersonal: Boolean(g.personal), sort: g.sort, ringColors: g.ring ?? undefined },
+      update: {},
+    });
+    if (g.slides.length && (await prisma.storySlide.count({ where: { groupId: group.id } })) === 0) {
+      await prisma.storySlide.createMany({
+        data: g.slides.map((s, i) => ({ groupId: group.id, sort: i, emoji: s.emoji, bgColor: s.bg, titleDe: s.title, bodyDe: s.body, cta: s.cta ?? undefined, map: s.map ?? undefined, verified: false })),
+      });
+    }
+  }
 }
 
 main()

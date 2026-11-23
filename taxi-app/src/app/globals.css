@@ -504,3 +504,19 @@
     animation: tpSkelIn 0.01s linear 0.12s forwards;
   }
 }
+
+/* Stories: drehender Farbring (nur transform → GPU) */
+.story-ring-spin {
+  animation: storyRingSpin 4s linear infinite;
+  will-change: transform;
+}
+@keyframes storyRingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-ring-spin {
+    animation: none;
+  }
+}

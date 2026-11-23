@@ -1,5 +1,5 @@
 /** Benachrichtigungstexte (du-Form, kurz) mit Varianten – rotiert, nie zweimal derselbe Text hintereinander. */
-export type PushType = "daily" | "due" | "streak" | "lernbuch" | "challenge" | "exam" | "weekly" | "duel" | "achievement" | "test";
+export type PushType = "daily" | "due" | "streak" | "lernbuch" | "challenge" | "exam" | "weekly" | "duel" | "achievement" | "story" | "test";
 
 type Tpl = { title: string; body: string };
 
@@ -52,6 +52,11 @@ export const PUSH_TEXTS: Record<PushType, Tpl[]> = {
     { title: "🏆 Neues Abzeichen!", body: "{name} freigeschaltet." },
     { title: "🏆 Geschafft!", body: "Du hast „{name}“ erreicht." },
     { title: "🏆 Stark!", body: "Abzeichen „{name}“ ist deins." },
+  ],
+  story: [
+    { title: "📍 Neuer Wien-Ort des Tages", body: "{place} – schau dir die Story an!" },
+    { title: "📍 Wien-Ort des Tages: {place}", body: "Wo liegt das? Teste dich in der Story." },
+    { title: "📍 Heute: {place}", body: "Neue Story mit Karte und Kurz-Check wartet auf dich." },
   ],
   test: [{ title: "✅ Test-Benachrichtigung", body: "So sehen deine Erinnerungen aus. Alles funktioniert!" }],
 };

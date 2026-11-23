@@ -34,6 +34,7 @@ const PREF_FOR: Partial<Record<PushType, keyof PrefsRow>> = {
   exam: "examCountdown",
   weekly: "weeklyReport",
   duel: "duelAlerts",
+  story: "storyAlerts",
 };
 type PrefsRow = NonNullable<Awaited<ReturnType<typeof prisma.notificationPrefs.findUnique>>>;
 
@@ -52,6 +53,7 @@ export function defaultPrefs(userId: string): PrefsRow {
     duelAlerts: true,
     examCountdown: true,
     weeklyReport: true,
+    storyAlerts: false,
     quietStart: "22:00",
     quietEnd: "08:00",
     timezone: "Europe/Vienna",

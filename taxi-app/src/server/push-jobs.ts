@@ -6,6 +6,7 @@ import { composeText, defaultPrefs, pushConfigured, sendToUser } from "@/lib/pus
 import { getDueReviewCount } from "@/server/gamification";
 import { getLernbuchOverview } from "@/server/lernbuch";
 import { getReadiness } from "@/server/readiness";
+import { ensureDaily } from "@/server/stories/daily";
 
 type JobResult = { job: string; checked: number; sent: number; skipped: number };
 
@@ -62,6 +63,10 @@ export async function runStreakCheck(now = new Date()): Promise<JobResult> {
 export async function runMorning(now = new Date()): Promise<JobResult> {
   const users = await pushUsers();
   const today = dayKey(now);
+  // Wien-Ort des Tages (aus der Story-Tagesauswahl)
+  await ensureDaily(today).catch(() => undefined);
+  const ortRow = await prisma.storyDaily.findUnique({ where: { day_groupKey: { day: dayKeyToDate(today), groupKey: "ort" } }, select: { slides: true } });
+  const place = (ortRow?.slides as { title?: string }[] | undefined)?.[0]?.title ?? null;
   const doneToday = new Set((await prisma.dailyChallengeResult.findMany({ where: { day: dayKeyToDate(today), userId: { in: users.map((u) => u.id) } }, select: { userId: true } })).map((r) => r.userId));
   const results = [];
   for (const u of users) {
@@ -72,6 +77,9 @@ export async function runMorning(now = new Date()): Promise<JobResult> {
         results.push(await sendToUser(u.id, "exam", { ...(await composeText(u.id, "exam", { days, score })), url: "/pruefung" }, { now }));
         continue;
       }
+    }
+    if (place && u.prefs.storyAlerts) {
+      results.push(await sendToUser(u.id, "story", { ...(await composeText(u.id, "story", { place })), url: "/stories/ort", tag: "tp-story" }, { now }));
     }
     if (u.prefs.challengeAlerts && !doneToday.has(u.id)) {
       results.push(await sendToUser(u.id, "challenge", { ...(await composeText(u.id, "challenge", {})), url: "/challenge", actions: [{ action: "open", title: "Los geht's" }, { action: "later", title: "Später" }] }, { now }));

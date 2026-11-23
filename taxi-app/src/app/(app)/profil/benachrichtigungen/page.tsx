@@ -13,7 +13,7 @@ export default async function NotificationsPage() {
     getPrefs(user.id),
     prisma.pushSubscription.findMany({ where: { userId: user.id, active: true }, orderBy: { createdAt: "desc" }, select: { id: true, endpoint: true, platform: true, userAgent: true, createdAt: true, lastSuccessAt: true } }),
   ]);
-  const p = { enabled: prefs.enabled, dailyReminder: prefs.dailyReminder, reminderTime: prefs.reminderTime, streakAlerts: prefs.streakAlerts, dueAlerts: prefs.dueAlerts, challengeAlerts: prefs.challengeAlerts, duelAlerts: prefs.duelAlerts, examCountdown: prefs.examCountdown, weeklyReport: prefs.weeklyReport, quietStart: prefs.quietStart, quietEnd: prefs.quietEnd, timezone: prefs.timezone };
+  const p = { enabled: prefs.enabled, dailyReminder: prefs.dailyReminder, reminderTime: prefs.reminderTime, streakAlerts: prefs.streakAlerts, dueAlerts: prefs.dueAlerts, challengeAlerts: prefs.challengeAlerts, duelAlerts: prefs.duelAlerts, examCountdown: prefs.examCountdown, weeklyReport: prefs.weeklyReport, storyAlerts: prefs.storyAlerts, quietStart: prefs.quietStart, quietEnd: prefs.quietEnd, timezone: prefs.timezone };
   return (
     <div className="mx-auto max-w-xl space-y-4 pb-6">
       <Link href="/profil" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-link">

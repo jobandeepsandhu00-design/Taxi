@@ -19,6 +19,7 @@ const prefsSchema = z.object({
   duelAlerts: z.boolean(),
   examCountdown: z.boolean(),
   weeklyReport: z.boolean(),
+  storyAlerts: z.boolean().optional(),
   quietStart: hm,
   quietEnd: hm,
   timezone: z.string().max(40).optional(),
