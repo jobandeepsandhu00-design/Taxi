@@ -26,6 +26,8 @@ type Props = {
   onClose: (seen: Record<string, string[]>, groups?: StoryGroupData[]) => void;
   /** von außen schließen (z. B. Zurück-Taste) */
   closeSignal?: number;
+  /** Admin: Bearbeiten-Knopf auf Kapitel-Fragen */
+  canEdit?: boolean;
 };
 
 /* ── Hilfen ──────────────────────────────────────────────── */
@@ -224,7 +226,7 @@ function ChapterProgress({ p }: { p: NonNullable<StorySlideData["progress"]> }) 
   );
 }
 
-export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, onClose, closeSignal = 0 }: Props) {
+export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay", origin, onClose, closeSignal = 0, canEdit = false }: Props) {
   const [groups, setGroups] = useState(initialGroups);
   const router = useRouter();
   const reduce = Boolean(useReducedMotion());
@@ -523,9 +525,20 @@ export function StoryViewer({ groups: initialGroups, startKey, mode = "overlay",
                   >
                     {slide.kind === "qa" ? (
                       <>
-                        <h2 className="text-xs font-extrabold tracking-wider text-[#FFC400] uppercase" data-testid="story-title">
-                          {slide.title}
-                        </h2>
+                        <div className="flex items-center justify-between gap-2">
+                          <h2 className="text-xs font-extrabold tracking-wider text-[#FFC400] uppercase" data-testid="story-title">
+                            {slide.title}
+                          </h2>
+                          {canEdit && group.lazy && (
+                            <a
+                              href={`/admin/kapitel/${group.lazy.categoryId}?q=${encodeURIComponent(slide.id.replace(/^kap:/, ""))}`}
+                              className="flex min-h-9 items-center gap-1 rounded-full bg-white/15 px-3 text-xs font-bold text-white"
+                              data-testid="story-edit"
+                            >
+                              ✏️ Bearbeiten
+                            </a>
+                          )}
+                        </div>
                         <p className="mt-2 text-xl leading-snug font-extrabold whitespace-pre-line text-white" data-testid="story-question">
                           {slide.body}
                         </p>

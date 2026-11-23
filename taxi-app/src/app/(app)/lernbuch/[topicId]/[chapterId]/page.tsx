@@ -44,7 +44,16 @@ export default async function ChapterPage({ params }: { params: Promise<{ topicI
       <Link href="/lernbuch" className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-link">
         <ChevronLeft className="size-4" /> Alle Kapitel
       </Link>
-      <PageHeader eyebrow={`Kapitel ${chapter.order}`} title={chapter.name} description={`${cards.length} Karten · ca. ${estMinutes(cards.length)} Min. Lesezeit`} action={<ChapterStateBadge state={state} className="text-xs" />} />
+      <PageHeader eyebrow={`Kapitel ${chapter.order}`} title={chapter.name} description={`${cards.length} Karten · ca. ${estMinutes(cards.length)} Min. Lesezeit`} action={
+          <span className="flex items-center gap-2">
+            {user.role === "ADMIN" && (
+              <Link href={`/admin/kapitel/${chapter.id}`} className="rounded-full border border-border px-3 py-1 text-xs font-bold text-link" data-testid="chapter-edit-link">
+                ✏️ Bearbeiten
+              </Link>
+            )}
+            <ChapterStateBadge state={state} className="text-xs" />
+          </span>
+        } />
       <div className="mb-5">
         <div className="mb-1 flex justify-between text-xs font-semibold">
           <span className="text-muted-foreground">{read} von {cards.length} gelesen</span>

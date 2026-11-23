@@ -74,6 +74,7 @@ export const COACH_FAB_PATHS = ["/dashboard", "/lernbuch", "/ueben", "/lernen", 
 
 export const adminNav = [
   { href: "/admin", label: "Admin-Übersicht", icon: Shield },
+  { href: "/admin/kapitel", label: "Kapitel & Fragen", icon: BookOpen },
   { href: "/admin/fragen", label: "Fragen", icon: ListChecks },
   { href: "/admin/kategorien", label: "Kategorien", icon: BookOpen },
   { href: "/admin/quellen", label: "Quellen", icon: BookmarkCheck },
